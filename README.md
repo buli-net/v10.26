@@ -1,4 +1,4 @@
-(*)1 BITCOIN
+README.md Bitcoin
 
 Welcome to _Bitcoin Wallet_, a standalone Bitcoin payment app for your Android device!
 
