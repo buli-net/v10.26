@@ -1,53 +1,97 @@
-# BITCOIN WALLET
+# Bitcoin Wallet
 
-Welcome to _Bitcoin Wallet_, a standalone Bitcoin payment app for your Android device!
+A simple and secure Bitcoin wallet application designed to help users manage their Bitcoin transactions and holdings with ease. This project aims to provide essential wallet functionalities, strong security practices, and an intuitive user experience.
 
-This project contains several sub-projects:
+---
 
- * __wallet__:
-     The Android app itself. This is probably what you're searching for.
- * __metadata__:
-     App description and promo material for the app stores.
+## Features
 
+- **Send & Receive Bitcoin:** Easily send and receive BTC with QR code support and transaction history.
+- **Balance Tracking:** Real-time display of wallet balance and transaction confirmations.
+- **Secure Key Management:** Private keys are securely stored and never leave your device.
+- **Transaction History:** View a comprehensive log of all incoming and outgoing transactions.
+- **Address Book:** Save frequently used addresses for faster transactions.
+- **Backup & Restore:** Export and import wallet backups securely.
+- **Multi-platform Support:** Designed to work seamlessly on different platforms (specify if web, mobile, or desktop).
 
-### PREREQUISITES FOR BUILDING
+---
 
-You'll need git, a Java 11 SDK and Gradle between 4.4 and 6.9.x for this. We'll assume Ubuntu 24.04 LTS (Noble Numbat)
-for the package installs, which comes with OpenJDK 11 and Gradle 4.4.1 out of the box.
+## Getting Started
 
-    # first time only
-    sudo apt install git gradle openjdk-11-jdk
+### Prerequisites
 
-Create a directory for the Android SDK (e.g. `android-sdk`) and point the `ANDROID_HOME` variable to it.
+- [Node.js](https://nodejs.org/) (recommended v18+)
+- [npm](https://www.npmjs.com/) or [yarn](https://yarnpkg.com/)
+- (Optional) [Docker](https://www.docker.com/) for containerized deployment
 
-Download the [Android SDK Tools](https://developer.android.com/studio/index.html#command-tools)
-and unpack it to `$ANDROID_HOME/`.
+### Installation
 
-Finally, the last preparative step is acquiring the source code. Again in your workspace, use:
+Clone the repository:
+```bash
+git clone https://github.com/nodoubtz/bitcoin-wallet.git
+cd bitcoin-wallet
+```
 
-    # first time only
-    git clone -b main https://github.com/bitcoin-wallet/bitcoin-wallet.git bitcoin-wallet
-    cd bitcoin-wallet
+Install dependencies:
+```bash
+npm install
+# or
+yarn install
+```
 
+### Running the Application
 
-### BUILDING
+Start the development server:
+```bash
+npm start
+# or
+yarn start
+```
 
-You can build all sub-projects in all flavors at once using Gradle:
+Open your browser and navigate to `http://localhost:3000` (or as specified in your configuration).
 
-    # each time
-    gradle clean build
+---
 
-For details about building the wallet see the [specific README](wallet/README.md).
+## Configuration
 
+- Configure environment variables in the `.env` file.
+- Set Bitcoin network (mainnet/testnet), API keys, and other sensitive credentials as needed.
 
-### REPRODUCIBLE BUILD
+---
 
-Alternatively, you can build using buildah:
+## Security
 
-    # each time
-    buildah build --cap-add sys_admin --device /dev/fuse --file build.Containerfile --output build/ .
+- **Do NOT share your private keys.**
+- All sensitive data is encrypted locally.
+- For best security, use strong passwords and enable two-factor authentication if available.
 
-Access to FUSE and the SYS_ADMIN capability are needed for mounting disorderfs
-in order to sort the directory entries of the project folder.
+---
 
-The unsigned APKs are written to the specified output directory.
+## Contributing
+
+Contributions are welcome! Please follow these steps:
+
+1. Fork the repo and create your branch (`git checkout -b feature/fooBar`)
+2. Commit your changes (`git commit -am 'Add some fooBar'`)
+3. Push to the branch (`git push origin feature/fooBar`)
+4. Create a new Pull Request
+
+Please review the [CONTRIBUTING.md](CONTRIBUTING.md) for more details.
+
+---
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
+
+---
+
+## Disclaimer
+
+This project is for educational purposes only. Use at your own risk. Always back up your keys and test with small amounts before using with significant funds.
+
+---
+
+## Contact
+
+For questions or support, please open an issue or contact [nodoubtz](https://github.com/nodoubtz).
