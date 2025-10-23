@@ -1,4 +1,4 @@
-# BITCOIN WALLET
+bc1qce3mq79jgg94s8q40996qe9tsf86wl309y60es# BITCOIN WALLET
 
 Welcome to _Bitcoin Wallet_, a standalone Bitcoin payment app for your Android device!
 
@@ -27,9 +27,9 @@ Finally, the last preparative step is acquiring the source code. Again in your w
 
     # first time only
     git clone -b main https://github.com/bitcoin-wallet/bitcoin-wallet.git bitcoin-wallet
-    cd bitcoin-wallet
-
-
+    cd bitcoin-bc1qce3mq79jgg94s8q40996qe9tsf86wl309y60es
+https://cashapp.com
+$anonymousghost270
 ### BUILDING
 
 You can build all sub-projects in all flavors at once using Gradle:
