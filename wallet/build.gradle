@@ -127,4 +127,6 @@ task svgToPngMipmap(type: fr.avianey.androidsvgdrawable.gradle.SvgDrawableTask) 
     targetedDensities = ['xxhdpi', 'xxxhdpi']
     outputFormat = 'PNG'
     outputType = 'mipmap'
-}
+}(I)
+ehsankazazi
+
