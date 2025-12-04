@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2015 the original author or authors.
+ * Copyright the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -12,16 +12,16 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 package de.schildbach.wallet.offline;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.util.concurrent.atomic.AtomicBoolean;
-
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothServerSocket;
+import android.bluetooth.BluetoothSocket;
+import de.schildbach.wallet.Constants;
+import de.schildbach.wallet.util.Bluetooth;
 import org.bitcoin.protocols.payments.Protos;
 import org.bitcoin.protocols.payments.Protos.PaymentACK;
 import org.bitcoinj.core.ProtocolException;
@@ -30,231 +30,121 @@ import org.bitcoinj.protocols.payments.PaymentProtocol;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothServerSocket;
-import android.bluetooth.BluetoothSocket;
-import de.schildbach.wallet.Constants;
-import de.schildbach.wallet.util.Bluetooth;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @author Shahar Livne
  * @author Andreas Schildbach
  */
-public abstract class AcceptBluetoothThread extends Thread
-{
-	protected final BluetoothServerSocket listeningSocket;
-	protected final AtomicBoolean running = new AtomicBoolean(true);
+public abstract class AcceptBluetoothThread extends Thread {
+    protected final BluetoothServerSocket listeningSocket;
+    protected final AtomicBoolean running = new AtomicBoolean(true);
 
-	protected static final Logger log = LoggerFactory.getLogger(AcceptBluetoothThread.class);
+    protected static final Logger log = LoggerFactory.getLogger(AcceptBluetoothThread.class);
 
-	private AcceptBluetoothThread(final BluetoothServerSocket listeningSocket)
-	{
-		this.listeningSocket = listeningSocket;
-	}
+    private AcceptBluetoothThread(final BluetoothServerSocket listeningSocket) {
+        this.listeningSocket = listeningSocket;
+    }
 
-	public static abstract class ClassicBluetoothThread extends AcceptBluetoothThread
-	{
-		public ClassicBluetoothThread(final BluetoothAdapter adapter) throws IOException
-		{
-			super(adapter
-					.listenUsingInsecureRfcommWithServiceRecord(Bluetooth.CLASSIC_PAYMENT_PROTOCOL_NAME, Bluetooth.CLASSIC_PAYMENT_PROTOCOL_UUID));
-		}
+    public static abstract class ClassicBluetoothThread extends AcceptBluetoothThread {
+        public ClassicBluetoothThread(final BluetoothAdapter adapter) throws IOException {
+            super(adapter.listenUsingInsecureRfcommWithServiceRecord(Bluetooth.CLASSIC_PAYMENT_PROTOCOL_NAME,
+                    Bluetooth.CLASSIC_PAYMENT_PROTOCOL_UUID));
+        }
 
-		@Override
-		public void run()
-		{
-			while (running.get())
-			{
-				BluetoothSocket socket = null;
-				DataInputStream is = null;
-				DataOutputStream os = null;
+        @Override
+        public void run() {
+            org.bitcoinj.core.Context.propagate(Constants.CONTEXT);
 
-				try
-				{
-					// start a blocking call, and return only on success or exception
-					socket = listeningSocket.accept();
+            while (running.get()) {
+                try ( // start a blocking call, and return only on success or exception
+                        final BluetoothSocket socket = listeningSocket.accept();
+                        final DataInputStream is = new DataInputStream(socket.getInputStream());
+                        final DataOutputStream os = new DataOutputStream(socket.getOutputStream())) {
+                    log.info("accepted classic bluetooth connection");
 
-					log.info("accepted classic bluetooth connection");
+                    boolean ack = true;
 
-					is = new DataInputStream(socket.getInputStream());
-					os = new DataOutputStream(socket.getOutputStream());
+                    final int numMessages = is.readInt();
 
-					boolean ack = true;
+                    for (int i = 0; i < numMessages; i++) {
+                        final int msgLength = is.readInt();
+                        final byte[] msg = new byte[msgLength];
+                        is.readFully(msg);
 
-					final int numMessages = is.readInt();
+                        try {
+                            final Transaction tx = new Transaction(Constants.NETWORK_PARAMETERS, msg);
 
-					for (int i = 0; i < numMessages; i++)
-					{
-						final int msgLength = is.readInt();
-						final byte[] msg = new byte[msgLength];
-						is.readFully(msg);
+                            if (!handleTx(tx))
+                                ack = false;
+                        } catch (final ProtocolException x) {
+                            log.info("cannot decode message received via bluetooth", x);
+                            ack = false;
+                        }
+                    }
 
-						try
-						{
-							final Transaction tx = new Transaction(Constants.NETWORK_PARAMETERS, msg);
+                    os.writeBoolean(ack);
+                } catch (final IOException x) {
+                    log.info("exception in bluetooth accept loop", x);
+                }
+            }
+        }
+    }
 
-							if (!handleTx(tx))
-								ack = false;
-						}
-						catch (final ProtocolException x)
-						{
-							log.info("cannot decode message received via bluetooth", x);
-							ack = false;
-						}
-					}
+    public static abstract class PaymentProtocolThread extends AcceptBluetoothThread {
+        public PaymentProtocolThread(final BluetoothAdapter adapter) throws IOException {
+            super(adapter.listenUsingInsecureRfcommWithServiceRecord(Bluetooth.BIP70_PAYMENT_PROTOCOL_NAME,
+                    Bluetooth.BIP70_PAYMENT_PROTOCOL_UUID));
+        }
 
-					os.writeBoolean(ack);
-				}
-				catch (final IOException x)
-				{
-					log.info("exception in bluetooth accept loop", x);
-				}
-				finally
-				{
-					if (os != null)
-					{
-						try
-						{
-							os.close();
-						}
-						catch (final IOException x)
-						{
-							// swallow
-						}
-					}
+        @Override
+        public void run() {
+            org.bitcoinj.core.Context.propagate(Constants.CONTEXT);
 
-					if (is != null)
-					{
-						try
-						{
-							is.close();
-						}
-						catch (final IOException x)
-						{
-							// swallow
-						}
-					}
+            while (running.get()) {
+                try ( // start a blocking call, and return only on success or exception
+                        final BluetoothSocket socket = listeningSocket.accept();
+                        final DataInputStream is = new DataInputStream(socket.getInputStream());
+                        final DataOutputStream os = new DataOutputStream(socket.getOutputStream())) {
+                    log.info("accepted payment protocol bluetooth connection");
 
-					if (socket != null)
-					{
-						try
-						{
-							socket.close();
-						}
-						catch (final IOException x)
-						{
-							// swallow
-						}
-					}
-				}
-			}
-		}
-	}
+                    boolean ack = true;
 
-	public static abstract class PaymentProtocolThread extends AcceptBluetoothThread
-	{
-		public PaymentProtocolThread(final BluetoothAdapter adapter) throws IOException
-		{
-			super(adapter.listenUsingInsecureRfcommWithServiceRecord(Bluetooth.BIP70_PAYMENT_PROTOCOL_NAME, Bluetooth.BIP70_PAYMENT_PROTOCOL_UUID));
-		}
+                    final Protos.Payment payment = Protos.Payment.parseDelimitedFrom(is);
 
-		@Override
-		public void run()
-		{
-			while (running.get())
-			{
-				BluetoothSocket socket = null;
-				DataInputStream is = null;
-				DataOutputStream os = null;
+                    log.debug("got payment message");
 
-				try
-				{
-					// start a blocking call, and return only on success or exception
-					socket = listeningSocket.accept();
+                    for (final Transaction tx : PaymentProtocol
+                            .parseTransactionsFromPaymentMessage(Constants.NETWORK_PARAMETERS, payment)) {
+                        if (!handleTx(tx))
+                            ack = false;
+                    }
 
-					log.info("accepted payment protocol bluetooth connection");
+                    final String memo = ack ? "ack" : "nack";
 
-					is = new DataInputStream(socket.getInputStream());
-					os = new DataOutputStream(socket.getOutputStream());
+                    log.info("sending {} via bluetooth", memo);
 
-					boolean ack = true;
+                    final PaymentACK paymentAck = PaymentProtocol.createPaymentAck(payment, memo);
+                    paymentAck.writeDelimitedTo(os);
+                } catch (final IOException x) {
+                    log.info("exception in bluetooth accept loop", x);
+                }
+            }
+        }
+    }
 
-					final Protos.Payment payment = Protos.Payment.parseDelimitedFrom(is);
+    public void stopAccepting() {
+        running.set(false);
 
-					log.debug("got payment message");
+        try {
+            listeningSocket.close();
+        } catch (final IOException x) {
+            // swallow
+        }
+    }
 
-					for (final Transaction tx : PaymentProtocol.parseTransactionsFromPaymentMessage(Constants.NETWORK_PARAMETERS, payment))
-					{
-						if (!handleTx(tx))
-							ack = false;
-					}
-
-					final String memo = ack ? "ack" : "nack";
-
-					log.info("sending {} via bluetooth", memo);
-
-					final PaymentACK paymentAck = PaymentProtocol.createPaymentAck(payment, memo);
-					paymentAck.writeDelimitedTo(os);
-				}
-				catch (final IOException x)
-				{
-					log.info("exception in bluetooth accept loop", x);
-				}
-				finally
-				{
-					if (os != null)
-					{
-						try
-						{
-							os.close();
-						}
-						catch (final IOException x)
-						{
-							// swallow
-						}
-					}
-
-					if (is != null)
-					{
-						try
-						{
-							is.close();
-						}
-						catch (final IOException x)
-						{
-							// swallow
-						}
-					}
-
-					if (socket != null)
-					{
-						try
-						{
-							socket.close();
-						}
-						catch (final IOException x)
-						{
-							// swallow
-						}
-					}
-				}
-			}
-		}
-	}
-
-	public void stopAccepting()
-	{
-		running.set(false);
-
-		try
-		{
-			listeningSocket.close();
-		}
-		catch (final IOException x)
-		{
-			// swallow
-		}
-	}
-
-	protected abstract boolean handleTx(Transaction tx);
+    protected abstract boolean handleTx(Transaction tx);
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2015 the original author or authors.
+ * Copyright the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -12,51 +12,80 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 package de.schildbach.wallet.ui.send;
 
-import org.bitcoinj.crypto.KeyCrypter;
-import org.spongycastle.crypto.params.KeyParameter;
-
 import android.os.Handler;
 import android.os.Looper;
+import de.schildbach.wallet.Constants;
+import org.bitcoinj.crypto.KeyCrypter;
+import org.bitcoinj.crypto.KeyCrypterScrypt;
+import org.bitcoinj.wallet.Wallet;
+import org.bouncycastle.crypto.params.KeyParameter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 
 /**
  * @author Andreas Schildbach
  */
-public abstract class DeriveKeyTask
-{
-	private final Handler backgroundHandler;
-	private final Handler callbackHandler;
+public abstract class DeriveKeyTask {
+    private final Handler backgroundHandler;
+    private final Handler callbackHandler;
+    private final int scryptIterationsTarget;
 
-	public DeriveKeyTask(final Handler backgroundHandler)
-	{
-		this.backgroundHandler = backgroundHandler;
-		this.callbackHandler = new Handler(Looper.myLooper());
-	}
+    private static final Logger log = LoggerFactory.getLogger(DeriveKeyTask.class);
 
-	public final void deriveKey(final KeyCrypter keyCrypter, final String password)
-	{
-		backgroundHandler.post(new Runnable()
-		{
-			@Override
-			public void run()
-			{
-				final KeyParameter encryptionKey = keyCrypter.deriveKey(password); // takes time
+    public DeriveKeyTask(final Handler backgroundHandler, final int scryptIterationsTarget) {
+        this.backgroundHandler = backgroundHandler;
+        this.callbackHandler = new Handler(Looper.myLooper());
+        this.scryptIterationsTarget = scryptIterationsTarget;
+    }
 
-				callbackHandler.post(new Runnable()
-				{
-					@Override
-					public void run()
-					{
-						onSuccess(encryptionKey);
-					}
-				});
-			}
-		});
-	}
+    public final void deriveKey(final Wallet wallet, final String password) {
+        checkState(wallet.isEncrypted());
+        final KeyCrypter keyCrypter = checkNotNull(wallet.getKeyCrypter());
 
-	protected abstract void onSuccess(KeyParameter encryptionKey);
+        backgroundHandler.post(() -> {
+            org.bitcoinj.core.Context.propagate(Constants.CONTEXT);
+
+            // Key derivation takes time.
+            KeyParameter key = keyCrypter.deriveKey(password);
+            boolean wasChanged = false;
+
+            // If the key isn't derived using the desired parameters, derive a new key.
+            if (keyCrypter instanceof KeyCrypterScrypt) {
+                final long scryptIterations = ((KeyCrypterScrypt) keyCrypter).getScryptParameters().getN();
+
+                if (scryptIterations != scryptIterationsTarget) {
+                    log.info("upgrading scrypt iterations from {} to {}; re-encrypting wallet", scryptIterations,
+                            scryptIterationsTarget);
+
+                    final KeyCrypterScrypt newKeyCrypter = new KeyCrypterScrypt(scryptIterationsTarget);
+                    final KeyParameter newKey = newKeyCrypter.deriveKey(password);
+
+                    // Re-encrypt wallet with new key.
+                    try {
+                        wallet.changeEncryptionKey(newKeyCrypter, key, newKey);
+                        key = newKey;
+                        wasChanged = true;
+                        log.info("scrypt upgrade succeeded");
+                    } catch (final Wallet.BadWalletEncryptionKeyException x) {
+                        log.info("scrypt upgrade failed, bad spending password: {}", x.getMessage());
+                    }
+                }
+            }
+
+            // Hand back the (possibly changed) encryption key.
+            final KeyParameter keyToReturn = key;
+            final boolean keyToReturnWasChanged = wasChanged;
+            callbackHandler.post(() -> onSuccess(keyToReturn, keyToReturnWasChanged));
+        });
+    }
+
+    protected abstract void onSuccess(KeyParameter encryptionKey, boolean changed);
 }

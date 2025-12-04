@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2015 the original author or authors.
+ * Copyright the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -12,198 +12,218 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 package de.schildbach.wallet.util;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import android.content.Context;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.os.Parcelable;
-import android.support.v4.view.ViewPager.OnPageChangeListener;
 import android.util.AttributeSet;
 import android.view.View;
-import de.schildbach.wallet_test.R;
+import androidx.annotation.ColorInt;
+import androidx.viewpager2.widget.ViewPager2;
+import de.schildbach.wallet.R;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author Andreas Schildbach
  */
-public class ViewPagerTabs extends View implements OnPageChangeListener
-{
-	private final List<String> labels = new ArrayList<String>();
-	private final Paint paint = new Paint();
-	private int maxWidth = 0;
+public class ViewPagerTabs extends View {
+    public enum Mode { DYNAMIC, STATIC }
 
-	// instance state
-	private int pagePosition = 0;
-	private float pageOffset = 0;
+    private Mode mode = Mode.DYNAMIC;
+    private final List<String> labels = new ArrayList<>();
+    private final Paint paint = new Paint();
+    private int maxWidth = 0;
+    @ColorInt
+    private int textColor, selectedTextColor;
+    @ColorInt
+    private int indicatorColor;
 
-	public ViewPagerTabs(final Context context, final AttributeSet attrs)
-	{
-		super(context, attrs);
+    // instance state
+    private int pagePosition = 0;
+    private float pageOffset = 0;
 
-		setSaveEnabled(true);
+    public ViewPagerTabs(final Context context, final AttributeSet attrs) {
+        super(context, attrs);
 
-		paint.setTextSize(getResources().getDimension(R.dimen.font_size_tiny));
-		paint.setColor(Color.BLACK);
-		paint.setAntiAlias(true);
-		paint.setShadowLayer(2, 0, 0, Color.WHITE);
-	}
+        setSaveEnabled(true);
 
-	public void addTabLabels(final int... labelResId)
-	{
-		final Context context = getContext();
+        paint.setTextSize(getResources().getDimension(R.dimen.font_size_tiny));
+        paint.setAntiAlias(true);
 
-		paint.setTypeface(Typeface.DEFAULT_BOLD);
+        textColor = context.getColor(R.color.fg_less_significant);
+        selectedTextColor = context.getColor(R.color.fg_significant);
+        indicatorColor = context.getColor(R.color.bg_level2);
+    }
 
-		for (final int resId : labelResId)
-		{
-			final String label = context.getString(resId);
+    public void setMode(final Mode mode) {
+        this.mode = mode;
+        invalidate();
+    }
 
-			final int width = (int) paint.measureText(label);
+    public void addTabLabels(final int... labelResId) {
+        final Context context = getContext();
 
-			if (width > maxWidth)
-				maxWidth = width;
+        paint.setTypeface(Typeface.DEFAULT_BOLD);
 
-			labels.add(label);
-		}
-	}
+        for (final int resId : labelResId) {
+            final String label = context.getString(resId);
 
-	private final Path path = new Path();
+            final int width = (int) paint.measureText(label);
 
-	@Override
-	protected void onDraw(final Canvas canvas)
-	{
-		super.onDraw(canvas);
+            if (width > maxWidth)
+                maxWidth = width;
 
-		final int viewWidth = getWidth();
-		final int viewHalfWidth = viewWidth / 2;
-		final int viewBottom = getHeight();
+            labels.add(label);
+        }
+    }
 
-		final float density = getResources().getDisplayMetrics().density;
-		final float spacing = 32 * density;
+    private final Path path = new Path();
 
-		path.reset();
-		path.moveTo(viewHalfWidth, viewBottom - 5 * density);
-		path.lineTo(viewHalfWidth + 5 * density, viewBottom);
-		path.lineTo(viewHalfWidth - 5 * density, viewBottom);
-		path.close();
+    @Override
+    protected void onDraw(final Canvas canvas) {
+        super.onDraw(canvas);
+        if (mode == Mode.DYNAMIC)
+            drawDynamic(canvas);
+        else
+            drawStatic(canvas);
+    }
 
-		paint.setColor(Color.WHITE);
-		canvas.drawPath(path, paint);
+    private void drawDynamic(final Canvas canvas) {
+        final int viewWidth = getWidth() - getPaddingLeft() - getPaddingRight();
+        final int viewHalfWidth = getPaddingLeft() + viewWidth / 2;
+        final int viewBottom = getHeight();
 
-		paint.setTypeface(Typeface.DEFAULT_BOLD);
-		final float y = getPaddingTop() + -paint.getFontMetrics().top;
+        final float density = getResources().getDisplayMetrics().density;
+        final float spacing = 32 * density;
 
-		for (int i = 0; i < labels.size(); i++)
-		{
-			final String label = labels.get(i);
+        path.reset();
+        path.moveTo(viewHalfWidth, viewBottom - 5 * density);
+        path.lineTo(viewHalfWidth + 5 * density, viewBottom);
+        path.lineTo(viewHalfWidth - 5 * density, viewBottom);
+        path.close();
 
-			paint.setTypeface(i == pagePosition ? Typeface.DEFAULT_BOLD : Typeface.DEFAULT);
-			paint.setColor(i == pagePosition ? Color.BLACK : Color.DKGRAY);
+        paint.setColor(indicatorColor);
+        canvas.drawPath(path, paint);
 
-			final float x = viewHalfWidth + (maxWidth + spacing) * (i - pageOffset);
-			final float labelWidth = paint.measureText(label);
-			final float labelHalfWidth = labelWidth / 2;
+        paint.setTypeface(Typeface.DEFAULT_BOLD);
+        final float y = getPaddingTop() + -paint.getFontMetrics().top;
 
-			final float labelLeft = x - labelHalfWidth;
-			final float labelVisibleLeft = labelLeft >= 0 ? 1f : 1f - (-labelLeft / labelWidth);
+        for (int i = 0; i < labels.size(); i++) {
+            final String label = labels.get(i);
 
-			final float labelRight = x + labelHalfWidth;
-			final float labelVisibleRight = labelRight < viewWidth ? 1f : 1f - ((labelRight - viewWidth) / labelWidth);
+            paint.setTypeface(i == pagePosition ? Typeface.DEFAULT_BOLD : Typeface.DEFAULT);
+            paint.setColor(i == pagePosition ? selectedTextColor : textColor);
 
-			final float labelVisible = Math.min(labelVisibleLeft, labelVisibleRight);
+            final float x = viewHalfWidth + (maxWidth + spacing) * (i - pageOffset);
+            final float labelWidth = paint.measureText(label);
+            final float labelHalfWidth = labelWidth / 2;
 
-			paint.setAlpha((int) (labelVisible * 255));
+            final float labelLeft = x - labelHalfWidth;
+            final float labelVisibleLeft = labelLeft >= 0 ? 1f : 1f - (-labelLeft / labelWidth);
 
-			canvas.drawText(label, labelLeft, y, paint);
-		}
-	}
+            final float labelRight = x + labelHalfWidth;
+            final float labelVisibleRight = labelRight < viewWidth ? 1f : 1f - ((labelRight - viewWidth) / labelWidth);
 
-	@Override
-	protected void onMeasure(final int widthMeasureSpec, final int heightMeasureSpec)
-	{
-		final int widthMode = MeasureSpec.getMode(widthMeasureSpec);
-		final int widthSize = MeasureSpec.getSize(widthMeasureSpec);
+            final float labelVisible = Math.min(labelVisibleLeft, labelVisibleRight);
 
-		final int width;
-		if (widthMode == MeasureSpec.EXACTLY)
-			width = widthSize;
-		else if (widthMode == MeasureSpec.AT_MOST)
-			width = Math.min(getMeasuredWidth(), widthSize);
-		else
-			width = 0;
+            paint.setAlpha((int) (labelVisible * 255));
 
-		final int heightMode = MeasureSpec.getMode(heightMeasureSpec);
-		final int heightSize = MeasureSpec.getSize(heightMeasureSpec);
+            canvas.drawText(label, labelLeft, y, paint);
+        }
+    }
 
-		final int height;
-		if (heightMode == MeasureSpec.EXACTLY)
-			height = heightSize;
-		else if (heightMode == MeasureSpec.AT_MOST)
-			height = Math.min(getSuggestedMinimumHeight(), heightSize);
-		else
-			height = getSuggestedMinimumHeight();
+    private void drawStatic(final Canvas canvas) {
+        final int numLabels = labels.size();
+        final float labelWidth = (float) (getWidth() - getPaddingLeft() - getPaddingRight()) / numLabels;
+        final float leftPadding = getResources().getDimension(R.dimen.list_entry_padding_horizontal);
+        final float y = getPaddingTop() + -paint.getFontMetrics().top;
+        paint.setTypeface(Typeface.DEFAULT);
+        paint.setColor(textColor);
+        for (int i = 0; i < numLabels; i++)
+            canvas.drawText(labels.get(i), getPaddingLeft() + labelWidth * i + leftPadding, y, paint);
+    }
 
-		setMeasuredDimension(width, height);
-	}
+    @Override
+    protected void onMeasure(final int widthMeasureSpec, final int heightMeasureSpec) {
+        final int widthMode = MeasureSpec.getMode(widthMeasureSpec);
+        final int widthSize = MeasureSpec.getSize(widthMeasureSpec);
 
-	@Override
-	protected int getSuggestedMinimumHeight()
-	{
-		paint.setTypeface(Typeface.DEFAULT_BOLD);
-		return (int) (-paint.getFontMetrics().top + paint.getFontMetrics().bottom) + getPaddingTop() + getPaddingBottom();
-	}
+        final int width;
+        if (widthMode == MeasureSpec.EXACTLY)
+            width = widthSize;
+        else if (widthMode == MeasureSpec.AT_MOST)
+            width = Math.min(getMeasuredWidth(), widthSize);
+        else
+            width = 0;
 
-	@Override
-	public void onPageScrolled(final int position, final float positionOffset, final int positionOffsetPixels)
-	{
-		pageOffset = position + positionOffset;
-		invalidate();
-	}
+        final int heightMode = MeasureSpec.getMode(heightMeasureSpec);
+        final int heightSize = MeasureSpec.getSize(heightMeasureSpec);
 
-	@Override
-	public void onPageSelected(final int position)
-	{
-		pagePosition = position;
-		invalidate();
-	}
+        final int height;
+        if (heightMode == MeasureSpec.EXACTLY)
+            height = heightSize;
+        else if (heightMode == MeasureSpec.AT_MOST)
+            height = Math.min(getSuggestedMinimumHeight(), heightSize);
+        else
+            height = getSuggestedMinimumHeight();
 
-	@Override
-	public void onPageScrollStateChanged(final int state)
-	{
-	}
+        setMeasuredDimension(width, height);
+    }
 
-	@Override
-	public Parcelable onSaveInstanceState()
-	{
-		final Bundle state = new Bundle();
-		state.putParcelable("super_state", super.onSaveInstanceState());
-		state.putInt("page_position", pagePosition);
-		state.putFloat("page_offset", pageOffset);
-		return state;
-	}
+    @Override
+    protected int getSuggestedMinimumHeight() {
+        paint.setTypeface(Typeface.DEFAULT_BOLD);
+        return (int) (-paint.getFontMetrics().top + paint.getFontMetrics().bottom) + getPaddingTop()
+                + getPaddingBottom();
+    }
 
-	@Override
-	public void onRestoreInstanceState(final Parcelable state)
-	{
-		if (state instanceof Bundle)
-		{
-			Bundle bundle = (Bundle) state;
-			pagePosition = bundle.getInt("page_position");
-			pageOffset = bundle.getFloat("page_offset");
-			super.onRestoreInstanceState(bundle.getParcelable("super_state"));
-			return;
-		}
+    private final ViewPager2.OnPageChangeCallback pageChangeCallback = new ViewPager2.OnPageChangeCallback() {
+        @Override
+        public void onPageScrolled(final int position, final float positionOffset, final int positionOffsetPixels) {
+            pageOffset = position + positionOffset;
+            invalidate();
+        }
 
-		super.onRestoreInstanceState(state);
-	}
+        @Override
+        public void onPageSelected(final int position) {
+            pagePosition = position;
+            invalidate();
+        }
+    };
+
+    public ViewPager2.OnPageChangeCallback getPageChangeCallback() {
+        return pageChangeCallback;
+    }
+
+    @Override
+    public Parcelable onSaveInstanceState() {
+        final Bundle state = new Bundle();
+        state.putParcelable("super_state", super.onSaveInstanceState());
+        state.putInt("page_position", pagePosition);
+        state.putFloat("page_offset", pageOffset);
+        return state;
+    }
+
+    @Override
+    public void onRestoreInstanceState(final Parcelable state) {
+        if (state instanceof Bundle) {
+            Bundle bundle = (Bundle) state;
+            pagePosition = bundle.getInt("page_position");
+            pageOffset = bundle.getFloat("page_offset");
+            super.onRestoreInstanceState(bundle.getParcelable("super_state"));
+            return;
+        }
+
+        super.onRestoreInstanceState(state);
+    }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2015 the original author or authors.
+ * Copyright the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -12,55 +12,21 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 package de.schildbach.wallet.ui;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.RejectedExecutionException;
-
-import javax.annotation.Nullable;
-
-import org.bitcoinj.core.Address;
-import org.bitcoinj.core.Transaction;
-import org.bitcoinj.core.Transaction.Purpose;
-import org.bitcoinj.core.TransactionConfidence.ConfidenceType;
-import org.bitcoinj.core.Wallet;
-import org.bitcoinj.utils.Threading;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import android.app.Activity;
-import android.app.Fragment;
-import android.app.LoaderManager;
-import android.app.LoaderManager.LoaderCallbacks;
-import android.content.AsyncTaskLoader;
-import android.content.BroadcastReceiver;
-import android.content.ContentResolver;
+import android.app.admin.DevicePolicyManager;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.Loader;
-import android.content.SharedPreferences;
-import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
-import android.database.ContentObserver;
 import android.graphics.Bitmap;
 import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Handler;
-import android.support.v4.content.LocalBroadcastManager;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
+import android.provider.Settings;
 import android.text.SpannableStringBuilder;
-import android.text.format.DateUtils;
 import android.text.style.StyleSpan;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -68,462 +34,314 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.PopupMenu;
-import android.widget.PopupMenu.OnMenuItemClickListener;
 import android.widget.TextView;
 import android.widget.ViewAnimator;
-import de.schildbach.wallet.AddressBookProvider;
+import androidx.core.graphics.Insets;
+import androidx.core.view.MenuProvider;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.RecyclerView;
 import de.schildbach.wallet.Configuration;
 import de.schildbach.wallet.Constants;
+import de.schildbach.wallet.R;
 import de.schildbach.wallet.WalletApplication;
-import de.schildbach.wallet.util.BitmapFragment;
+import de.schildbach.wallet.addressbook.AddressBookDao;
+import de.schildbach.wallet.addressbook.AddressBookDatabase;
+import de.schildbach.wallet.ui.TransactionsAdapter.WarningType;
+import de.schildbach.wallet.ui.send.RaiseFeeDialogFragment;
 import de.schildbach.wallet.util.Qr;
-import de.schildbach.wallet.util.ThrottlingWalletChangeListener;
 import de.schildbach.wallet.util.WalletUtils;
-import de.schildbach.wallet_test.R;
+import org.bitcoinj.core.Address;
+import org.bitcoinj.core.Sha256Hash;
+import org.bitcoinj.core.Transaction;
+import org.bitcoinj.wallet.Wallet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Andreas Schildbach
  */
-public class WalletTransactionsFragment extends Fragment implements LoaderCallbacks<List<Transaction>>, TransactionsAdapter.OnClickListener,
-		OnSharedPreferenceChangeListener
-{
-	public enum Direction
-	{
-		RECEIVED, SENT
-	}
-
-	private AbstractWalletActivity activity;
-	private WalletApplication application;
-	private Configuration config;
-	private Wallet wallet;
-	private ContentResolver resolver;
-	private LoaderManager loaderManager;
-
-	private ViewAnimator viewGroup;
-	private TextView emptyView;
-	private RecyclerView recyclerView;
-	private TransactionsAdapter adapter;
-
-	@Nullable
-	private Direction direction;
-
-	private final Handler handler = new Handler();
-
-	private static final int ID_TRANSACTION_LOADER = 0;
-	private static final String ARG_DIRECTION = "direction";
-
-	private static final long THROTTLE_MS = DateUtils.SECOND_IN_MILLIS;
-	private static final Uri KEY_ROTATION_URI = Uri.parse("https://bitcoin.org/en/alert/2013-08-11-android");
-	private static final int SHOW_QR_THRESHOLD_BYTES = 2500;
-
-	private static final Logger log = LoggerFactory.getLogger(WalletTransactionsFragment.class);
-
-	private final ContentObserver addressBookObserver = new ContentObserver(handler)
-	{
-		@Override
-		public void onChange(final boolean selfChange)
-		{
-			adapter.clearCacheAndNotifyDataSetChanged();
-		}
-	};
-
-	@Override
-	public void onAttach(final Activity activity)
-	{
-		super.onAttach(activity);
-
-		this.activity = (AbstractWalletActivity) activity;
-		this.application = (WalletApplication) activity.getApplication();
-		this.config = application.getConfiguration();
-		this.wallet = application.getWallet();
-		this.resolver = activity.getContentResolver();
-		this.loaderManager = getLoaderManager();
-	}
-
-	@Override
-	public void onCreate(final Bundle savedInstanceState)
-	{
-		super.onCreate(savedInstanceState);
-
-		setRetainInstance(true);
-		setHasOptionsMenu(true);
-
-		adapter = new TransactionsAdapter(activity, wallet, true, application.maxConnectedPeers(), this);
-
-		this.direction = null;
-	}
-
-	@Override
-	public View onCreateView(final LayoutInflater inflater, final ViewGroup container, final Bundle savedInstanceState)
-	{
-		final View view = inflater.inflate(R.layout.wallet_transactions_fragment, container, false);
-
-		viewGroup = (ViewAnimator) view.findViewById(R.id.wallet_transactions_group);
-
-		emptyView = (TextView) view.findViewById(R.id.wallet_transactions_empty);
-
-		recyclerView = (RecyclerView) view.findViewById(R.id.wallet_transactions_list);
-		recyclerView.setHasFixedSize(true);
-		recyclerView.setLayoutManager(new LinearLayoutManager(activity));
-		recyclerView.setAdapter(adapter);
-		recyclerView.addItemDecoration(new RecyclerView.ItemDecoration()
-		{
-			private final int PADDING = 2 * activity.getResources().getDimensionPixelOffset(R.dimen.card_padding_vertical);
-
-			@Override
-			public void getItemOffsets(final Rect outRect, final View view, final RecyclerView parent, final RecyclerView.State state)
-			{
-				super.getItemOffsets(outRect, view, parent, state);
-
-				final int position = parent.getChildAdapterPosition(view);
-				if (position == 0)
-					outRect.top += PADDING;
-				else if (position == parent.getAdapter().getItemCount() - 1)
-					outRect.bottom += PADDING;
-			}
-		});
-
-		return view;
-	}
-
-	@Override
-	public void onResume()
-	{
-		super.onResume();
-
-		resolver.registerContentObserver(AddressBookProvider.contentUri(activity.getPackageName()), true, addressBookObserver);
-
-		config.registerOnSharedPreferenceChangeListener(this);
-
-		final Bundle args = new Bundle();
-		args.putSerializable(ARG_DIRECTION, direction);
-		loaderManager.initLoader(ID_TRANSACTION_LOADER, args, this);
-
-		wallet.addEventListener(transactionChangeListener, Threading.SAME_THREAD);
-
-		updateView();
-	}
-
-	@Override
-	public void onPause()
-	{
-		wallet.removeEventListener(transactionChangeListener);
-		transactionChangeListener.removeCallbacks();
-
-		loaderManager.destroyLoader(ID_TRANSACTION_LOADER);
-
-		config.unregisterOnSharedPreferenceChangeListener(this);
-
-		resolver.unregisterContentObserver(addressBookObserver);
-
-		super.onPause();
-	}
-
-	@Override
-	public void onCreateOptionsMenu(final Menu menu, final MenuInflater inflater)
-	{
-		inflater.inflate(R.menu.wallet_transactions_fragment_options, menu);
-
-		super.onCreateOptionsMenu(menu, inflater);
-	}
-
-	@Override
-	public void onPrepareOptionsMenu(final Menu menu)
-	{
-		if (direction == null)
-			menu.findItem(R.id.wallet_transactions_options_filter_all).setChecked(true);
-		else if (direction == Direction.RECEIVED)
-			menu.findItem(R.id.wallet_transactions_options_filter_received).setChecked(true);
-		else if (direction == Direction.SENT)
-			menu.findItem(R.id.wallet_transactions_options_filter_sent).setChecked(true);
-
-		super.onPrepareOptionsMenu(menu);
-	}
-
-	@Override
-	public boolean onOptionsItemSelected(final MenuItem item)
-	{
-		final int itemId = item.getItemId();
-		if (itemId == R.id.wallet_transactions_options_filter_all)
-			direction = null;
-		else if (itemId == R.id.wallet_transactions_options_filter_received)
-			direction = Direction.RECEIVED;
-		else if (itemId == R.id.wallet_transactions_options_filter_sent)
-			direction = Direction.SENT;
-		else
-			return false;
-
-		item.setChecked(true);
-
-		final Bundle args = new Bundle();
-		args.putSerializable(ARG_DIRECTION, direction);
-		loaderManager.restartLoader(ID_TRANSACTION_LOADER, args, this);
-
-		return true;
-	}
-
-	@Override
-	public void onTransactionMenuClick(final View view, final Transaction tx)
-	{
-		final boolean txSent = tx.getValue(wallet).signum() < 0;
-		final Address txAddress = txSent ? WalletUtils.getToAddressOfSent(tx, wallet) : WalletUtils.getWalletAddressOfReceived(tx, wallet);
-		final byte[] txSerialized = tx.unsafeBitcoinSerialize();
-		final boolean txRotation = tx.getPurpose() == Purpose.KEY_ROTATION;
-
-		final PopupMenu popupMenu = new PopupMenu(activity, view);
-		popupMenu.inflate(R.menu.wallet_transactions_context);
-		final MenuItem editAddressMenuItem = popupMenu.getMenu().findItem(R.id.wallet_transactions_context_edit_address);
-		if (!txRotation && txAddress != null)
-		{
-			editAddressMenuItem.setVisible(true);
-			final boolean isAdd = AddressBookProvider.resolveLabel(activity, txAddress.toString()) == null;
-			final boolean isOwn = wallet.isPubKeyHashMine(txAddress.getHash160());
-
-			if (isOwn)
-				editAddressMenuItem.setTitle(isAdd ? R.string.edit_address_book_entry_dialog_title_add_receive
-						: R.string.edit_address_book_entry_dialog_title_edit_receive);
-			else
-				editAddressMenuItem.setTitle(isAdd ? R.string.edit_address_book_entry_dialog_title_add
-						: R.string.edit_address_book_entry_dialog_title_edit);
-		}
-		else
-		{
-			editAddressMenuItem.setVisible(false);
-		}
-
-		popupMenu.getMenu().findItem(R.id.wallet_transactions_context_show_qr)
-				.setVisible(!txRotation && txSerialized.length < SHOW_QR_THRESHOLD_BYTES);
-		popupMenu.setOnMenuItemClickListener(new OnMenuItemClickListener()
-		{
-			@Override
-			public boolean onMenuItemClick(final MenuItem item)
-			{
-				switch (item.getItemId())
-				{
-					case R.id.wallet_transactions_context_edit_address:
-						handleEditAddress(tx);
-						return true;
-
-					case R.id.wallet_transactions_context_show_qr:
-						handleShowQr();
-						return true;
-
-					case R.id.wallet_transactions_context_browse:
-						if (!txRotation)
-							startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(Constants.EXPLORE_BASE_URL + "tx/" + tx.getHashAsString())));
-						else
-							startActivity(new Intent(Intent.ACTION_VIEW, KEY_ROTATION_URI));
-						return true;
-				}
-				return false;
-			}
-
-			private void handleEditAddress(final Transaction tx)
-			{
-				EditAddressBookEntryFragment.edit(getFragmentManager(), txAddress);
-			}
-
-			private void handleShowQr()
-			{
-				final int size = getResources().getDimensionPixelSize(R.dimen.bitmap_dialog_qr_size);
-				final Bitmap qrCodeBitmap = Qr.bitmap(Qr.encodeCompressBinary(txSerialized), size);
-				BitmapFragment.show(getFragmentManager(), qrCodeBitmap);
-			}
-		});
-		popupMenu.show();
-	}
-
-	@Override
-	public void onWarningClick()
-	{
-		((WalletActivity) activity).handleBackupWallet();
-	}
-
-	@Override
-	public Loader<List<Transaction>> onCreateLoader(final int id, final Bundle args)
-	{
-		return new TransactionsLoader(activity, wallet, (Direction) args.getSerializable(ARG_DIRECTION));
-	}
-
-	@Override
-	public void onLoadFinished(final Loader<List<Transaction>> loader, final List<Transaction> transactions)
-	{
-		final Direction direction = ((TransactionsLoader) loader).getDirection();
-
-		adapter.replace(transactions);
-
-		if (transactions.isEmpty())
-		{
-			viewGroup.setDisplayedChild(1);
-
-			final SpannableStringBuilder emptyText = new SpannableStringBuilder(
-					getString(direction == Direction.SENT ? R.string.wallet_transactions_fragment_empty_text_sent
-							: R.string.wallet_transactions_fragment_empty_text_received));
-			emptyText.setSpan(new StyleSpan(Typeface.BOLD), 0, emptyText.length(), SpannableStringBuilder.SPAN_POINT_MARK);
-			if (direction != Direction.SENT)
-				emptyText.append("\n\n").append(getString(R.string.wallet_transactions_fragment_empty_text_howto));
-			emptyView.setText(emptyText);
-		}
-		else
-		{
-			viewGroup.setDisplayedChild(2);
-		}
-	}
-
-	@Override
-	public void onLoaderReset(final Loader<List<Transaction>> loader)
-	{
-		// don't clear the adapter, because it will confuse users
-	}
-
-	private final ThrottlingWalletChangeListener transactionChangeListener = new ThrottlingWalletChangeListener(THROTTLE_MS)
-	{
-		@Override
-		public void onThrottledWalletChanged()
-		{
-			adapter.notifyDataSetChanged();
-		}
-	};
-
-	private static class TransactionsLoader extends AsyncTaskLoader<List<Transaction>>
-	{
-		private LocalBroadcastManager broadcastManager;
-		private final Wallet wallet;
-		@Nullable
-		private final Direction direction;
-
-		private TransactionsLoader(final Context context, final Wallet wallet, @Nullable final Direction direction)
-		{
-			super(context);
-
-			this.broadcastManager = LocalBroadcastManager.getInstance(context.getApplicationContext());
-			this.wallet = wallet;
-			this.direction = direction;
-		}
-
-		public @Nullable Direction getDirection()
-		{
-			return direction;
-		}
-
-		@Override
-		protected void onStartLoading()
-		{
-			super.onStartLoading();
-
-			wallet.addEventListener(transactionAddRemoveListener, Threading.SAME_THREAD);
-			broadcastManager.registerReceiver(walletChangeReceiver, new IntentFilter(WalletApplication.ACTION_WALLET_REFERENCE_CHANGED));
-			transactionAddRemoveListener.onReorganize(null); // trigger at least one reload
-
-			safeForceLoad();
-		}
-
-		@Override
-		protected void onStopLoading()
-		{
-			broadcastManager.unregisterReceiver(walletChangeReceiver);
-			wallet.removeEventListener(transactionAddRemoveListener);
-			transactionAddRemoveListener.removeCallbacks();
-
-			super.onStopLoading();
-		}
-
-		@Override
-		protected void onReset()
-		{
-			broadcastManager.unregisterReceiver(walletChangeReceiver);
-			wallet.removeEventListener(transactionAddRemoveListener);
-			transactionAddRemoveListener.removeCallbacks();
-
-			super.onReset();
-		}
-
-		@Override
-		public List<Transaction> loadInBackground()
-		{
-			final Set<Transaction> transactions = wallet.getTransactions(true);
-			final List<Transaction> filteredTransactions = new ArrayList<Transaction>(transactions.size());
-
-			for (final Transaction tx : transactions)
-			{
-				final boolean sent = tx.getValue(wallet).signum() < 0;
-				final boolean isInternal = tx.getPurpose() == Purpose.KEY_ROTATION;
-
-				if ((direction == Direction.RECEIVED && !sent && !isInternal) || direction == null
-						|| (direction == Direction.SENT && sent && !isInternal))
-					filteredTransactions.add(tx);
-			}
-
-			Collections.sort(filteredTransactions, TRANSACTION_COMPARATOR);
-
-			return filteredTransactions;
-		}
-
-		private final ThrottlingWalletChangeListener transactionAddRemoveListener = new ThrottlingWalletChangeListener(THROTTLE_MS, true, true, false)
-		{
-			@Override
-			public void onThrottledWalletChanged()
-			{
-				safeForceLoad();
-			}
-		};
-
-		private final BroadcastReceiver walletChangeReceiver = new BroadcastReceiver()
-		{
-			@Override
-			public void onReceive(final Context context, final Intent intent)
-			{
-				safeForceLoad();
-			}
-		};
-
-		private void safeForceLoad()
-		{
-			try
-			{
-				forceLoad();
-			}
-			catch (final RejectedExecutionException x)
-			{
-				log.info("rejected execution: " + TransactionsLoader.this.toString());
-			}
-		}
-
-		private static final Comparator<Transaction> TRANSACTION_COMPARATOR = new Comparator<Transaction>()
-		{
-			@Override
-			public int compare(final Transaction tx1, final Transaction tx2)
-			{
-				final boolean pending1 = tx1.getConfidence().getConfidenceType() == ConfidenceType.PENDING;
-				final boolean pending2 = tx2.getConfidence().getConfidenceType() == ConfidenceType.PENDING;
-
-				if (pending1 != pending2)
-					return pending1 ? -1 : 1;
-
-				final Date updateTime1 = tx1.getUpdateTime();
-				final long time1 = updateTime1 != null ? updateTime1.getTime() : 0;
-				final Date updateTime2 = tx2.getUpdateTime();
-				final long time2 = updateTime2 != null ? updateTime2.getTime() : 0;
-
-				if (time1 != time2)
-					return time1 > time2 ? -1 : 1;
-
-				return tx1.getHash().compareTo(tx2.getHash());
-			}
-		};
-	}
-
-	@Override
-	public void onSharedPreferenceChanged(final SharedPreferences sharedPreferences, final String key)
-	{
-		if (Configuration.PREFS_KEY_BTC_PRECISION.equals(key) || Configuration.PREFS_KEY_REMIND_BACKUP.equals(key))
-			updateView();
-	}
-
-	private void updateView()
-	{
-		adapter.setFormat(config.getFormat());
-		adapter.setShowBackupWarning(config.remindBackup());
-	}
+public class WalletTransactionsFragment extends Fragment implements TransactionsAdapter.OnClickListener,
+        TransactionsAdapter.ContextMenuCallback {
+    private AbstractWalletActivity activity;
+    private WalletApplication application;
+    private Configuration config;
+    private FragmentManager fragmentManager;
+    private AddressBookDao addressBookDao;
+    private DevicePolicyManager devicePolicyManager;
+
+    private ViewAnimator viewGroup;
+    private TextView emptyView;
+    private RecyclerView recyclerView;
+    private TransactionsAdapter adapter;
+    private MenuItem filterMenuItem;
+
+    private WalletActivityViewModel activityViewModel;
+    private WalletTransactionsViewModel viewModel;
+
+    private static final int SHOW_QR_THRESHOLD_BYTES = 2500;
+
+    private static final Logger log = LoggerFactory.getLogger(WalletTransactionsFragment.class);
+
+    @Override
+    public void onAttach(final Context context) {
+        super.onAttach(context);
+        this.activity = (AbstractWalletActivity) context;
+        this.application = activity.getWalletApplication();
+        this.config = application.getConfiguration();
+        this.addressBookDao = AddressBookDatabase.getDatabase(context).addressBookDao();
+        this.devicePolicyManager = application.getSystemService(DevicePolicyManager.class);
+    }
+
+    @Override
+    public void onCreate(final Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        this.fragmentManager = getChildFragmentManager();
+
+        activityViewModel = new ViewModelProvider(activity).get(WalletActivityViewModel.class);
+        viewModel = new ViewModelProvider(this).get(WalletTransactionsViewModel.class);
+
+        viewModel.direction.observe(this, direction -> activity.invalidateOptionsMenu());
+        viewModel.transactions.observe(this, transactions -> {
+            if (transactions.isEmpty()) {
+                viewGroup.setDisplayedChild(0);
+
+                final WalletTransactionsViewModel.Direction direction = viewModel.direction.getValue();
+                final WarningType warning = viewModel.warning.getValue();
+                final SpannableStringBuilder emptyText = new SpannableStringBuilder(
+                        getString(direction == WalletTransactionsViewModel.Direction.SENT
+                                ? R.string.wallet_transactions_fragment_empty_text_sent
+                                : R.string.wallet_transactions_fragment_empty_text_received));
+                emptyText.setSpan(new StyleSpan(Typeface.BOLD), 0, emptyText.length(),
+                        SpannableStringBuilder.SPAN_POINT_MARK);
+                if (direction != WalletTransactionsViewModel.Direction.SENT)
+                    emptyText.append("\n\n")
+                            .append(getString(R.string.wallet_transactions_fragment_empty_text_howto));
+                if (warning == WarningType.BACKUP) {
+                    final int start = emptyText.length();
+                    emptyText.append("\n\n")
+                            .append(getString(R.string.wallet_transactions_fragment_empty_remind_backup));
+                    emptyText.setSpan(new StyleSpan(Typeface.BOLD), start, emptyText.length(),
+                            SpannableStringBuilder.SPAN_POINT_MARK);
+                }
+                emptyView.setText(emptyText);
+            } else {
+                viewGroup.setDisplayedChild(1);
+            }
+        });
+        viewModel.selectedTransaction.observe(this, transactionId -> {
+            adapter.setSelectedTransaction(transactionId);
+            final int position = adapter.positionOf(transactionId);
+            if (position != RecyclerView.NO_POSITION)
+                recyclerView.smoothScrollToPosition(position);
+        });
+        viewModel.list.observe(this, listItems -> {
+            adapter.submitList(listItems);
+            activityViewModel.transactionsLoadingFinished();
+        });
+        viewModel.showBitmapDialog.observe(this, new Event.Observer<Bitmap>() {
+            @Override
+            protected void onEvent(final Bitmap bitmap) {
+                BitmapFragment.show(fragmentManager, bitmap);
+            }
+        });
+        viewModel.showEditAddressBookEntryDialog.observe(this, new Event.Observer<Address>() {
+            @Override
+            protected void onEvent(final Address address) {
+                EditAddressBookEntryFragment.edit(fragmentManager, address);
+            }
+        });
+        viewModel.showReportIssueDialog.observe(this, new Event.Observer<Sha256Hash>() {
+            @Override
+            protected void onEvent(final Sha256Hash transactionHash) {
+                ReportIssueDialogFragment.show(fragmentManager, R.string.report_issue_dialog_title_transaction,
+                        R.string.report_issue_dialog_message_issue, Constants.REPORT_SUBJECT_ISSUE, transactionHash);
+            }
+        });
+
+        adapter = new TransactionsAdapter(activity, this, this);
+
+        activity.addMenuProvider(new MenuProvider() {
+            @Override
+            public void onCreateMenu(final Menu menu, final MenuInflater inflater) {
+                inflater.inflate(R.menu.wallet_transactions_fragment_options, menu);
+                filterMenuItem = menu.findItem(R.id.wallet_transactions_options_filter);
+            }
+
+            @Override
+            public void onPrepareMenu(final Menu menu) {
+                final WalletTransactionsViewModel.Direction direction = viewModel.direction.getValue();
+                if (direction == null) {
+                    menu.findItem(R.id.wallet_transactions_options_filter_all).setChecked(true);
+                    filterMenuItem.setIcon(R.drawable.ic_filter_list_white_24dp);
+                } else if (direction == WalletTransactionsViewModel.Direction.RECEIVED) {
+                    menu.findItem(R.id.wallet_transactions_options_filter_received).setChecked(true);
+                    filterMenuItem.setIcon(R.drawable.transactions_list_filter_received);
+                } else if (direction == WalletTransactionsViewModel.Direction.SENT) {
+                    menu.findItem(R.id.wallet_transactions_options_filter_sent).setChecked(true);
+                    filterMenuItem.setIcon(R.drawable.transactions_list_filter_sent);
+                }
+            }
+
+            @Override
+            public boolean onMenuItemSelected(final MenuItem item) {
+                final int itemId = item.getItemId();
+                if (itemId == R.id.wallet_transactions_options_filter_all) {
+                    viewModel.setDirection(null);
+                    filterMenuItem.setIcon(R.drawable.ic_filter_list_white_24dp);
+                    return true;
+                } else if (itemId == R.id.wallet_transactions_options_filter_received) {
+                    viewModel.setDirection(WalletTransactionsViewModel.Direction.RECEIVED);
+                    filterMenuItem.setIcon(R.drawable.transactions_list_filter_received);
+                    return true;
+                } else if (itemId == R.id.wallet_transactions_options_filter_sent) {
+                    viewModel.setDirection(WalletTransactionsViewModel.Direction.SENT);
+                    filterMenuItem.setIcon(R.drawable.transactions_list_filter_sent);
+                    return true;
+                }
+                return false;
+            }
+        });
+    }
+
+    @Override
+    public View onCreateView(final LayoutInflater inflater, final ViewGroup container,
+            final Bundle savedInstanceState) {
+        final View view = inflater.inflate(R.layout.wallet_transactions_fragment, container, false);
+
+        viewGroup = view.findViewById(R.id.wallet_transactions_group);
+
+        emptyView = view.findViewById(R.id.wallet_transactions_empty);
+
+        recyclerView = view.findViewById(R.id.wallet_transactions_list);
+        recyclerView.setHasFixedSize(true);
+        recyclerView.setLayoutManager(new StickToTopLinearLayoutManager(activity));
+        recyclerView.setAdapter(adapter);
+        recyclerView.addItemDecoration(new RecyclerView.ItemDecoration() {
+            private final int PADDING = 2
+                    * activity.getResources().getDimensionPixelOffset(R.dimen.card_margin_vertical);
+
+            @Override
+            public void getItemOffsets(final Rect outRect, final View view, final RecyclerView parent,
+                    final RecyclerView.State state) {
+                super.getItemOffsets(outRect, view, parent, state);
+
+                final int position = parent.getChildAdapterPosition(view);
+                if (position == 0)
+                    outRect.top += PADDING;
+                else if (position == parent.getAdapter().getItemCount() - 1)
+                    outRect.bottom += PADDING;
+            }
+        });
+        ViewCompat.setOnApplyWindowInsetsListener(recyclerView, (v, windowInsets) -> {
+            final Insets insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
+            final boolean hasBottomBar = !getResources().getBoolean(R.bool.wallet_actions_top);
+            v.setPadding(v.getPaddingLeft(), v.getPaddingTop(), v.getPaddingRight(), hasBottomBar ?
+                    v.getPaddingBottom() : insets.bottom);
+            return windowInsets;
+        });
+
+        return view;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        viewModel.setWarning(warning());
+    }
+
+    @Override
+    public void onTransactionClick(final View view, final Sha256Hash transactionId) {
+        viewModel.selectedTransaction.setValue(transactionId);
+    }
+
+    @Override
+    public void onInflateTransactionContextMenu(final MenuInflater inflater, final Menu menu,
+                                                final Sha256Hash transactionId) {
+        final Wallet wallet = viewModel.wallet.getValue();
+        final Transaction tx = wallet.getTransaction(transactionId);
+        final boolean txSent = tx.getValue(wallet).signum() < 0;
+        final Address txAddress = txSent ? WalletUtils.getToAddressOfSent(tx, wallet)
+                : WalletUtils.getWalletAddressOfReceived(tx, wallet);
+        final byte[] txSerialized = tx.unsafeBitcoinSerialize();
+
+        inflater.inflate(R.menu.wallet_transactions_context, menu);
+        final MenuItem editAddressMenuItem = menu
+                .findItem(R.id.wallet_transactions_context_edit_address);
+        if (txAddress != null) {
+            editAddressMenuItem.setVisible(true);
+            final boolean isAdd = addressBookDao.resolveLabel(txAddress.toString()) == null;
+            final boolean isOwn = wallet.isAddressMine(txAddress);
+
+            if (isOwn)
+                editAddressMenuItem.setTitle(isAdd ? R.string.edit_address_book_entry_dialog_title_add_receive
+                        : R.string.edit_address_book_entry_dialog_title_edit_receive);
+            else
+                editAddressMenuItem.setTitle(isAdd ? R.string.edit_address_book_entry_dialog_title_add
+                        : R.string.edit_address_book_entry_dialog_title_edit);
+        } else {
+            editAddressMenuItem.setVisible(false);
+        }
+
+        menu.findItem(R.id.wallet_transactions_context_show_qr)
+                .setVisible(txSerialized.length < SHOW_QR_THRESHOLD_BYTES);
+        menu.findItem(R.id.wallet_transactions_context_raise_fee)
+                .setVisible(RaiseFeeDialogFragment.feeCanLikelyBeRaised(wallet, tx));
+        menu.findItem(R.id.wallet_transactions_context_browse).setVisible(Constants.ENABLE_BROWSE);
+    }
+
+    @Override
+    public boolean onClickTransactionContextMenuItem(final MenuItem item, final Sha256Hash transactionId) {
+        final Wallet wallet = viewModel.wallet.getValue();
+        final Transaction tx = wallet.getTransaction(transactionId);
+        final int itemId = item.getItemId();
+        if (itemId == R.id.wallet_transactions_context_edit_address) {
+            final boolean txSent = tx.getValue(wallet).signum() < 0;
+            final Address txAddress = txSent ? WalletUtils.getToAddressOfSent(tx, wallet)
+                    : WalletUtils.getWalletAddressOfReceived(tx, wallet);
+            viewModel.showEditAddressBookEntryDialog.setValue(new Event<>(txAddress));
+            return true;
+        } else if (itemId == R.id.wallet_transactions_context_show_qr) {
+            final byte[] txSerialized = tx.unsafeBitcoinSerialize();
+            final Bitmap qrCodeBitmap = Qr.bitmap(Qr.encodeCompressBinary(txSerialized));
+            viewModel.showBitmapDialog.setValue(new Event<>(qrCodeBitmap));
+            return true;
+        } else if (itemId == R.id.wallet_transactions_context_raise_fee) {
+            RaiseFeeDialogFragment.show(fragmentManager, transactionId);
+            return true;
+        } else if (itemId == R.id.wallet_transactions_context_report_issue) {
+            viewModel.showReportIssueDialog.setValue(new Event<>(transactionId));
+            return true;
+        } else if (itemId == R.id.wallet_transactions_context_browse) {
+            final Uri blockExplorerUri = config.getBlockExplorer();
+            log.info("Viewing transaction {} on {}", transactionId, blockExplorerUri);
+            activity.startExternalDocument(Uri.withAppendedPath(blockExplorerUri, "tx/" + transactionId.toString()));
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    @Override
+    public void onWarningClick(final View view, final TransactionsAdapter.WarningType warning) {
+        if (warning == TransactionsAdapter.WarningType.BACKUP)
+            activityViewModel.showBackupWalletDialog.setValue(Event.simple());
+        else if (warning == TransactionsAdapter.WarningType.STORAGE_ENCRYPTION)
+            startActivity(new Intent(Settings.ACTION_SECURITY_SETTINGS));
+    }
+
+    private TransactionsAdapter.WarningType warning() {
+        if (config.remindBackup())
+            return TransactionsAdapter.WarningType.BACKUP;
+
+        final int storageEncryptionStatus = devicePolicyManager.getStorageEncryptionStatus();
+        if (storageEncryptionStatus == DevicePolicyManager.ENCRYPTION_STATUS_INACTIVE
+                || storageEncryptionStatus == DevicePolicyManager.ENCRYPTION_STATUS_ACTIVE_DEFAULT_KEY)
+            return TransactionsAdapter.WarningType.STORAGE_ENCRYPTION;
+
+        return null;
+    }
 }

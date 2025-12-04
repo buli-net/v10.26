@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 the original author or authors.
+ * Copyright the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -12,94 +12,80 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 package de.schildbach.wallet.ui;
 
-import org.bitcoinj.core.Transaction;
-import org.bitcoinj.core.VerificationException;
-import org.bitcoinj.core.VersionedChecksummedBytes;
-
-import android.app.Activity;
-import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
-import android.content.Intent;
 import android.os.Bundle;
-import de.schildbach.wallet.WalletApplication;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.lifecycle.ViewModelProvider;
+import de.schildbach.wallet.Constants;
 import de.schildbach.wallet.data.PaymentIntent;
 import de.schildbach.wallet.ui.InputParser.StringInputParser;
+import de.schildbach.wallet.ui.scan.ScanActivity;
 import de.schildbach.wallet.ui.send.SendCoinsActivity;
 import de.schildbach.wallet.ui.send.SweepWalletActivity;
+import org.bitcoinj.core.PrefixedChecksummedBytes;
+import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.VerificationException;
 
 /**
  * @author Andreas Schildbach
  */
-public final class SendCoinsQrActivity extends Activity
-{
-	private static final int REQUEST_CODE_SCAN = 0;
+public final class SendCoinsQrActivity extends AbstractWalletActivity {
+    private AbstractWalletActivityViewModel walletActivityViewModel;
 
-	@Override
-	protected void onCreate(final Bundle savedInstanceState)
-	{
-		super.onCreate(savedInstanceState);
+    private final ActivityResultLauncher<Void> scanLauncher =
+            registerForActivityResult(new ScanActivity.Scan(), input -> {
+                if (input != null) {
+                    new StringInputParser(input) {
+                        @Override
+                        protected void handlePaymentIntent(final PaymentIntent paymentIntent) {
+                            SendCoinsActivity.start(SendCoinsQrActivity.this, paymentIntent);
+                            SendCoinsQrActivity.this.finish();
+                        }
 
-		startActivityForResult(new Intent(this, ScanActivity.class), REQUEST_CODE_SCAN);
-	}
+                        @Override
+                        protected void handlePrivateKey(final PrefixedChecksummedBytes key) {
+                            if (Constants.ENABLE_SWEEP_WALLET) {
+                                SweepWalletActivity.start(SendCoinsQrActivity.this, key);
+                                SendCoinsQrActivity.this.finish();
+                            } else {
+                                super.handlePrivateKey(key);
+                            }
+                        }
 
-	@Override
-	public void onActivityResult(final int requestCode, final int resultCode, final Intent intent)
-	{
-		if (requestCode == REQUEST_CODE_SCAN && resultCode == Activity.RESULT_OK)
-		{
-			final String input = intent.getStringExtra(ScanActivity.INTENT_EXTRA_RESULT);
+                        @Override
+                        protected void handleDirectTransaction(final Transaction transaction) throws VerificationException {
+                            walletActivityViewModel.broadcastTransaction(transaction);
+                            SendCoinsQrActivity.this.finish();
+                        }
 
-			new StringInputParser(input)
-			{
-				@Override
-				protected void handlePaymentIntent(final PaymentIntent paymentIntent)
-				{
-					SendCoinsActivity.start(SendCoinsQrActivity.this, paymentIntent);
+                        @Override
+                        protected void error(final int messageResId, final Object... messageArgs) {
+                            final DialogBuilder dialog = DialogBuilder.dialog(SendCoinsQrActivity.this, 0,
+                                    messageResId, messageArgs);
+                            dialog.singleDismissButton(dismissListener);
+                            dialog.show();
+                        }
 
-					SendCoinsQrActivity.this.finish();
-				}
+                        private final OnClickListener dismissListener =
+                                (dialog, which) -> SendCoinsQrActivity.this.finish();
+                    }.parse();
+                } else {
+                    finish();
+                }
+            });
 
-				@Override
-				protected void handlePrivateKey(final VersionedChecksummedBytes key)
-				{
-					SweepWalletActivity.start(SendCoinsQrActivity.this, key);
+    @Override
+    protected void onCreate(final Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
 
-					SendCoinsQrActivity.this.finish();
-				}
+        walletActivityViewModel = new ViewModelProvider(this).get(AbstractWalletActivityViewModel.class);
 
-				@Override
-				protected void handleDirectTransaction(final Transaction transaction) throws VerificationException
-				{
-					final WalletApplication application = (WalletApplication) getApplication();
-					application.processDirectTransaction(transaction);
-
-					SendCoinsQrActivity.this.finish();
-				}
-
-				@Override
-				protected void error(final int messageResId, final Object... messageArgs)
-				{
-					dialog(SendCoinsQrActivity.this, dismissListener, 0, messageResId, messageArgs);
-				}
-
-				private final OnClickListener dismissListener = new OnClickListener()
-				{
-					@Override
-					public void onClick(final DialogInterface dialog, final int which)
-					{
-						SendCoinsQrActivity.this.finish();
-					}
-				};
-			}.parse();
-		}
-		else
-		{
-			finish();
-		}
-	}
+        if (savedInstanceState == null)
+            scanLauncher.launch(null);
+    }
 }

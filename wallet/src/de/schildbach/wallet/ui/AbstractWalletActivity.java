@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2015 the original author or authors.
+ * Copyright the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -12,37 +12,61 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 package de.schildbach.wallet.ui;
 
+import android.app.ActivityManager.TaskDescription;
+import android.content.ActivityNotFoundException;
+import android.content.Intent;
+import android.net.Uri;
+import android.os.Bundle;
+import android.view.MenuItem;
+import androidx.fragment.app.FragmentActivity;
+import de.schildbach.wallet.R;
+import de.schildbach.wallet.WalletApplication;
+import de.schildbach.wallet.util.Toast;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import android.app.Activity;
-import android.os.Bundle;
-import de.schildbach.wallet.WalletApplication;
 
 /**
  * @author Andreas Schildbach
  */
-public abstract class AbstractWalletActivity extends Activity
-{
-	private WalletApplication application;
+public abstract class AbstractWalletActivity extends FragmentActivity {
+    private WalletApplication application;
 
-	protected static final Logger log = LoggerFactory.getLogger(AbstractWalletActivity.class);
+    protected static final Logger log = LoggerFactory.getLogger(AbstractWalletActivity.class);
 
-	@Override
-	protected void onCreate(final Bundle savedInstanceState)
-	{
-		application = (WalletApplication) getApplication();
+    @Override
+    protected void onCreate(final Bundle savedInstanceState) {
+        application = (WalletApplication) getApplication();
+        setTaskDescription(new TaskDescription(null, null, getColor(R.color.bg_action_bar)));
+        super.onCreate(savedInstanceState);
+    }
 
-		super.onCreate(savedInstanceState);
-	}
+    public WalletApplication getWalletApplication() {
+        return application;
+    }
 
-	protected WalletApplication getWalletApplication()
-	{
-		return application;
-	}
+    @Override
+    public boolean onOptionsItemSelected(final MenuItem item) {
+        if (item.getItemId() == android.R.id.home) {
+            onBackPressed();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    public void startExternalDocument(final Uri url) {
+        try {
+            startActivity(new Intent(Intent.ACTION_VIEW, url));
+        } catch (final ActivityNotFoundException x) {
+            log.info("Cannot view " + url, x);
+            new Toast(this).longToast(R.string.toast_start_external_document_failed);
+        } catch (final Exception x) {
+            log.info("Cannot view " + url, x);
+            new Toast(this).longToast(getString(R.string.toast_start_external_document_error, x.getClass().getName()));
+        }
+    }
 }

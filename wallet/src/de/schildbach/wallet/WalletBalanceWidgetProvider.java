@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2015 the original author or authors.
+ * Copyright the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -12,20 +12,10 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 package de.schildbach.wallet;
-
-import java.lang.reflect.Method;
-
-import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.Wallet;
-import org.bitcoinj.core.Wallet.BalanceType;
-import org.bitcoinj.utils.Fiat;
-import org.bitcoinj.utils.MonetaryFormat;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
@@ -33,162 +23,170 @@ import android.appwidget.AppWidgetProvider;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.database.Cursor;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.text.Spannable;
+import android.text.Spanned;
 import android.text.style.ForegroundColorSpan;
+import android.text.style.StrikethroughSpan;
 import android.view.View;
 import android.widget.RemoteViews;
-import de.schildbach.wallet.ExchangeRatesProvider.ExchangeRate;
+import androidx.annotation.Nullable;
+import de.schildbach.wallet.exchangerate.ExchangeRateEntry;
+import de.schildbach.wallet.exchangerate.ExchangeRatesRepository;
 import de.schildbach.wallet.ui.RequestCoinsActivity;
 import de.schildbach.wallet.ui.SendCoinsQrActivity;
 import de.schildbach.wallet.ui.WalletActivity;
 import de.schildbach.wallet.ui.send.SendCoinsActivity;
 import de.schildbach.wallet.util.GenericUtils;
 import de.schildbach.wallet.util.MonetarySpannable;
-import de.schildbach.wallet_test.R;
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.NetworkParameters;
+import org.bitcoinj.utils.ContextPropagatingThreadFactory;
+import org.bitcoinj.utils.ExchangeRate;
+import org.bitcoinj.utils.Fiat;
+import org.bitcoinj.utils.MonetaryFormat;
+import org.bitcoinj.wallet.Wallet.BalanceType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.lang.reflect.Method;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 /**
  * @author Andreas Schildbach
  */
-public class WalletBalanceWidgetProvider extends AppWidgetProvider
-{
-	private static final Logger log = LoggerFactory.getLogger(WalletBalanceWidgetProvider.class);
+public class WalletBalanceWidgetProvider extends AppWidgetProvider {
+    private final Executor executor = Executors.newSingleThreadExecutor(new ContextPropagatingThreadFactory("appwidget"));
 
-	@Override
-	public void onUpdate(final Context context, final AppWidgetManager appWidgetManager, final int[] appWidgetIds)
-	{
-		final WalletApplication application = (WalletApplication) context.getApplicationContext();
-		final Coin balance = application.getWallet().getBalance(BalanceType.ESTIMATED);
+    private static final StrikethroughSpan STRIKE_THRU_SPAN = new StrikethroughSpan();
 
-		updateWidgets(context, appWidgetManager, appWidgetIds, balance);
-	}
+    private static final Logger log = LoggerFactory.getLogger(WalletBalanceWidgetProvider.class);
 
-	@Override
-	public void onAppWidgetOptionsChanged(final Context context, final AppWidgetManager appWidgetManager, final int appWidgetId,
-			final Bundle newOptions)
-	{
-		if (newOptions != null)
-			log.info("app widget {} options changed: minWidth={}", appWidgetId, newOptions.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH));
+    @Override
+    public void onUpdate(final Context context, final AppWidgetManager appWidgetManager, final int[] appWidgetIds) {
+        final PendingResult result = goAsync();
+        executor.execute(() -> {
+            final WalletApplication application = (WalletApplication) context.getApplicationContext();
+            final Coin balance = application.getWallet().getBalance(BalanceType.ESTIMATED);
+            final Configuration config = application.getConfiguration();
+            final ExchangeRatesRepository exchangeRatesRepository = ExchangeRatesRepository.get(application);
+            final ExchangeRateEntry exchangeRate = config.isEnableExchangeRates() ?
+                    exchangeRatesRepository.exchangeRateDao().findByCurrencyCode(config.getExchangeCurrencyCode()) : null;
+            updateWidgets(context, appWidgetManager, appWidgetIds, balance, exchangeRate != null ?
+                    exchangeRate.exchangeRate() : null);
+            result.finish();
+        });
+    }
 
-		final WalletApplication application = (WalletApplication) context.getApplicationContext();
-		final Coin balance = application.getWallet().getBalance(BalanceType.ESTIMATED);
+    @Override
+    public void onAppWidgetOptionsChanged(final Context context, final AppWidgetManager appWidgetManager,
+            final int appWidgetId, final Bundle newOptions) {
+        if (newOptions != null)
+            log.info("app widget {} options changed: minWidth={}", appWidgetId,
+                    newOptions.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH));
+        final PendingResult result = goAsync();
+        executor.execute(() -> {
+            final WalletApplication application = (WalletApplication) context.getApplicationContext();
+            final Coin balance = application.getWallet().getBalance(BalanceType.ESTIMATED);
+            final Configuration config = application.getConfiguration();
+            final ExchangeRatesRepository exchangeRatesRepository = ExchangeRatesRepository.get(application);
+            final ExchangeRateEntry exchangeRate = config.isEnableExchangeRates() ?
+                    exchangeRatesRepository.exchangeRateDao().findByCurrencyCode(config.getExchangeCurrencyCode()) : null;
+            updateWidget(context, appWidgetManager, appWidgetId, newOptions, balance, exchangeRate != null ?
+                    exchangeRate.exchangeRate() : null);
+            result.finish();
+        });
+    }
 
-		updateWidget(context, appWidgetManager, appWidgetId, newOptions, balance);
-	}
+    public static void updateWidgets(final Context context, final Coin balance,
+            final @Nullable ExchangeRate exchangeRate) {
+        final AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
+        final ComponentName providerName = new ComponentName(context, WalletBalanceWidgetProvider.class);
 
-	public static void updateWidgets(final Context context, final Wallet wallet)
-	{
-		final AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
-		final ComponentName providerName = new ComponentName(context, WalletBalanceWidgetProvider.class);
+        try {
+            final int[] appWidgetIds = appWidgetManager.getAppWidgetIds(providerName);
+            if (appWidgetIds.length > 0)
+                WalletBalanceWidgetProvider.updateWidgets(context, appWidgetManager, appWidgetIds, balance,
+                        exchangeRate);
+        } catch (final RuntimeException x) // system server dead?
+        {
+            log.warn("cannot update app widgets", x);
+        }
+    }
 
-		try
-		{
-			final int[] appWidgetIds = appWidgetManager.getAppWidgetIds(providerName);
+    private static void updateWidgets(final Context context, final AppWidgetManager appWidgetManager,
+            final int[] appWidgetIds, final Coin balance, final @Nullable ExchangeRate exchangeRate) {
+        for (final int appWidgetId : appWidgetIds) {
+            final Bundle options = getAppWidgetOptions(appWidgetManager, appWidgetId);
+            updateWidget(context, appWidgetManager, appWidgetId, options, balance, exchangeRate);
+        }
+    }
 
-			if (appWidgetIds.length > 0)
-			{
-				final Coin balance = wallet.getBalance(BalanceType.ESTIMATED);
-				WalletBalanceWidgetProvider.updateWidgets(context, appWidgetManager, appWidgetIds, balance);
-			}
-		}
-		catch (final RuntimeException x) // system server dead?
-		{
-			log.warn("cannot update app widgets", x);
-		}
-	}
+    private static void updateWidget(final Context context, final AppWidgetManager appWidgetManager,
+            final int appWidgetId, final Bundle appWidgetOptions, final Coin balance,
+            final @Nullable ExchangeRate exchangeRate) {
+        final WalletApplication application = (WalletApplication) context.getApplicationContext();
+        final Configuration config = application.getConfiguration();
+        final MonetaryFormat btcFormat = config.getFormat();
 
-	private static void updateWidgets(final Context context, final AppWidgetManager appWidgetManager, final int[] appWidgetIds, final Coin balance)
-	{
-		for (final int appWidgetId : appWidgetIds)
-		{
-			final Bundle options = getAppWidgetOptions(appWidgetManager, appWidgetId);
-			updateWidget(context, appWidgetManager, appWidgetId, options, balance);
-		}
-	}
+        final Spannable balanceStr = new MonetarySpannable(btcFormat.noCode(), balance).applyMarkup(null,
+                MonetarySpannable.STANDARD_INSIGNIFICANT_SPANS);
+        final Spannable localBalanceStr;
+        if (exchangeRate != null) {
+            final Fiat localBalance = exchangeRate.coinToFiat(balance);
+            final MonetaryFormat localFormat = Constants.LOCAL_FORMAT.code(0,
+                    Constants.PREFIX_ALMOST_EQUAL_TO + GenericUtils.currencySymbol(exchangeRate.fiat.currencyCode));
+            final Object[] prefixSpans = new Object[] { MonetarySpannable.SMALLER_SPAN,
+                    new ForegroundColorSpan(context.getColor(R.color.fg_insignificant_darkdefault)) };
+            localBalanceStr = new MonetarySpannable(localFormat, localBalance).applyMarkup(prefixSpans,
+                    MonetarySpannable.STANDARD_INSIGNIFICANT_SPANS);
+            if (!Constants.NETWORK_PARAMETERS.getId().equals(NetworkParameters.ID_MAINNET))
+                localBalanceStr.setSpan(STRIKE_THRU_SPAN, 0, localBalanceStr.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        } else {
+            localBalanceStr = null;
+        }
 
-	private static void updateWidget(final Context context, final AppWidgetManager appWidgetManager, final int appWidgetId,
-			final Bundle appWidgetOptions, final Coin balance)
-	{
-		final Configuration config = new Configuration(PreferenceManager.getDefaultSharedPreferences(context));
-		final MonetaryFormat btcFormat = config.getFormat();
+        final RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.wallet_balance_widget_content);
 
-		final Spannable balanceStr = new MonetarySpannable(btcFormat.noCode(), balance).applyMarkup(null,
-				MonetarySpannable.STANDARD_INSIGNIFICANT_SPANS);
+        final String currencyCode = btcFormat.code();
+        if (MonetaryFormat.CODE_BTC.equals(currencyCode))
+            views.setImageViewResource(R.id.widget_wallet_prefix, R.drawable.currency_symbol_btc);
+        else if (MonetaryFormat.CODE_MBTC.equals(currencyCode))
+            views.setImageViewResource(R.id.widget_wallet_prefix, R.drawable.currency_symbol_mbtc);
+        else if (MonetaryFormat.CODE_UBTC.equals(currencyCode))
+            views.setImageViewResource(R.id.widget_wallet_prefix, R.drawable.currency_symbol_ubtc);
 
-		final Cursor data = context.getContentResolver().query(ExchangeRatesProvider.contentUri(context.getPackageName(), true), null,
-				ExchangeRatesProvider.KEY_CURRENCY_CODE, new String[] { config.getExchangeCurrencyCode() }, null);
-		final Spannable localBalanceStr;
-		if (data != null)
-		{
-			if (data.moveToFirst())
-			{
-				final ExchangeRate exchangeRate = ExchangeRatesProvider.getExchangeRate(data);
-				final Fiat localBalance = exchangeRate.rate.coinToFiat(balance);
-				final MonetaryFormat localFormat = Constants.LOCAL_FORMAT.code(0,
-						Constants.PREFIX_ALMOST_EQUAL_TO + GenericUtils.currencySymbol(exchangeRate.getCurrencyCode()));
-				final Object[] prefixSpans = new Object[] { MonetarySpannable.SMALLER_SPAN,
-						new ForegroundColorSpan(context.getResources().getColor(R.color.fg_less_significant)) };
-				localBalanceStr = new MonetarySpannable(localFormat, localBalance).applyMarkup(prefixSpans,
-						MonetarySpannable.STANDARD_INSIGNIFICANT_SPANS);
-			}
-			else
-			{
-				localBalanceStr = null;
-			}
+        views.setTextViewText(R.id.widget_wallet_balance_btc, balanceStr);
+        views.setViewVisibility(R.id.widget_wallet_balance_local, localBalanceStr != null ? View.VISIBLE : View.GONE);
+        views.setTextViewText(R.id.widget_wallet_balance_local, localBalanceStr);
 
-			data.close();
-		}
-		else
-		{
-			localBalanceStr = null;
-		}
+        if (appWidgetOptions != null) {
+            final int minWidth = appWidgetOptions.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH);
+            views.setViewVisibility(R.id.widget_app_icon, minWidth > 400 ? View.VISIBLE : View.GONE);
+            views.setViewVisibility(R.id.widget_button_request, minWidth > 300 ? View.VISIBLE : View.GONE);
+            views.setViewVisibility(R.id.widget_button_send, minWidth > 300 ? View.VISIBLE : View.GONE);
+            views.setViewVisibility(R.id.widget_button_send_qr, minWidth > 200 ? View.VISIBLE : View.GONE);
+        }
 
-		final RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.wallet_balance_widget_content);
+        views.setOnClickPendingIntent(R.id.widget_button_balance, PendingIntent.getActivity(context, 0,
+                new Intent(context, WalletActivity.class), PendingIntent.FLAG_IMMUTABLE));
+        views.setOnClickPendingIntent(R.id.widget_button_request, PendingIntent.getActivity(context, 0,
+                new Intent(context, RequestCoinsActivity.class), PendingIntent.FLAG_IMMUTABLE));
+        views.setOnClickPendingIntent(R.id.widget_button_send, PendingIntent.getActivity(context, 0,
+                new Intent(context, SendCoinsActivity.class), PendingIntent.FLAG_IMMUTABLE));
+        views.setOnClickPendingIntent(R.id.widget_button_send_qr, PendingIntent.getActivity(context, 0,
+                new Intent(context, SendCoinsQrActivity.class), PendingIntent.FLAG_IMMUTABLE));
 
-		final String currencyCode = btcFormat.code();
-		if (MonetaryFormat.CODE_BTC.equals(currencyCode))
-			views.setImageViewResource(R.id.widget_wallet_prefix, R.drawable.currency_symbol_btc);
-		else if (MonetaryFormat.CODE_MBTC.equals(currencyCode))
-			views.setImageViewResource(R.id.widget_wallet_prefix, R.drawable.currency_symbol_mbtc);
-		else if (MonetaryFormat.CODE_UBTC.equals(currencyCode))
-			views.setImageViewResource(R.id.widget_wallet_prefix, R.drawable.currency_symbol_ubtc);
+        appWidgetManager.updateAppWidget(appWidgetId, views);
+    }
 
-		views.setTextViewText(R.id.widget_wallet_balance_btc, balanceStr);
-		views.setViewVisibility(R.id.widget_wallet_balance_local, localBalanceStr != null ? View.VISIBLE : View.GONE);
-		views.setTextViewText(R.id.widget_wallet_balance_local, localBalanceStr);
-
-		if (appWidgetOptions != null)
-		{
-			final int minWidth = appWidgetOptions.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH);
-			views.setViewVisibility(R.id.widget_app_icon, minWidth > 400 ? View.VISIBLE : View.GONE);
-			views.setViewVisibility(R.id.widget_button_request, minWidth > 300 ? View.VISIBLE : View.GONE);
-			views.setViewVisibility(R.id.widget_button_send, minWidth > 300 ? View.VISIBLE : View.GONE);
-			views.setViewVisibility(R.id.widget_button_send_qr, minWidth > 200 ? View.VISIBLE : View.GONE);
-		}
-
-		views.setOnClickPendingIntent(R.id.widget_button_balance, PendingIntent.getActivity(context, 0, new Intent(context, WalletActivity.class), 0));
-		views.setOnClickPendingIntent(R.id.widget_button_request,
-				PendingIntent.getActivity(context, 0, new Intent(context, RequestCoinsActivity.class), 0));
-		views.setOnClickPendingIntent(R.id.widget_button_send, PendingIntent.getActivity(context, 0, new Intent(context, SendCoinsActivity.class), 0));
-		views.setOnClickPendingIntent(R.id.widget_button_send_qr,
-				PendingIntent.getActivity(context, 0, new Intent(context, SendCoinsQrActivity.class), 0));
-
-		appWidgetManager.updateAppWidget(appWidgetId, views);
-	}
-
-	private static Bundle getAppWidgetOptions(final AppWidgetManager appWidgetManager, final int appWidgetId)
-	{
-		try
-		{
-			final Method getAppWidgetOptions = AppWidgetManager.class.getMethod("getAppWidgetOptions", Integer.TYPE);
-			final Bundle options = (Bundle) getAppWidgetOptions.invoke(appWidgetManager, appWidgetId);
-			return options;
-		}
-		catch (final Exception x)
-		{
-			return null;
-		}
-	}
+    private static Bundle getAppWidgetOptions(final AppWidgetManager appWidgetManager, final int appWidgetId) {
+        try {
+            final Method getAppWidgetOptions = AppWidgetManager.class.getMethod("getAppWidgetOptions", Integer.TYPE);
+            return (Bundle) getAppWidgetOptions.invoke(appWidgetManager, appWidgetId);
+        } catch (final Exception x) {
+            return null;
+        }
+    }
 }

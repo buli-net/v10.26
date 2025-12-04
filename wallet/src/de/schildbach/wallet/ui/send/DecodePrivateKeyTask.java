@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2015 the original author or authors.
+ * Copyright the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -12,67 +12,41 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 package de.schildbach.wallet.ui.send;
 
-import org.bitcoinj.core.ECKey;
-import org.bitcoinj.crypto.BIP38PrivateKey;
-
 import android.os.Handler;
 import android.os.Looper;
+import org.bitcoinj.core.ECKey;
+import org.bitcoinj.crypto.BIP38PrivateKey;
 
 /**
  * @author Andreas Schildbach
  */
-public abstract class DecodePrivateKeyTask
-{
-	private final Handler backgroundHandler;
-	private final Handler callbackHandler;
+public abstract class DecodePrivateKeyTask {
+    private final Handler backgroundHandler;
+    private final Handler callbackHandler;
 
-	public DecodePrivateKeyTask(final Handler backgroundHandler)
-	{
-		this.backgroundHandler = backgroundHandler;
-		this.callbackHandler = new Handler(Looper.myLooper());
-	}
+    public DecodePrivateKeyTask(final Handler backgroundHandler) {
+        this.backgroundHandler = backgroundHandler;
+        this.callbackHandler = new Handler(Looper.myLooper());
+    }
 
-	public final void decodePrivateKey(final BIP38PrivateKey encryptedKey, final String passphrase)
-	{
-		backgroundHandler.post(new Runnable()
-		{
-			@Override
-			public void run()
-			{
-				try
-				{
-					final ECKey decryptedKey = encryptedKey.decrypt(passphrase); // takes time
+    public final void decodePrivateKey(final BIP38PrivateKey encryptedKey, final String passphrase) {
+        backgroundHandler.post(() -> {
+            try {
+                final ECKey decryptedKey = encryptedKey.decrypt(passphrase); // takes time
 
-					callbackHandler.post(new Runnable()
-					{
-						@Override
-						public void run()
-						{
-							onSuccess(decryptedKey);
-						}
-					});
-				}
-				catch (final BIP38PrivateKey.BadPassphraseException x)
-				{
-					callbackHandler.post(new Runnable()
-					{
-						@Override
-						public void run()
-						{
-							onBadPassphrase();
-						}
-					});
-				}
-			}
-		});
-	}
+                callbackHandler.post(() -> onSuccess(decryptedKey));
+            } catch (final BIP38PrivateKey.BadPassphraseException x) {
+                callbackHandler.post(() -> onBadPassphrase());
+            }
+        });
+    }
 
-	protected abstract void onSuccess(ECKey decryptedKey);
+    protected abstract void onSuccess(ECKey decryptedKey);
 
-	protected abstract void onBadPassphrase();
+    protected abstract void onBadPassphrase();
 }

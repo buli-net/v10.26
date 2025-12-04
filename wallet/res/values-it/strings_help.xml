@@ -3,27 +3,21 @@
   <string name="help_wallet">
 <![CDATA[
 		<p>
-			La parte in alto a sinistra dello schermo mostra gli indirizzo Bitcoin che le altre persone hanno bisogno per poterti inviare dei Bitcoin.
-			Premi per cambiare l\'indirizzo.
+			La parte in alto a sinistra dello schermo mostra il tuo saldo in Bitcoin e nella valuta nazionale selezionata.
+			Clicca per visualizzare la lista delle valute nazionali, e scegli una valuta per selezionarla come predefinita.
 		</p>
 		<p>
-			Il codice QR sulla destra contiene il tuo indirizzo Bitcoin e può essere usato per farlo leggere ad altri.
-			Premi sul codice per visualizzarne una versione più grande.
+			Il codice QR sulla destra contiene il vostro indirizzo Bitcoin e può essere utilizzato per la scansione da parte di un altro soggetto.
+			Tocca il codice QR per ingrandirlo.
 		</p>
 		<p>
-			Il tuo saldo viene visualizzato al centro dello schermo.
-			Il valore del tuo portafoglio viene anche mostrato nella tua valuta locale.
-			Premi sul saldo per visualizzare la lista di tutte le valute e scegliere quella di default.
+			La parte inferiore dello schermo è occupata dalla lista delle transazioni, inizialmente è vuota.
+			Le operazioni in sospeso sono visualizzate in grigio finché non vengono confermate.
+			Toccare un elemento della lista per aggiungere l\'indirizzo del mittente o del destinatario nella rubrica degli indirizzi.
 		</p>
 		<p>
-			In fondo allo schermo troverai la lista delle tue transazioni, inizialmente vuota.
-			Le transazioni da confermare saranno visualizzate in grigio finchè non confermate.
-			Premi su una di esse per aggiungere gli indirizzi mittente o destinazione nella rubrica.
-			Trascina a destra o sinistra per impostare dei filtri alla lista.
-		</p>
-		<p>
-			Puoi inviare o ricevere Bitcoins premendo i tasti nella barra delle azioni.
-			Sono disponibili ulteriori comandi nel menù opzioni.
+			È possibile inviare o ricevere Bitcoin cliccando i pulsanti nella barra delle azioni.
+			Ulteriori opzioni sono disponibili nel menu delle opzioni.
 		</p>
 	]]>
 	</string>
@@ -92,7 +86,7 @@
 			Eventuali Bitcoin non trasferiti saranno persi per sempre.
 		</p>
 		<p>
-			<b>I pagamenti non possono essere annullate</b>.
+			<b>I pagamenti non possono essere annullati</b>.
 			Se invi i tuoi Bitcoin ad indirizzi errati non c\'è modo di riaverli indietro
 			a meno che tu non conosca il ricevente e che sia disponibile a restituirli.
 		</p>
@@ -104,6 +98,23 @@
 		<p>
 			Tieni basso il rischio!
 			<b>Usa Bitcoin Wallet solo con piccoli importi</b> sufficienti per l\'uso quotidiano.
+		</p>
+	]]>
+	</string>
+  <string name="help_technical_notes">
+<![CDATA[
+		<p>
+			<b>Note tecniche:</b>
+		</p>
+		<p>
+			Come un portafoglio SPV/light, Bitcoin Wallet segue la catena della prova di lavoro a volte chiamata \"catena più lunga\", \"catena vincente\" o \"catena di blocchi Bitcoin\".
+			Riceverai pagamenti in entrata e sarai in grado di pagare solo su quella catena.
+			Non è possibile fornire garanzie sui Bitcoin sulle catene più corte, ovvero sulle catene con meno prova di lavoro.
+		</p>
+		<p>
+			In passato, le catene più sono sempre diventate irrilevanti molto rapidamente.
+			Se desideri seguire comunque una catena minore, ti consigliamo di utilizzare la funzione \"peer attendibile\" per connetterti esclusivamente ad un\'implementazione bitcoind che impone la catena desiderata.
+			Se la rete tra il tuo portafoglio e il peer attendibile non è affidabile, usa una VPN per autenticare quella connessione.
 		</p>
 	]]>
 	</string>

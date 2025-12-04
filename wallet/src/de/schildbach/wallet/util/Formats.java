@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2015 the original author or authors.
+ * Copyright the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -12,57 +12,45 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 package de.schildbach.wallet.util;
 
+import androidx.annotation.Nullable;
+import de.schildbach.wallet.Constants;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import javax.annotation.Nullable;
-
-import de.schildbach.wallet.Constants;
 
 /**
  * @author Andreas Schildbach
  */
-public final class Formats
-{
-	public static final Pattern PATTERN_MONETARY_SPANNABLE = Pattern.compile("(?:([\\p{Alpha}\\p{Sc}]++)\\s?+)?" // prefix
-			+ "([\\+\\-" + Constants.CURRENCY_PLUS_SIGN + Constants.CURRENCY_MINUS_SIGN + "]?+(?:\\d*+\\.\\d{0,2}+|\\d++))" // significant
-			+ "(\\d++)?"); // insignificant
+public final class Formats {
+    public static final Pattern PATTERN_WHITESPACE = Pattern.compile("\\s+");
+    public static final Pattern PATTERN_MONETARY_SPANNABLE = Pattern.compile("(?:([\\p{Alpha}\\p{Sc}]++)\\s?+)?" // prefix
+            + "([\\+\\-" + Constants.CURRENCY_PLUS_SIGN + Constants.CURRENCY_MINUS_SIGN
+            + "]?+(?:\\d*+\\.\\d{0,2}+|\\d++))" // significant
+            + "(\\d++)?"); // insignificant
+    public static int PATTERN_GROUP_PREFIX = 1; // optional
+    public static int PATTERN_GROUP_SIGNIFICANT = 2; // mandatory
+    public static int PATTERN_GROUP_INSIGNIFICANT = 3; // optional
 
-	public static int PATTERN_GROUP_PREFIX = 1; // optional
-	public static int PATTERN_GROUP_SIGNIFICANT = 2; // mandatory
-	public static int PATTERN_GROUP_INSIGNIFICANT = 3; // optional
+    private static final Pattern PATTERN_MEMO = Pattern.compile(
+            "(?:Payment request for Coinbase order code: (.+)|Payment request for BitPay invoice (.+) for merchant (.+))",
+            Pattern.CASE_INSENSITIVE);
 
-	private static final Pattern PATTERN_OUTER_HTML_PARAGRAPH = Pattern.compile("<p[^>]*>(.*)</p>\n?", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+    @Nullable
+    public static String[] sanitizeMemo(final @Nullable String memo) {
+        if (memo == null)
+            return null;
 
-	public static String maybeRemoveOuterHtmlParagraph(final CharSequence html)
-	{
-		final Matcher m = PATTERN_OUTER_HTML_PARAGRAPH.matcher(html);
-		if (m.matches())
-			return m.group(1);
-		else
-			return html.toString();
-	}
-
-	private static final Pattern PATTERN_MEMO = Pattern.compile(
-			"(?:Payment request for Coinbase order code: (.+)|Payment request for BitPay invoice (.+) for merchant (.+))", Pattern.CASE_INSENSITIVE);
-
-	@Nullable
-	public static String[] sanitizeMemo(final @Nullable String memo)
-	{
-		if (memo == null)
-			return null;
-
-		final Matcher m = PATTERN_MEMO.matcher(memo);
-		if (m.matches() && m.group(1) != null)
-			return new String[] { m.group(1) + " (via Coinbase)" };
-		else if (m.matches() && m.group(2) != null)
-			return new String[] { m.group(2) + " (via BitPay)", m.group(3) };
-		else
-			return new String[] { memo };
-	}
+        final Matcher m = PATTERN_MEMO.matcher(memo);
+        if (m.matches() && m.group(1) != null)
+            return new String[] { m.group(1) + " (via Coinbase)" };
+        else if (m.matches() && m.group(2) != null)
+            return new String[] { m.group(2) + " (via BitPay)", m.group(3) };
+        else
+            return new String[] { memo };
+    }
 }

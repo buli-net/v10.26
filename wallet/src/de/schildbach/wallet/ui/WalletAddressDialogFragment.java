@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 the original author or authors.
+ * Copyright the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -12,111 +12,108 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 package de.schildbach.wallet.ui;
 
-import org.bitcoinj.core.Address;
-
 import android.app.Activity;
 import android.app.Dialog;
-import android.app.DialogFragment;
-import android.app.FragmentManager;
-import android.content.Intent;
-import android.graphics.Bitmap;
+import android.content.Context;
+import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.view.Window;
 import android.widget.ImageView;
 import android.widget.TextView;
+import androidx.core.app.ShareCompat;
+import androidx.fragment.app.DialogFragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.lifecycle.ViewModelProvider;
 import de.schildbach.wallet.Constants;
+import de.schildbach.wallet.R;
 import de.schildbach.wallet.util.WalletUtils;
-import de.schildbach.wallet_test.R;
+import org.bitcoinj.core.Address;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Andreas Schildbach
  */
-public class WalletAddressDialogFragment extends DialogFragment
-{
-	private static final String FRAGMENT_TAG = WalletAddressDialogFragment.class.getName();
+public class WalletAddressDialogFragment extends DialogFragment {
+    private static final String FRAGMENT_TAG = WalletAddressDialogFragment.class.getName();
 
-	private static final String KEY_BITMAP = "bitmap";
-	private static final String KEY_ADDRESS = "address";
+    private ImageView imageView;
+    private TextView labelView;
+    private WalletAddressViewModel viewModel;
 
-	public static void show(final FragmentManager fm, final Bitmap bitmap, final Address address)
-	{
-		instance(bitmap, address).show(fm, FRAGMENT_TAG);
-	}
+    private static final Logger log = LoggerFactory.getLogger(WalletAddressDialogFragment.class);
 
-	private static WalletAddressDialogFragment instance(final Bitmap bitmap, final Address address)
-	{
-		final WalletAddressDialogFragment fragment = new WalletAddressDialogFragment();
+    public static void show(final FragmentManager fm) {
+        instance().show(fm, FRAGMENT_TAG);
+    }
 
-		final Bundle args = new Bundle();
-		args.putParcelable(KEY_BITMAP, bitmap);
-		args.putSerializable(KEY_ADDRESS, address);
-		fragment.setArguments(args);
+    private static WalletAddressDialogFragment instance() {
+        return new WalletAddressDialogFragment();
+    }
 
-		return fragment;
-	}
+    private Activity activity;
 
-	private Activity activity;
+    @Override
+    public void onAttach(final Context context) {
+        super.onAttach(context);
+        this.activity = (AbstractWalletActivity) context;
+    }
 
-	@Override
-	public void onAttach(final Activity activity)
-	{
-		super.onAttach(activity);
+    @Override
+    public void onCreate(final Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        log.info("opening dialog {}", getClass().getName());
 
-		this.activity = activity;
-	}
+        viewModel = new ViewModelProvider(getParentFragment()).get(WalletAddressViewModel.class);
+        viewModel.qrCode.observe(this, qrCode -> {
+            final BitmapDrawable qrDrawable = new BitmapDrawable(getResources(), qrCode);
+            qrDrawable.setFilterBitmap(false);
+            imageView.setImageDrawable(qrDrawable);
+        });
+        viewModel.currentAddress.observe(this, currentAddress -> {
+            final CharSequence label = WalletUtils.formatAddress(currentAddress, Constants.ADDRESS_FORMAT_GROUP_SIZE,
+                    Constants.ADDRESS_FORMAT_LINE_SIZE);
+            labelView.setText(label);
+        });
+    }
 
-	@Override
-	public Dialog onCreateDialog(final Bundle savedInstanceState)
-	{
-		final Bundle args = getArguments();
-		final Bitmap bitmap = (Bitmap) args.getParcelable(KEY_BITMAP);
-		final Address address = (Address) args.getSerializable(KEY_ADDRESS);
+    @Override
+    public Dialog onCreateDialog(final Bundle savedInstanceState) {
+        final Dialog dialog = new Dialog(activity);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.wallet_address_dialog);
+        dialog.setCanceledOnTouchOutside(true);
 
-		final Dialog dialog = new Dialog(activity);
-		dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-		dialog.setContentView(R.layout.wallet_address_dialog);
-		dialog.setCanceledOnTouchOutside(true);
+        imageView = dialog.findViewById(R.id.wallet_address_dialog_image);
+        labelView = dialog.findViewById(R.id.wallet_address_dialog_label);
 
-		final ImageView imageView = (ImageView) dialog.findViewById(R.id.wallet_address_dialog_image);
-		imageView.setImageBitmap(bitmap);
+        final View labelButtonView = dialog.findViewById(R.id.wallet_address_dialog_label_button);
+        labelButtonView.setVisibility(View.VISIBLE);
+        labelButtonView.setOnClickListener(v -> {
+            final Address address = viewModel.currentAddress.getValue();
+            if (address != null) {
+                final ShareCompat.IntentBuilder builder = ShareCompat.IntentBuilder.from(activity);
+                builder.setType("text/plain");
+                builder.setText(address.toString());
+                builder.setChooserTitle(R.string.bitmap_fragment_share);
+                builder.startChooser();
+                log.info("wallet address shared via intent: {}", address.toString());
+            }
+        });
 
-		final View labelButtonView = dialog.findViewById(R.id.wallet_address_dialog_label_button);
-		final TextView labelView = (TextView) dialog.findViewById(R.id.wallet_address_dialog_label);
-		final CharSequence label = WalletUtils.formatAddress(address, Constants.ADDRESS_FORMAT_GROUP_SIZE, Constants.ADDRESS_FORMAT_LINE_SIZE);
-		labelView.setText(label);
-		labelButtonView.setVisibility(View.VISIBLE);
-		labelButtonView.setOnClickListener(new OnClickListener()
-		{
-			@Override
-			public void onClick(final View v)
-			{
-				final Intent intent = new Intent(Intent.ACTION_SEND);
-				intent.setType("text/plain");
-				intent.putExtra(Intent.EXTRA_TEXT, address.toString());
-				startActivity(Intent.createChooser(intent, getString(R.string.bitmap_fragment_share)));
-			}
-		});
+        final View hintView = dialog.findViewById(R.id.wallet_address_dialog_hint);
+        hintView.setVisibility(
+                getResources().getBoolean(R.bool.show_wallet_address_dialog_hint) ? View.VISIBLE : View.GONE);
 
-		final View hintView = dialog.findViewById(R.id.wallet_address_dialog_hint);
-		hintView.setVisibility(getResources().getBoolean(R.bool.show_wallet_address_dialog_hint) ? View.VISIBLE : View.GONE);
+        final View dialogView = dialog.findViewById(R.id.wallet_address_dialog_group);
+        dialogView.setOnClickListener(v -> dismissAllowingStateLoss());
 
-		final View dialogView = dialog.findViewById(R.id.wallet_address_dialog_group);
-		dialogView.setOnClickListener(new View.OnClickListener()
-		{
-			@Override
-			public void onClick(final View v)
-			{
-				dismiss();
-			}
-		});
-
-		return dialog;
-	}
+        return dialog;
+    }
 }

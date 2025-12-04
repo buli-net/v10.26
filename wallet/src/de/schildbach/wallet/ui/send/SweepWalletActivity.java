@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2015 the original author or authors.
+ * Copyright the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -12,59 +12,59 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 package de.schildbach.wallet.ui.send;
 
-import org.bitcoinj.core.VersionedChecksummedBytes;
-
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
-import android.view.MenuItem;
-import de.schildbach.wallet.ui.AbstractBindServiceActivity;
-import de.schildbach.wallet_test.R;
+import android.widget.Toolbar;
+import androidx.activity.EdgeToEdge;
+import androidx.activity.SystemBarStyle;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
+import de.schildbach.wallet.R;
+import de.schildbach.wallet.service.BlockchainService;
+import de.schildbach.wallet.ui.AbstractWalletActivity;
+import org.bitcoinj.core.PrefixedChecksummedBytes;
 
 /**
  * @author Andreas Schildbach
  */
-public final class SweepWalletActivity extends AbstractBindServiceActivity
-{
-	public static final String INTENT_EXTRA_KEY = "sweep_key";
+public final class SweepWalletActivity extends AbstractWalletActivity {
+    public static final String INTENT_EXTRA_KEY = "sweep_key";
 
-	public static void start(final Context context)
-	{
-		context.startActivity(new Intent(context, SweepWalletActivity.class));
-	}
+    public static void start(final Context context) {
+        context.startActivity(new Intent(context, SweepWalletActivity.class));
+    }
 
-	public static void start(final Context context, final VersionedChecksummedBytes key)
-	{
-		final Intent intent = new Intent(context, SweepWalletActivity.class);
-		intent.putExtra(INTENT_EXTRA_KEY, key);
-		context.startActivity(intent);
-	}
+    public static void start(final Context context, final PrefixedChecksummedBytes key) {
+        final Intent intent = new Intent(context, SweepWalletActivity.class);
+        intent.putExtra(INTENT_EXTRA_KEY, key.toString());
+        context.startActivity(intent);
+    }
 
-	@Override
-	public void onCreate(final Bundle savedInstanceState)
-	{
-		super.onCreate(savedInstanceState);
+    @Override
+    public void onCreate(final Bundle savedInstanceState) {
+        EdgeToEdge.enable(this, SystemBarStyle.dark(getColor(R.color.bg_action_bar)),
+                SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT));
+        super.onCreate(savedInstanceState);
 
-		setContentView(R.layout.sweep_wallet_content);
+        setContentView(R.layout.sweep_wallet_content);
+        final Toolbar appbar = findViewById(R.id.sweep_wallet_appbar);
+        appbar.getNavigationIcon().setTint(getColor(R.color.fg_on_dark_bg_network_significant));
+        setActionBar(appbar);
+        getActionBar().setDisplayHomeAsUpEnabled(true);
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(android.R.id.content), (v, windowInsets) -> {
+            final Insets insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(v.getPaddingLeft(), insets.top, v.getPaddingRight(), v.getPaddingBottom());
+            return windowInsets;
+        });
 
-		getWalletApplication().startBlockchainService(false);
-	}
-
-	@Override
-	public boolean onOptionsItemSelected(final MenuItem item)
-	{
-		switch (item.getItemId())
-		{
-			case android.R.id.home:
-				finish();
-				return true;
-		}
-
-		return super.onOptionsItemSelected(item);
-	}
+        BlockchainService.start(this, false);
+    }
 }

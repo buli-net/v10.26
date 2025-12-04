@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2015 the original author or authors.
+ * Copyright the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -12,51 +12,98 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 package de.schildbach.wallet.ui;
 
+import android.content.Context;
+import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
-import de.schildbach.wallet_test.R;
+import android.widget.Toolbar;
+import androidx.activity.EdgeToEdge;
+import androidx.activity.SystemBarStyle;
+import androidx.annotation.Nullable;
+import androidx.core.graphics.Insets;
+import androidx.core.view.MenuProvider;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
+import androidx.lifecycle.ViewModelProvider;
+import de.schildbach.wallet.R;
+import org.bitcoinj.script.Script;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Andreas Schildbach
  */
-public final class RequestCoinsActivity extends AbstractBindServiceActivity
-{
-	@Override
-	protected void onCreate(final Bundle savedInstanceState)
-	{
-		super.onCreate(savedInstanceState);
+public final class RequestCoinsActivity extends AbstractWalletActivity {
+    public static final String INTENT_EXTRA_OUTPUT_SCRIPT_TYPE = "output_script_type";
 
-		setContentView(R.layout.request_coins_content);
-	}
+    public static void start(final Context context) {
+        start(context, null);
+    }
 
-	@Override
-	public boolean onCreateOptionsMenu(final Menu menu)
-	{
-		getMenuInflater().inflate(R.menu.request_coins_activity_options, menu);
+    public static void start(final Context context, final @Nullable Script.ScriptType outputScriptType) {
+        final Intent intent = new Intent(context, RequestCoinsActivity.class);
+        if (outputScriptType != null)
+            intent.putExtra(INTENT_EXTRA_OUTPUT_SCRIPT_TYPE, outputScriptType);
+        context.startActivity(intent);
+    }
 
-		return super.onCreateOptionsMenu(menu);
-	}
+    private RequestCoinsActivityViewModel viewModel;
 
-	@Override
-	public boolean onOptionsItemSelected(final MenuItem item)
-	{
-		switch (item.getItemId())
-		{
-			case android.R.id.home:
-				finish();
-				return true;
+    private static final Logger log = LoggerFactory.getLogger(RequestCoinsActivity.class);
 
-			case R.id.request_coins_options_help:
-				HelpDialogFragment.page(getFragmentManager(), R.string.help_request_coins);
-				return true;
-		}
+    @Override
+    protected void onCreate(final Bundle savedInstanceState) {
+        EdgeToEdge.enable(this, SystemBarStyle.dark(getColor(R.color.bg_action_bar)),
+                SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT));
+        super.onCreate(savedInstanceState);
+        log.info("Referrer: {}", getReferrer());
+        setContentView(R.layout.request_coins_content);
+        final Toolbar appbar = findViewById(R.id.request_coins_appbar);
+        appbar.getNavigationIcon().setTint(getColor(R.color.fg_on_dark_bg_network_significant));
+        setActionBar(appbar);
+        getActionBar().setDisplayHomeAsUpEnabled(true);
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(android.R.id.content), (v, windowInsets) -> {
+            final Insets insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
+            final boolean imeVisible = windowInsets.isVisible(WindowInsetsCompat.Type.ime());
+            v.setPadding(v.getPaddingLeft(), insets.top, v.getPaddingRight(),
+                    imeVisible ? windowInsets.getInsets(WindowInsetsCompat.Type.ime()).bottom : 0);
+            return windowInsets;
+        });
 
-		return super.onOptionsItemSelected(item);
-	}
+        viewModel = new ViewModelProvider(this).get(RequestCoinsActivityViewModel.class);
+        viewModel.showHelpDialog.observe(this, new Event.Observer<Integer>() {
+            @Override
+            protected void onEvent(final Integer messageResId) {
+                HelpDialogFragment.page(getSupportFragmentManager(), messageResId);
+            }
+        });
+
+        addMenuProvider(new MenuProvider() {
+            @Override
+            public void onCreateMenu(final Menu menu, final MenuInflater inflater) {
+                inflater.inflate(R.menu.request_coins_activity_options, menu);
+            }
+
+            @Override
+            public void onPrepareMenu(final Menu menu) {
+            }
+
+            @Override
+            public boolean onMenuItemSelected(final MenuItem item) {
+                if (item.getItemId() == R.id.request_coins_options_help) {
+                    viewModel.showHelpDialog.setValue(new Event<>(R.string.help_request_coins));
+                    return true;
+                }
+                return false;
+            }
+        });
+    }
 }

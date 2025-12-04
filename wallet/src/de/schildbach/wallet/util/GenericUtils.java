@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2015 the original author or authors.
+ * Copyright the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -12,7 +12,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 package de.schildbach.wallet.util;
@@ -22,23 +22,17 @@ import java.util.Currency;
 /**
  * @author Andreas Schildbach
  */
-public class GenericUtils
-{
-	public static boolean startsWithIgnoreCase(final String string, final String prefix)
-	{
-		return string.regionMatches(true, 0, prefix, 0, prefix.length());
-	}
+public class GenericUtils {
+    public static boolean startsWithIgnoreCase(final String string, final String prefix) {
+        return string.regionMatches(true, 0, prefix, 0, prefix.length());
+    }
 
-	public static String currencySymbol(final String currencyCode)
-	{
-		try
-		{
-			final Currency currency = Currency.getInstance(currencyCode);
-			return currency.getSymbol();
-		}
-		catch (final IllegalArgumentException x)
-		{
-			return currencyCode;
-		}
-	}
+    public static String currencySymbol(final String currencyCode) {
+        try {
+            final Currency currency = Currency.getInstance(currencyCode);
+            return currency.getSymbol();
+        } catch (final IllegalArgumentException x) {
+            return currencyCode;
+        }
+    }
 }
