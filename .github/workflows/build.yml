@@ -32,9 +32,9 @@ jobs:
           cat > ~/.gradle/init.d/force.gradle <<'EOF'
           allprojects {
             configurations.all {
+              exclude group: 'com.google.guava', module: 'listenablefuture'
               resolutionStrategy {
                 force 'com.google.guava:guava:31.1-android'
-                force 'com.google.guava:listenablefuture:1.0'
                 eachDependency { d ->
                   if (d.requested.group.startsWith('androidx.core')) { d.useVersion '1.12.0' }
                   if (d.requested.group == 'androidx.annotation' && d.requested.name == 'annotation') { d.useVersion '1.7.0' }
