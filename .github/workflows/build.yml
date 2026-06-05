@@ -8,13 +8,20 @@ jobs:
       - uses: actions/checkout@v4
         with: {ref: main, fetch-depth: 0}
 
-      - uses: actions/setup-java@v4
-        with: {distribution: temurin, java-version: '11'}
+      # 1. JDK 17 để sdkmanager chạy được
+      - name: Setup JDK 17 for SDK
+        uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: '17'}
 
       - name: Setup Android SDK 34 only
         uses: android-actions/setup-android@v3
         with:
           packages: 'platform-tools platforms;android-34 build-tools;34.0.0'
+
+      # 2. Hạ xuống JDK 11 để Gradle 6 build
+      - name: Setup JDK 11 for build
+        uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: '11'}
 
       - uses: gradle/actions/setup-gradle@v3
         with: {gradle-version: '6.9.4'}
@@ -36,7 +43,8 @@ jobs:
       - name: Build APK
         run: |
           export ANDROID_HOME=$ANDROID_SDK_ROOT
-          gradle :wallet:assembleProdDebug --no-daemon -Pandroid.buildToolsVersion=34.0.0 --stacktrace
+          export JAVA_HOME=$JAVA_HOME_11_X64
+          gradle :wallet:assembleProdDebug --no-daemon -Pandroid.buildToolsVersion=34.0.0
 
       - uses: actions/upload-artifact@v4
         with: {name: main-apk, path: wallet/build/outputs/apk/prod/debug/*.apk}
