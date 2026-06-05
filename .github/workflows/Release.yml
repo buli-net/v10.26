@@ -1,32 +1,31 @@
 name: Build Release
 on:
   workflow_dispatch:
+
 jobs:
   build:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: main
-          fetch-depth: 0
+        with: {ref: main, fetch-depth: 0}
+
       - name: Setup JDK 17 for SDK
         uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '17'
+        with: {distribution: temurin, java-version: '17'}
+
       - name: Setup Android SDK 34 only
         uses: android-actions/setup-android@v3
         with:
           packages: 'platform-tools platforms;android-34 build-tools;34.0.0'
+
       - name: Setup JDK 11 for build
         uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '11'
+        with: {distribution: temurin, java-version: '11'}
+
       - name: Setup Gradle 6.9.4
         uses: gradle/actions/setup-gradle@v3
-        with:
-          gradle-version: '6.9.4'
+        with: {gradle-version: '6.9.4'}
+
       - name: Force libs for Gradle 6
         run: |
           mkdir -p ~/.gradle/init.d
@@ -50,26 +49,38 @@ jobs:
                 }
               }
             }
+          }
           EOF
+
       - name: Build APK prodDebug
         run: |
           export ANDROID_HOME=$ANDROID_SDK_ROOT
           export JAVA_HOME=$JAVA_HOME_11_X64
-          gradle :wallet:assembleProdDebug --no-daemon -Pandroid.buildToolsVersion=34.0.0
+          gradle :wallet:assembleProdDebug --no-daemon -Pandroid.buildToolsVersion=34.0.0 --stacktrace
+
+      # ========== KÝ APK ==========
       - name: Decode Keystore
-        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > keystore.jks
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > keystore.jks
+
       - name: Sign APK with apksigner
         run: |
           APK_PATH=$(find wallet/build/outputs/apk/prod/debug -name "*.apk" | head -1)
-          $ANDROID_HOME/build-tools/34.0.0/apksigner sign --ks keystore.jks --ks-pass pass:${{ secrets.KEYSTORE_PASSWORD }} --ks-key-alias ${{ secrets.KEY_ALIAS }} --key-pass pass:${{ secrets.KEY_PASSWORD }} "$APK_PATH"
-      - name: Print certificate fingerprints
+          echo "Signing $APK_PATH"
+          $ANDROID_HOME/build-tools/34.0.0/apksigner sign \
+            --ks keystore.jks \
+            --ks-pass pass:${{ secrets.KEYSTORE_PASSWORD }} \
+            --ks-key-alias ${{ secrets.KEY_ALIAS }} \
+            --key-pass pass:${{ secrets.KEY_PASSWORD }} \
+            "$APK_PATH"
+
+      - name: Verify and print certificate (check signing key)
         run: |
           APK_PATH=$(find wallet/build/outputs/apk/prod/debug -name "*.apk" | head -1)
-          $ANDROID_HOME/build-tools/34.0.0/apksigner verify --print-certs "$APK_PATH"
-      - name: Verify signature
-        run: |
-          APK_PATH=$(find wallet/build/outputs/apk/prod/debug -name "*.apk" | head -1)
-          $ANDROID_HOME/build-tools/34.0.0/apksigner verify "$APK_PATH"
+          echo "=== APK Signature Verification ==="
+          $ANDROID_HOME/build-tools/34.0.0/apksigner verify --verbose --print-certs "$APK_PATH"
+      # =================================
+
       - uses: actions/upload-artifact@v4
         with:
           name: main-apk-signed
