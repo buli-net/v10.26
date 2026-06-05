@@ -1,40 +1,42 @@
 name: Build Bitcoin Wallet - main
 on:
   workflow_dispatch:
-
 jobs:
   build:
     runs-on: ubuntu-22.04
     steps:
-      - name: Checkout main
-        uses: actions/checkout@v4
-        with:
-          ref: main
-          fetch-depth: 0
+      - uses: actions/checkout@v4
+        with: {ref: main, fetch-depth: 0}
 
-      - name: Setup JDK 17 (main cần JDK 17)
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '17'
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: '11'}
 
-      - name: Setup Android SDK
+      - name: Setup Android SDK 34 only
         uses: android-actions/setup-android@v3
         with:
-          packages: 'platform-tools platforms;android-34 platforms;android-35 build-tools;35.0.0 build-tools;34.0.0'
+          packages: 'platform-tools platforms;android-34 build-tools;34.0.0'
 
-      - name: Setup Gradle 8
-        uses: gradle/actions/setup-gradle@v3
-        with:
-          gradle-version: '8.7'
+      - uses: gradle/actions/setup-gradle@v3
+        with: {gradle-version: '6.9.4'}
 
-      - name: Build APK prodDebug
+      - name: Force libs for Gradle 6
+        run: |
+          mkdir -p ~/.gradle/init.d
+          cat > ~/.gradle/init.d/force.gradle <<'EOF'
+          allprojects {
+            configurations.all {
+              resolutionStrategy {
+                force 'com.google.guava:guava:31.1-android'
+                force 'com.google.guava:listenablefuture:1.0'
+              }
+            }
+          }
+          EOF
+
+      - name: Build APK
         run: |
           export ANDROID_HOME=$ANDROID_SDK_ROOT
-          gradle :wallet:assembleProdDebug --no-daemon --stacktrace
+          gradle :wallet:assembleProdDebug --no-daemon -Pandroid.buildToolsVersion=34.0.0 --stacktrace
 
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: bitcoin-wallet-main-apk
-          path: wallet/build/outputs/apk/prod/debug/*.apk
+      - uses: actions/upload-artifact@v4
+        with: {name: main-apk, path: wallet/build/outputs/apk/prod/debug/*.apk}
