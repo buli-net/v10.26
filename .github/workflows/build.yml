@@ -1,17 +1,18 @@
-name: Build Bitcoin APK
+name: build
 on:
   workflow_dispatch:
-
 jobs:
   build:
     runs-on: ubuntu-22.04
     steps:
-      - name: Checkout
+      - name: Checkout code gốc v10.10
         uses: actions/checkout@v4
         with:
+          repository: bitcoin-wallet/bitcoin-wallet
+          ref: v10.10
           fetch-depth: 0
 
-      - name: Kiểm tra có gradlew không
+      - name: Xem file (phải thấy gradlew)
         run: ls -la
 
       - name: Setup JDK 17
