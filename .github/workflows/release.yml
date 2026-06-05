@@ -49,23 +49,19 @@ jobs:
                 }
               }
             }
-          }
           EOF
 
       - name: Build APK prodDebug
         run: |
           export ANDROID_HOME=$ANDROID_SDK_ROOT
           export JAVA_HOME=$JAVA_HOME_11_X64
-          gradle :wallet:assembleProdDebug --no-daemon -Pandroid.buildToolsVersion=34.0.0 --stacktrace
+          gradle :wallet:assembleProdDebug --no-daemon -Pandroid.buildToolsVersion=34.0.0
 
-      # ========== THÊM BƯỚC KÝ APK ==========
       - name: Decode Keystore
-        run: |
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > keystore.jks
+        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > keystore.jks
 
       - name: Sign APK with apksigner
         run: |
-          # Tìm file APK vừa build (prodDebug)
           APK_PATH=$(find wallet/build/outputs/apk/prod/debug -name "*.apk" | head -1)
           echo "Signing $APK_PATH"
           $ANDROID_HOME/build-tools/34.0.0/apksigner sign \
@@ -75,21 +71,18 @@ jobs:
             --key-pass pass:${{ secrets.KEY_PASSWORD }} \
             "$APK_PATH"
 
+      # ==== THÊM VÀO ĐÂY ====
+      - name: Print certificate fingerprints
+        run: |
+          APK_PATH=$(find wallet/build/outputs/apk/prod/debug -name "*.apk" | head -1)
+          echo "=== CERTIFICATES IN APK ==="
+          $ANDROID_HOME/build-tools/34.0.0/apksigner verify --print-certs "$APK_PATH"
+      # =======================
 
-  # =====================================
-
-- name: Print certificate fingerprints
-  run: |
-    APK_PATH=$(find wallet/build/outputs/apk/prod/debug -name "*.apk" | head -1)
-    echo "=== CERTIFICATES IN APK ==="
-    $ANDROID_HOME/build-tools/34.0.0/apksigner verify --print-certs "$APK_PATH"
-
-  # =====================================
       - name: Verify signature
         run: |
           APK_PATH=$(find wallet/build/outputs/apk/prod/debug -name "*.apk" | head -1)
           $ANDROID_HOME/build-tools/34.0.0/apksigner verify "$APK_PATH"
-      # =====================================
 
       - uses: actions/upload-artifact@v4
         with:
