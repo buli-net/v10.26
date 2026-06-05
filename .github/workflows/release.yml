@@ -14,28 +14,9 @@ jobs:
         with: { distribution: temurin, java-version: 11 }
       - uses: gradle/actions/setup-gradle@v3
         with: { gradle-version: 6.9.4 }
-      - name: Force
-        run: |
-          mkdir -p ~/.gradle/init.d
-          cat > ~/.gradle/init.d/force.gradle <<'EOF'
-allprojects {
-  configurations.all {
-    exclude group: 'com.google.guava', module: 'listenablefuture'
-    resolutionStrategy {
-      force 'com.google.guava:guava:31.1-android'
-      force 'androidx.viewpager2:viewpager2:1.1.0'
-    }
-  }
-}
-EOF
-      - name: Build Debug
-        run: |
-          export JAVA_HOME=$JAVA_HOME_11_X64
-          gradle :wallet:assembleProdDebug --no-daemon -Pandroid.buildToolsVersion=33.0.2
-      - name: Sign
-        run: |
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > $HOME/wallet.jks
-          APK=$(find wallet/build/outputs/apk -name "*prod*debug.apk")
-          $ANDROID_SDK_ROOT/build-tools/33.0.2/apksigner sign --ks $HOME/wallet.jks --ks-pass pass:${{ secrets.KEYSTORE_PASSWORD }} --key-pass pass:${{ secrets.KEY_PASSWORD }} --ks-key-alias ${{ secrets.KEY_ALIAS }} --out $HOME/release.apk $APK
+      - run: mkdir -p ~/.gradle/init.d && printf "allprojects{configurations.all{exclude group:'com.google.guava',module:'listenablefuture';resolutionStrategy{force 'com.google.guava:guava:31.1-android';force 'androidx.viewpager2:viewpager2:1.1.0'}}}" > ~/.gradle/init.d/force.gradle
+      - run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > $HOME/wallet.jks
+      - run: export JAVA_HOME=$JAVA_HOME_11_X64 && gradle :wallet:assembleProdDebug --no-daemon -Pandroid.buildToolsVersion=33.0.2
+      - run: APK=$(find wallet/build/outputs/apk -name "*prod*debug.apk") && $ANDROID_SDK_ROOT/build-tools/33.0.2/apksigner sign --ks $HOME/wallet.jks --ks-pass pass:${{ secrets.KEYSTORE_PASSWORD }} --key-pass pass:${{ secrets.KEY_PASSWORD }} --ks-key-alias ${{ secrets.KEY_ALIAS }} --out $HOME/release.apk $APK
       - uses: actions/upload-artifact@v4
         with: { name: release-apk, path: /home/runner/release.apk }
