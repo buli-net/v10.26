@@ -1,5 +1,7 @@
-name: Build Bitcoin Wallet
-on: workflow_dispatch
+name: Sign Debug to Release
+on:
+  workflow_dispatch:
+
 jobs:
   build:
     runs-on: ubuntu-22.04
@@ -14,7 +16,8 @@ jobs:
       - uses: gradle/actions/setup-gradle@v3
         with: { gradle-version: '6.9.4' }
 
-      - name: Force libs (bản bạn đã chạy được)
+      # --- BẢN BUILD XANH CỦA BẠN ---
+      - name: Force libs
         run: |
           mkdir -p ~/.gradle/init.d
           cat > ~/.gradle/init.d/force.gradle <<'EOF'
@@ -23,35 +26,31 @@ allprojects {
     exclude group: 'com.google.guava', module: 'listenablefuture'
     resolutionStrategy {
       force 'com.google.guava:guava:31.1-android'
-      eachDependency { d ->
-        if (d.requested.group.startsWith('androidx.core')) { d.useVersion '1.12.0' }
-        if (d.requested.group == 'androidx.annotation' && d.requested.name == 'annotation') { d.useVersion '1.7.0' }
-        if (d.requested.group == 'androidx.annotation' && d.requested.name == 'annotation-experimental') { d.useVersion '1.3.1' }
-        if (d.requested.group == 'androidx.arch.core') { d.useVersion '2.2.0' }
-        if (d.requested.group == 'androidx.fragment') { d.useVersion '1.6.2' }
-        if (d.requested.group == 'androidx.activity') { d.useVersion '1.8.1' }
-        if (d.requested.group == 'androidx.appcompat') { d.useVersion '1.6.1' }
-        if (d.requested.group == 'androidx.lifecycle') { d.useVersion '2.6.2' }
-        if (d.requested.group == 'androidx.viewpager2') { d.useVersion '1.0.0' }
-        if (d.requested.group == 'androidx.recyclerview') { d.useVersion '1.3.2' }
-      }
     }
   }
 }
 EOF
 
-      - run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > $HOME/wallet.jks
-
-      - name: Build
+      - name: Build ProdDebug (đã xanh)
         run: |
-          export ANDROID_HOME=$ANDROID_SDK_ROOT
           export JAVA_HOME=$JAVA_HOME_11_X64
-          gradle :wallet:assembleProdRelease --no-daemon \
-            -Pandroid.buildToolsVersion=34.0.0 \
-            -Pandroid.injected.signing.store.file=$HOME/wallet.jks \
-            -Pandroid.injected.signing.store.password=${{ secrets.KEYSTORE_PASSWORD }} \
-            -Pandroid.injected.signing.key.alias=${{ secrets.KEY_ALIAS }} \
-            -Pandroid.injected.signing.key.password=${{ secrets.KEY_PASSWORD }}
+          export ANDROID_HOME=$ANDROID_SDK_ROOT
+          gradle :wallet:assembleProdDebug --no-daemon -Pandroid.buildToolsVersion=34.0.0
+
+      # --- KÝ LẠI THÀNH RELEASE ---
+      - name: Sign APK
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > $HOME/wallet.jks
+          APK_IN=$(find wallet/build/outputs/apk -name "*prod*debug*.apk" | head -1)
+          APK_OUT=$HOME/wallet-prod-release.apk
+          $ANDROID_SDK_ROOT/build-tools/34.0.0/apksigner sign \
+            --ks $HOME/wallet.jks \
+            --ks-pass pass:${{ secrets.KEYSTORE_PASSWORD }} \
+            --key-pass pass:${{ secrets.KEY_PASSWORD }} \
+            --ks-key-alias ${{ secrets.KEY_ALIAS }} \
+            --out $APK_OUT $APK_IN
 
       - uses: actions/upload-artifact@v4
-        with: { name: release, path: wallet/build/outputs/apk/prod/release/*.apk }
+        with:
+          name: signed-release
+          path: /home/runner/wallet-prod-release.apk
