@@ -1,4 +1,4 @@
-name: Build Bitcoin Wallet - main
+name: Build debug
 on:
   workflow_dispatch:
 
