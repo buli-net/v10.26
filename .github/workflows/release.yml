@@ -84,7 +84,7 @@ jobs:
     echo "=== CERTIFICATES IN APK ==="
     $ANDROID_HOME/build-tools/34.0.0/apksigner verify --print-certs "$APK_PATH"
 
-#==================================
+# ==================================
       - name: Verify signature
         run: |
           APK_PATH=$(find wallet/build/outputs/apk/prod/debug -name "*.apk" | head -1)
