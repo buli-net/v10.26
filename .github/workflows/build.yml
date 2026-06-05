@@ -1,0 +1,43 @@
+name: Build Bitcoin APK
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Kiểm tra có gradlew không
+        run: ls -la
+
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools platforms;android-33 build-tools;33.0.2'
+
+      - name: Setup JDK 11
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '11'
+
+      - name: Build
+        run: |
+          chmod +x gradlew
+          ./gradlew :wallet:assembleProdDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: bitcoin-apk
+          path: wallet/build/outputs/apk/prod/debug/*.apk
