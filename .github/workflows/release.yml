@@ -75,6 +75,12 @@ jobs:
             --key-pass pass:${{ secrets.KEY_PASSWORD }} \
             "$APK_PATH"
 
+- name: Print certificate fingerprints
+  run: |
+    APK_PATH=$(find wallet/build/outputs/apk/prod/debug -name "*.apk" | head -1)
+    echo "=== CERTIFICATES IN APK ==="
+    $ANDROID_HOME/build-tools/34.0.0/apksigner verify --print-certs "$APK_PATH"
+
       - name: Verify signature
         run: |
           APK_PATH=$(find wallet/build/outputs/apk/prod/debug -name "*.apk" | head -1)
