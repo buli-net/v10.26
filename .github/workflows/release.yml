@@ -1,54 +1,41 @@
 name: Build
 on:
   workflow_dispatch:
-
 jobs:
   build:
     runs-on: ubuntu-22.04
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: JDK 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 17
-
-      - name: Android SDK
-        uses: android-actions/setup-android@v3
-        with:
-          packages: platform-tools platforms;android-34 build-tools;34.0.0
-
-      - name: JDK 11
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 11
-
-      - name: Gradle 6.9.4
-        uses: gradle/actions/setup-gradle@v3
-        with:
-          gradle-version: 6.9.4
-
-      - name: Force Guava
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 17 }
+      - uses: android-actions/setup-android@v3
+        with: { packages: 'platform-tools platforms;android-33 build-tools;33.0.2' }
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 11 }
+      - uses: gradle/actions/setup-gradle@v3
+        with: { gradle-version: 6.9.4 }
+      - name: Force
         run: |
           mkdir -p ~/.gradle/init.d
-          echo "allprojects{configurations.all{exclude group:'com.google.guava',module:'listenablefuture';resolutionStrategy{force 'com.google.guava:guava:31.1-android'}}}" > ~/.gradle/init.d/force.gradle
-
-      - name: Build Debug (bản đã xanh)
+          cat > ~/.gradle/init.d/force.gradle <<'EOF'
+allprojects {
+  configurations.all {
+    exclude group: 'com.google.guava', module: 'listenablefuture'
+    resolutionStrategy {
+      force 'com.google.guava:guava:31.1-android'
+      force 'androidx.viewpager2:viewpager2:1.1.0'
+    }
+  }
+}
+EOF
+      - name: Build Debug
         run: |
           export JAVA_HOME=$JAVA_HOME_11_X64
-          gradle :wallet:assembleProdDebug --no-daemon -Pandroid.buildToolsVersion=34.0.0
-
-      - name: Sign to Release
+          gradle :wallet:assembleProdDebug --no-daemon -Pandroid.buildToolsVersion=33.0.2
+      - name: Sign
         run: |
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > $HOME/wallet.jks
           APK=$(find wallet/build/outputs/apk -name "*prod*debug.apk")
-          $ANDROID_SDK_ROOT/build-tools/34.0.0/apksigner sign --ks $HOME/wallet.jks --ks-pass pass:${{ secrets.KEYSTORE_PASSWORD }} --key-pass pass:${{ secrets.KEY_PASSWORD }} --ks-key-alias ${{ secrets.KEY_ALIAS }} --out $HOME/release.apk $APK
-
-      - name: Upload
-        uses: actions/upload-artifact@v4
-        with:
-          name: release-apk
-          path: /home/runner/release.apk
+          $ANDROID_SDK_ROOT/build-tools/33.0.2/apksigner sign --ks $HOME/wallet.jks --ks-pass pass:${{ secrets.KEYSTORE_PASSWORD }} --key-pass pass:${{ secrets.KEY_PASSWORD }} --ks-key-alias ${{ secrets.KEY_ALIAS }} --out $HOME/release.apk $APK
+      - uses: actions/upload-artifact@v4
+        with: { name: release-apk, path: /home/runner/release.apk }
