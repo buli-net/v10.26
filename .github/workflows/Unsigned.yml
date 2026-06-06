@@ -1,12 +1,13 @@
-# ============================================
-# FILE: build-unsigned.yml
-# Mục đích: Build APK từ debug, sau đó xóa toàn bộ chữ ký (META-INF)
-#            để có file unsigned APK (chưa ký)
-#            - Đổi tên thành bitcoin-wallet-unsigned.apk
-# ============================================
+# =================================================================
+# FILE: .github/workflows/build-unsigned.yml
+# MỤC ĐÍCH: Tạo APK không có chữ ký (unsigned) bằng cách xóa META-INF
+#            sau khi build debug. Dùng để ký thủ công sau.
+# OUTPUT: bitcoin-wallet-unsigned.apk
+# =================================================================
 
 name: Build Bitcoin Wallet - Unsigned
 
+# Chỉ chạy thủ công
 on:
   workflow_dispatch:
 
@@ -15,34 +16,41 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-      - uses: actions/checkout@v4
+      # ----- BƯỚC 1: Lấy mã nguồn -----
+      - name: Checkout source code
+        uses: actions/checkout@v4
         with:
           ref: main
-          fetch-depth: 0
+          fetch-depth: 0   # Lấy toàn bộ lịch sử commit
 
-      - name: Setup JDK 17 for SDK
+      # ----- BƯỚC 2: Cài JDK 17 cho Android SDK -----
+      - name: Setup JDK 17 for Android SDK
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
 
-      - name: Setup Android SDK 34 only
+      # ----- BƯỚC 3: Cài Android SDK 34 và build-tools 34.0.0 -----
+      - name: Setup Android SDK 34
         uses: android-actions/setup-android@v3
         with:
           packages: 'platform-tools platforms;android-34 build-tools;34.0.0'
 
+      # ----- BƯỚC 4: Chuyển về JDK 11 để build (dự án yêu cầu) -----
       - name: Setup JDK 11 for build
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '11'
 
+      # ----- BƯỚC 5: Cài Gradle 6.9.4 -----
       - name: Setup Gradle 6.9.4
         uses: gradle/actions/setup-gradle@v3
         with:
           gradle-version: '6.9.4'
 
-      - name: Force libs for Gradle 6
+      # ----- BƯỚC 6: Ép phiên bản thư viện tương thích với Gradle 6 -----
+      - name: Force library versions for Gradle 6
         run: |
           mkdir -p ~/.gradle/init.d
           cat > ~/.gradle/init.d/force.gradle <<'EOF'
@@ -68,32 +76,36 @@ jobs:
           }
           EOF
 
-      # Build APK prodDebug (sẽ có chữ ký debug)
-      - name: Build APK prodDebug
+      # ----- BƯỚC 7: Build APK prodDebug (sẽ có chữ ký debug) -----
+      - name: Build prodDebug APK
         run: |
           export ANDROID_HOME=$ANDROID_SDK_ROOT
           export JAVA_HOME=$JAVA_HOME_11_X64
           gradle :wallet:assembleProdDebug --no-daemon -Pandroid.buildToolsVersion=34.0.0 --stacktrace
 
-      # Xóa toàn bộ thư mục META-INF (chứa chữ ký) để biến thành unsigned APK
+      # ----- BƯỚC 8: Xóa thư mục META-INF để loại bỏ chữ ký -----
       - name: Remove signature to make unsigned APK
         run: |
+          # Tìm file APK vừa tạo
           APK_PATH=$(find wallet/build/outputs/apk/prod/debug -name "*.apk" | head -1)
-          echo "Đang xóa chữ ký trong $APK_PATH"
-          # Lệnh zip -d xóa các file/thư mục bên trong APK, || true để tránh lỗi nếu META-INF không tồn tại
+          echo "Đang xóa META-INF khỏi $APK_PATH"
+          # Lệnh zip -d xóa tệp/thư mục bên trong file zip (APK là zip)
+          # Xóa toàn bộ thư mục META-INF chứa chữ ký (RSA, SF, MF)
+          # || true : không báo lỗi nếu META-INF không tồn tại
           zip -d "$APK_PATH" META-INF/* || true
-          echo "APK hiện tại không còn chữ ký (unsigned)"
+          echo "APK hiện không còn chữ ký (unsigned)"
 
-      # Đổi tên file APK thành bitcoin-wallet-unsigned.apk
-      - name: Rename APK to unsigned
+      # ----- BƯỚC 9: Đổi tên file để phân biệt -----
+      - name: Rename APK to bitcoin-wallet-unsigned.apk
         run: |
           APK_PATH=$(find wallet/build/outputs/apk/prod/debug -name "*.apk" | head -1)
           DIR=$(dirname "$APK_PATH")
           mv "$APK_PATH" "$DIR/bitcoin-wallet-unsigned.apk"
           echo "Đã đổi tên thành bitcoin-wallet-unsigned.apk"
 
-      # Upload unsigned APK lên artifact
-      - uses: actions/upload-artifact@v4
+      # ----- BƯỚC 10: Upload artifact -----
+      - name: Upload unsigned APK
+        uses: actions/upload-artifact@v4
         with:
           name: unsigned-apk
           path: wallet/build/outputs/apk/prod/debug/*.apk
