@@ -17,6 +17,7 @@ name: Build Bitcoin Wallet - Signed (Release)
 on:
   workflow_dispatch:
 
+# Định nghĩa công việc cần thực hiện
 jobs:
   build:
     runs-on: ubuntu-22.04
