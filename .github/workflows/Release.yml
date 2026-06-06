@@ -52,24 +52,27 @@ jobs:
           }
           EOF
 
-      # 1. Build bản unsignedRelease (file APK chưa ký)
-      - name: Build unsigned APK
+      - name: Build APK prodDebug
         run: |
           export ANDROID_HOME=$ANDROID_SDK_ROOT
           export JAVA_HOME=$JAVA_HOME_11_X64
-          gradle :wallet:assembleUnsignedRelease --no-daemon -Pandroid.buildToolsVersion=34.0.0 --stacktrace
+          gradle :wallet:assembleProdDebug --no-daemon -Pandroid.buildToolsVersion=34.0.0 --stacktrace
 
-      # 2. Giải mã keystore
+      # Xóa chữ ký debug cũ (thư mục META-INF)
+      - name: Remove old signature
+        run: |
+          APK_PATH=$(find wallet/build/outputs/apk/prod/debug -name "*.apk" | head -1)
+          echo "Removing META-INF from $APK_PATH"
+          zip -d "$APK_PATH" META-INF/* || true
+
       - name: Decode Keystore
         run: |
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > keystore.jks
 
-      # 3. Ký APK từ bản chưa ký với đầy đủ lược đồ v1, v2, v3, v4
-      - name: Sign APK with all schemes
+      - name: Sign APK with all schemes (v1, v2, v3, v4)
         run: |
-          UNSIGNED_APK=$(find wallet/build/outputs/apk/unsignedRelease -name "*.apk" | head -1)
-          SIGNED_APK="${UNSIGNED_APK%.*}-signed.apk"
-          echo "Signing $UNSIGNED_APK"
+          APK_PATH=$(find wallet/build/outputs/apk/prod/debug -name "*.apk" | head -1)
+          echo "Signing $APK_PATH"
           $ANDROID_HOME/build-tools/34.0.0/apksigner sign \
             --ks keystore.jks \
             --ks-pass pass:${{ secrets.KEYSTORE_PASSWORD }} \
@@ -79,18 +82,15 @@ jobs:
             --v2-signing-enabled true \
             --v3-signing-enabled true \
             --v4-signing-enabled true \
-            --out "$SIGNED_APK" \
-            "$UNSIGNED_APK"
+            "$APK_PATH"
 
-      # 4. Xác minh và in thông tin chữ ký
       - name: Verify and print certificate
         run: |
-          SIGNED_APK=$(find wallet/build/outputs/unsignedRelease -name "*-signed.apk" | head -1)
+          APK_PATH=$(find wallet/build/outputs/apk/prod/debug -name "*.apk" | head -1)
           echo "=== APK Signature Verification ==="
-          $ANDROID_HOME/build-tools/34.0.0/apksigner verify --verbose --print-certs "$SIGNED_APK"
+          $ANDROID_HOME/build-tools/34.0.0/apksigner verify --verbose --print-certs "$APK_PATH"
 
-      # 5. Upload file APK đã ký
       - uses: actions/upload-artifact@v4
         with:
           name: main-apk-signed
-          path: wallet/build/outputs/unsignedRelease/*-signed.apk
+          path: wallet/build/outputs/apk/prod/debug/*.apk
