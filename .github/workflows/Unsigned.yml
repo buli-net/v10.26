@@ -1,0 +1,94 @@
+# Tên workflow: Build unsigned APK (xóa chữ ký debug)
+name: Build Bitcoin Wallet - unsigned
+
+# Chỉ chạy thủ công từ giao diện GitHub Actions
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    # Chạy trên máy ảo Ubuntu 22.04
+    runs-on: ubuntu-22.04
+
+    steps:
+      # Bước 1: Lấy mã nguồn từ nhánh main
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      # Bước 2: Cài đặt JDK 17 (cần cho Android SDK)
+      - name: Setup JDK 17 for SDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      # Bước 3: Cài đặt Android SDK 34 và build-tools 34.0.0
+      - name: Setup Android SDK 34 only
+        uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools platforms;android-34 build-tools;34.0.0'
+
+      # Bước 4: Chuyển sang JDK 11 để build (dự án yêu cầu)
+      - name: Setup JDK 11 for build
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '11'
+
+      # Bước 5: Cài đặt Gradle 6.9.4 (phiên bản cũ của dự án)
+      - name: Setup Gradle 6.9.4
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: '6.9.4'
+
+      # Bước 6: Ép buộc các thư viện tương thích với Gradle 6
+      - name: Force libs for Gradle 6
+        run: |
+          mkdir -p ~/.gradle/init.d
+          cat > ~/.gradle/init.d/force.gradle <<'EOF'
+          allprojects {
+            configurations.all {
+              exclude group: 'com.google.guava', module: 'listenablefuture'
+              resolutionStrategy {
+                force 'com.google.guava:guava:31.1-android'
+                eachDependency { d ->
+                  if (d.requested.group.startsWith('androidx.core')) { d.useVersion '1.12.0' }
+                  if (d.requested.group == 'androidx.annotation' && d.requested.name == 'annotation') { d.useVersion '1.7.0' }
+                  if (d.requested.group == 'androidx.annotation' && d.requested.name == 'annotation-experimental') { d.useVersion '1.3.1' }
+                  if (d.requested.group == 'androidx.arch.core') { d.useVersion '2.2.0' }
+                  if (d.requested.group == 'androidx.fragment') { d.useVersion '1.6.2' }
+                  if (d.requested.group == 'androidx.activity') { d.useVersion '1.8.1' }
+                  if (d.requested.group == 'androidx.appcompat') { d.useVersion '1.6.1' }
+                  if (d.requested.group == 'androidx.lifecycle') { d.useVersion '2.6.2' }
+                  if (d.requested.group == 'androidx.viewpager2') { d.useVersion '1.0.0' }
+                  if (d.requested.group == 'androidx.recyclerview') { d.useVersion '1.3.2' }
+                }
+              }
+            }
+          }
+          EOF
+
+      # Bước 7: Build APK với flavor prod và build type debug (sẽ có chữ ký debug)
+      - name: Build APK prodDebug
+        run: |
+          export ANDROID_HOME=$ANDROID_SDK_ROOT
+          export JAVA_HOME=$JAVA_HOME_11_X64
+          gradle :wallet:assembleProdDebug --no-daemon -Pandroid.buildToolsVersion=34.0.0 --stacktrace
+
+      # Bước 8: Xóa thư mục META-INF để loại bỏ hoàn toàn chữ ký (trở thành unsigned APK)
+      - name: Remove signature to make unsigned APK
+        run: |
+          # Tìm đường dẫn file APK vừa build
+          APK_PATH=$(find wallet/build/outputs/apk/prod/debug -name "*.apk" | head -1)
+          echo "Removing META-INF from $APK_PATH to get unsigned APK"
+          # Xóa toàn bộ chữ ký (các file .RSA, .SF, MANIFEST.MF)
+          zip -d "$APK_PATH" META-INF/* || true
+          echo "Done. APK is now unsigned."
+
+      # Bước 9: Upload unsigned APK lên artifact (có thể tải về)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: unsigned-apk
+          path: wallet/build/outputs/apk/prod/debug/*.apk
