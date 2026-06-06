@@ -11,7 +11,7 @@
 # =================================================================
 
 # Tên workflow hiển thị trên GitHub Actions
-name: Build Bitcoin Wallet - Signed (Release)
+name: Build Bitcoin Wallet - Release
 
 # Chỉ chạy khi người dùng bấm nút "Run workflow" (không tự động)
 on:
@@ -20,40 +20,40 @@ on:
 # Định nghĩa công việc cần thực hiện
 jobs:
   build:
-
     # Máy ảo chạy Ubuntu 22.04 (chuẩn cho build Android)
     runs-on: ubuntu-22.04
 
     # Các bước thực hiện tuần tự
     steps:
-      # ----- BƯỚC 1: Lấy mã nguồn -----
+      # ----- BƯỚC 1: Lấy mã nguồn từ repository -----
       - name: Checkout source code
         uses: actions/checkout@v4
         with:
-          ref: main
-          fetch-depth: 0
+          ref: main               # Lấy nhánh main
+          fetch-depth: 0          # Lấy toàn bộ lịch sử commit (cần cho một số tác vụ)
 
-      # ----- BƯỚC 2: Cài JDK 17 cho Android SDK -----
+      # ----- BƯỚC 2: Cài JDK 17 (cần cho Android SDK) -----
       - name: Setup JDK 17 for Android SDK
         uses: actions/setup-java@v4
         with:
-          distribution: temurin
-          java-version: '17'
+          distribution: temurin   # Bản phân phối OpenJDK từ Adoptium
+          java-version: '17'      # Phiên bản Java 17
 
       # ----- BƯỚC 3: Cài Android SDK 34 và build-tools 34.0.0 -----
       - name: Setup Android SDK 34
         uses: android-actions/setup-android@v3
         with:
+          # Các gói cần cài: platform-tools, nền tảng API 34, build-tools 34.0.0
           packages: 'platform-tools platforms;android-34 build-tools;34.0.0'
 
-      # ----- BƯỚC 4: Chuyển về JDK 11 để build -----
+      # ----- BƯỚC 4: Chuyển sang JDK 11 để build (dự án yêu cầu Java 11) -----
       - name: Setup JDK 11 for build
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '11'
 
-      # ----- BƯỚC 5: Cài Gradle 6.9.4 -----
+      # ----- BƯỚC 5: Cài Gradle 6.9.4 (phiên bản Gradle mà dự án đang dùng) -----
       - name: Setup Gradle 6.9.4
         uses: gradle/actions/setup-gradle@v3
         with:
