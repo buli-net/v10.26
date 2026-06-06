@@ -74,6 +74,7 @@ jobs:
             --key-pass pass:${{ secrets.KEY_PASSWORD }} \
             --v1-signing-enabled true \
             --v4-signing-enabled true \
+            --min-sdk-version 23 \
             "$APK_PATH"
 
       - name: Verify and print certificate (check signing key)
