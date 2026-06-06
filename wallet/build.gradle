@@ -58,13 +58,6 @@ android {
         debug {
             debuggable true
         }
-        // THÊM unsignedRelease TẠO APK CHƯA KÝ
-        unsignedRelease {
-            minifyEnabled false      // Tắt minify để tránh lỗi khi ký lại
-            shrinkResources false
-            signingConfig null        // Không ký
-            proguardFile 'proguard.cfg'
-        }
     }
 
     flavorDimensions 'flavor'
