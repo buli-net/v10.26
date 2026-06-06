@@ -13,6 +13,7 @@
 # Tên workflow hiển thị trên GitHub Actions
 name: Build Bitcoin Wallet - Signed (Release)
 
+# Chỉ chạy khi người dùng bấm nút "Run workflow" (không tự động)
 on:
   workflow_dispatch:
 
