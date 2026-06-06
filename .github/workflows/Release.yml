@@ -10,6 +10,7 @@
 # OUTPUT: bitcoin-wallet-release.apk (ký bằng key riêng)
 # =================================================================
 
+# Tên workflow hiển thị trên GitHub Actions
 name: Build Bitcoin Wallet - Signed (Release)
 
 on:
