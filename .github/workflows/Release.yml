@@ -20,6 +20,8 @@ on:
 # Định nghĩa công việc cần thực hiện
 jobs:
   build:
+
+    # Máy ảo chạy Ubuntu 22.04 (chuẩn cho build Android)
     runs-on: ubuntu-22.04
 
     steps:
