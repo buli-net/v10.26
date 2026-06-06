@@ -58,12 +58,12 @@ jobs:
           export JAVA_HOME=$JAVA_HOME_11_X64
           gradle :wallet:assembleProdDebug --no-daemon -Pandroid.buildToolsVersion=34.0.0 --stacktrace
 
-      # ========== KÝ APK ==========
+      # ========== KÝ APK (bật v1 và v4) ==========
       - name: Decode Keystore
         run: |
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > keystore.jks
 
-      - name: Sign APK with apksigner
+      - name: Sign APK with apksigner (v1+v2+v3+v4)
         run: |
           APK_PATH=$(find wallet/build/outputs/apk/prod/debug -name "*.apk" | head -1)
           echo "Signing $APK_PATH"
@@ -72,6 +72,8 @@ jobs:
             --ks-pass pass:${{ secrets.KEYSTORE_PASSWORD }} \
             --ks-key-alias ${{ secrets.KEY_ALIAS }} \
             --key-pass pass:${{ secrets.KEY_PASSWORD }} \
+            --v1-signing-enabled true \
+            --v4-signing-enabled true \
             "$APK_PATH"
 
       - name: Verify and print certificate (check signing key)
