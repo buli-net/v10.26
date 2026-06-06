@@ -58,27 +58,38 @@ jobs:
           export JAVA_HOME=$JAVA_HOME_11_X64
           gradle :wallet:assembleProdDebug --no-daemon -Pandroid.buildToolsVersion=34.0.0 --stacktrace
 
-      # Xóa chữ ký debug cũ (thư mục META-INF)
-      - name: Remove old signature
+      - name: Remove old signature (META-INF)
         run: |
           APK_PATH=$(find wallet/build/outputs/apk/prod/debug -name "*.apk" | head -1)
-          echo "Removing META-INF from $APK_PATH"
+          echo "Removing old signature from $APK_PATH"
           zip -d "$APK_PATH" META-INF/* || true
 
       - name: Decode Keystore
         run: |
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > keystore.jks
 
-      - name: Sign APK with all schemes (v1, v2, v3, v4)
+      - name: Sign with jarsigner (v1 signature)
         run: |
           APK_PATH=$(find wallet/build/outputs/apk/prod/debug -name "*.apk" | head -1)
-          echo "Signing $APK_PATH"
+          echo "Signing with jarsigner (v1)"
+          jarsigner \
+            -sigalg SHA1withRSA -digestalg SHA1 \
+            -keystore keystore.jks \
+            -storepass ${{ secrets.KEYSTORE_PASSWORD }} \
+            -keypass ${{ secrets.KEY_PASSWORD }} \
+            -signedjar "$APK_PATH" "$APK_PATH" \
+            ${{ secrets.KEY_ALIAS }}
+
+      - name: Sign with apksigner (v2, v3, v4)
+        run: |
+          APK_PATH=$(find wallet/build/outputs/apk/prod/debug -name "*.apk" | head -1)
+          echo "Adding v2, v3, v4 signatures with apksigner"
           $ANDROID_HOME/build-tools/34.0.0/apksigner sign \
             --ks keystore.jks \
             --ks-pass pass:${{ secrets.KEYSTORE_PASSWORD }} \
             --ks-key-alias ${{ secrets.KEY_ALIAS }} \
             --key-pass pass:${{ secrets.KEY_PASSWORD }} \
-            --v1-signing-enabled true \
+            --v1-signing-enabled false \
             --v2-signing-enabled true \
             --v3-signing-enabled true \
             --v4-signing-enabled true \
