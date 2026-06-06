@@ -1,5 +1,5 @@
 # Tên workflow hiển thị trên GitHub Actions
-name: Build Bitcoin Wallet - main
+name: Build Debug
 
 # Chỉ chạy thủ công từ giao diện (không tự động)
 on:
