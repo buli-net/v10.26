@@ -1,5 +1,5 @@
 # Tên workflow: Build unsigned APK (xóa chữ ký debug)
-name: Build Bitcoin Wallet - unsigned
+name: Build Unsigned
 
 # Chỉ chạy thủ công từ giao diện GitHub Actions
 on:
