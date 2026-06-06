@@ -1,6 +1,6 @@
 # =================================================================
 # FILE: .github/workflows/build-release.yml
-# MỤC ĐÍCH: Build APK từ debug sau đó ký bằng keystore riêng
+# MỤC ĐÍCH: Build APK từ bản debug, sau đó ký bằng keystore riêng
 #            (đã lưu trong GitHub Secrets)
 # YÊU CẦU SECRETS:
 #   - KEYSTORE_BASE64   : keystore đã mã hóa base64
@@ -10,56 +10,50 @@
 # OUTPUT: bitcoin-wallet-release.apk (ký bằng key riêng)
 # =================================================================
 
-# Tên workflow hiển thị trên GitHub Actions
 name: Build Bitcoin Wallet - Release
 
-# Chỉ chạy khi người dùng bấm nút "Run workflow" (không tự động)
 on:
   workflow_dispatch:
 
-# Định nghĩa công việc cần thực hiện
 jobs:
   build:
-    # Máy ảo chạy Ubuntu 22.04 (chuẩn cho build Android)
     runs-on: ubuntu-22.04
 
-    # Các bước thực hiện tuần tự
     steps:
-      # ----- BƯỚC 1: Lấy mã nguồn từ repository -----
+      # ----- BƯỚC 1: Lấy mã nguồn -----
       - name: Checkout source code
         uses: actions/checkout@v4
         with:
-          ref: main               # Lấy nhánh main
-          fetch-depth: 0          # Lấy toàn bộ lịch sử commit (cần cho một số tác vụ)
+          ref: main
+          fetch-depth: 0
 
-      # ----- BƯỚC 2: Cài JDK 17 (cần cho Android SDK) -----
+      # ----- BƯỚC 2: Cài JDK 17 cho Android SDK -----
       - name: Setup JDK 17 for Android SDK
         uses: actions/setup-java@v4
         with:
-          distribution: temurin   # Bản phân phối OpenJDK từ Adoptium
-          java-version: '17'      # Phiên bản Java 17
+          distribution: temurin
+          java-version: '17'
 
       # ----- BƯỚC 3: Cài Android SDK 34 và build-tools 34.0.0 -----
       - name: Setup Android SDK 34
         uses: android-actions/setup-android@v3
         with:
-          # Các gói cần cài: platform-tools, nền tảng API 34, build-tools 34.0.0
           packages: 'platform-tools platforms;android-34 build-tools;34.0.0'
 
-      # ----- BƯỚC 4: Chuyển sang JDK 11 để build (dự án yêu cầu Java 11) -----
+      # ----- BƯỚC 4: Chuyển sang JDK 11 để build (dự án yêu cầu) -----
       - name: Setup JDK 11 for build
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '11'
 
-      # ----- BƯỚC 5: Cài Gradle 6.9.4 (phiên bản Gradle mà dự án đang dùng) -----
+      # ----- BƯỚC 5: Cài Gradle 6.9.4 -----
       - name: Setup Gradle 6.9.4
         uses: gradle/actions/setup-gradle@v3
         with:
           gradle-version: '6.9.4'
 
-      # ----- BƯỚC 6: Ép phiên bản thư viện -----
+      # ----- BƯỚC 6: Ép phiên bản thư viện tương thích với Gradle 6 -----
       - name: Force library versions for Gradle 6
         run: |
           mkdir -p ~/.gradle/init.d
@@ -86,7 +80,7 @@ jobs:
           }
           EOF
 
-      # ----- BƯỚC 7: Build APK prodDebug (sẽ có chữ ký debug tạm) -----
+      # ----- BƯỚC 7: Build APK prodDebug (sẽ có chữ ký debug tạm thời) -----
       - name: Build prodDebug APK
         run: |
           export ANDROID_HOME=$ANDROID_SDK_ROOT
@@ -96,25 +90,20 @@ jobs:
       # ----- BƯỚC 8: Giải mã keystore từ secret (base64) -----
       - name: Decode Keystore
         run: |
-          # Lấy chuỗi base64 từ secret, giải mã và lưu thành file keystore.jks
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > keystore.jks
           echo "Keystore đã được giải mã thành công."
 
       # ----- BƯỚC 9: Ký APK bằng apksigner với keystore riêng -----
+      # LƯU Ý: Không được đặt comment (#) ở cuối các dòng lệnh vì sẽ gây lỗi cú pháp.
       - name: Sign APK with private keystore
         run: |
           APK_PATH=$(find wallet/build/outputs/apk/prod/debug -name "*.apk" | head -1)
-            # Gọi apksigner từ build-tools 34.0.0
           echo "Đang ký APK: $APK_PATH"
-            # Keystore vừa giải mã
           $ANDROID_HOME/build-tools/34.0.0/apksigner sign \
-            --ks keystore.jks \                           
-            # Mật khẩu keystore
-            --ks-pass pass:${{ secrets.KEYSTORE_PASSWORD }} \  
-            # Alias của key
-            --ks-key-alias ${{ secrets.KEY_ALIAS }} \          
-            # Mật khẩu key (nếu có)
-            --key-pass pass:${{ secrets.KEY_PASSWORD }} \      
+            --ks keystore.jks \
+            --ks-pass pass:${{ secrets.KEYSTORE_PASSWORD }} \
+            --ks-key-alias ${{ secrets.KEY_ALIAS }} \
+            --key-pass pass:${{ secrets.KEY_PASSWORD }} \
             "$APK_PATH"
           echo "APK đã được ký bằng key riêng."
 
@@ -124,7 +113,6 @@ jobs:
           APK_PATH=$(find wallet/build/outputs/apk/prod/debug -name "*.apk" | head -1)
           echo "=== Xác minh chữ ký release ==="
           $ANDROID_HOME/build-tools/34.0.0/apksigner verify --verbose --print-certs "$APK_PATH"
-          # Kết quả mong đợi: DN hiển thị thông tin từ keystore của bạn (CN=MyWallet,...)
 
       # ----- BƯỚC 11: Đổi tên file thành bitcoin-wallet-release.apk -----
       - name: Rename APK to release
