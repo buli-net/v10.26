@@ -24,6 +24,7 @@ jobs:
     # Máy ảo chạy Ubuntu 22.04 (chuẩn cho build Android)
     runs-on: ubuntu-22.04
 
+    # Các bước thực hiện tuần tự
     steps:
       # ----- BƯỚC 1: Lấy mã nguồn -----
       - name: Checkout source code
