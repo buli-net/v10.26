@@ -104,13 +104,17 @@ jobs:
       - name: Sign APK with private keystore
         run: |
           APK_PATH=$(find wallet/build/outputs/apk/prod/debug -name "*.apk" | head -1)
+            # Gọi apksigner từ build-tools 34.0.0
           echo "Đang ký APK: $APK_PATH"
-          # Gọi apksigner từ build-tools 34.0.0
+            # Keystore vừa giải mã
           $ANDROID_HOME/build-tools/34.0.0/apksigner sign \
-            --ks keystore.jks \                           # Keystore vừa giải mã
-            --ks-pass pass:${{ secrets.KEYSTORE_PASSWORD }} \  # Mật khẩu keystore
-            --ks-key-alias ${{ secrets.KEY_ALIAS }} \          # Alias của key
-            --key-pass pass:${{ secrets.KEY_PASSWORD }} \      # Mật khẩu key (nếu có)
+            --ks keystore.jks \                           
+            # Mật khẩu keystore
+            --ks-pass pass:${{ secrets.KEYSTORE_PASSWORD }} \  
+            # Alias của key
+            --ks-key-alias ${{ secrets.KEY_ALIAS }} \          
+            # Mật khẩu key (nếu có)
+            --key-pass pass:${{ secrets.KEY_PASSWORD }} \      
             "$APK_PATH"
           echo "APK đã được ký bằng key riêng."
 
