@@ -1,58 +1,65 @@
-# ============================================
-# FILE: build-debug.yml
-# Mục đích: Build APK debug (chữ ký debug mặc định)
-#            - Xác minh chữ ký và in thông tin
-#            - Đổi tên thành bitcoin-wallet-debug.apk
-# ============================================
+# =================================================================
+# FILE: .github/workflows/build-debug.yml
+# MỤC ĐÍCH: Tạo APK đã được ký bằng chữ ký debug mặc định của Android SDK
+#            (dùng cho kiểm thử, không dùng để phát hành)
+# OUTPUT:   bitcoin-wallet-debug.apk (có chữ ký Android Debug)
+# =================================================================
 
+# Tên workflow hiển thị trên GitHub Actions
 name: Build Bitcoin Wallet - Debug
 
-# Chỉ chạy thủ công từ giao diện GitHub Actions
+# Chỉ chạy khi người dùng bấm nút "Run workflow" (không tự động)
 on:
   workflow_dispatch:
 
+# Định nghĩa công việc cần thực hiện
 jobs:
   build:
-    # Chạy trên máy ảo Ubuntu 22.04
+    # Máy ảo chạy Ubuntu 22.04 (chuẩn cho build Android)
     runs-on: ubuntu-22.04
 
+    # Các bước thực hiện tuần tự
     steps:
-      # Bước 1: Lấy mã nguồn từ nhánh main
-      - uses: actions/checkout@v4
+      # ----- BƯỚC 1: Lấy mã nguồn từ repository -----
+      - name: Checkout source code
+        uses: actions/checkout@v4
         with:
-          ref: main
-          fetch-depth: 0
+          ref: main               # Lấy nhánh main
+          fetch-depth: 0          # Lấy toàn bộ lịch sử commit (cần cho một số tác vụ)
 
-      # Bước 2: Cài JDK 17 (cần cho Android SDK)
-      - name: Setup JDK 17 for SDK
+      # ----- BƯỚC 2: Cài JDK 17 (cần cho Android SDK) -----
+      - name: Setup JDK 17 for Android SDK
         uses: actions/setup-java@v4
         with:
-          distribution: temurin
-          java-version: '17'
+          distribution: temurin   # Bản phân phối OpenJDK từ Adoptium
+          java-version: '17'      # Phiên bản Java 17
 
-      # Bước 3: Cài Android SDK 34 và build-tools 34.0.0
-      - name: Setup Android SDK 34 only
+      # ----- BƯỚC 3: Cài Android SDK 34 và build-tools 34.0.0 -----
+      - name: Setup Android SDK 34
         uses: android-actions/setup-android@v3
         with:
+          # Các gói cần cài: platform-tools, nền tảng API 34, build-tools 34.0.0
           packages: 'platform-tools platforms;android-34 build-tools;34.0.0'
 
-      # Bước 4: Chuyển sang JDK 11 để build (dự án yêu cầu)
+      # ----- BƯỚC 4: Chuyển sang JDK 11 để build (dự án yêu cầu Java 11) -----
       - name: Setup JDK 11 for build
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '11'
 
-      # Bước 5: Cài Gradle 6.9.4 (phiên bản cũ của dự án)
+      # ----- BƯỚC 5: Cài Gradle 6.9.4 (phiên bản Gradle mà dự án đang dùng) -----
       - name: Setup Gradle 6.9.4
         uses: gradle/actions/setup-gradle@v3
         with:
           gradle-version: '6.9.4'
 
-      # Bước 6: Ép buộc các thư viện tương thích với Gradle 6
-      - name: Force libs for Gradle 6
+      # ----- BƯỚC 6: Ép các thư viện về phiên bản tương thích với Gradle 6 -----
+      - name: Force library versions for Gradle 6
         run: |
+          # Tạo thư mục init.d cho Gradle (nếu chưa có)
           mkdir -p ~/.gradle/init.d
+          # Tạo script init.gradle để ghi đè phiên bản dependency
           cat > ~/.gradle/init.d/force.gradle <<'EOF'
           allprojects {
             configurations.all {
@@ -76,33 +83,48 @@ jobs:
           }
           EOF
 
-      # Bước 7: Build APK với flavor prod và build type debug (sẽ có chữ ký debug)
-      - name: Build APK prodDebug
+      # ----- BƯỚC 7: Build APK với flavor = prod, build type = debug -----
+      - name: Build prodDebug APK
         run: |
+          # Thiết lập biến môi trường ANDROID_HOME trỏ đến SDK đã cài
           export ANDROID_HOME=$ANDROID_SDK_ROOT
+          # Thiết lập JAVA_HOME dùng JDK 11
           export JAVA_HOME=$JAVA_HOME_11_X64
+          # Chạy Gradle task assembleProdDebug
+          # --no-daemon: không dùng Gradle daemon (tránh lỗi trên CI)
+          # -Pandroid.buildToolsVersion=34.0.0: truyền tham số buildToolsVersion
+          # --stacktrace: in chi tiết lỗi nếu có
           gradle :wallet:assembleProdDebug --no-daemon -Pandroid.buildToolsVersion=34.0.0 --stacktrace
 
-      # Bước 8: Xác minh chữ ký của APK debug và in thông tin chứng chỉ
-      - name: Verify and print certificate (debug signature)
+      # ----- BƯỚC 8: Xác minh chữ ký của APK debug và in thông tin chứng chỉ (PRINT) -----
+      - name: Verify and print debug certificate
         run: |
-          # Tìm đường dẫn file APK vừa build
+          # Tìm file APK vừa tạo (lấy file .apk đầu tiên tìm thấy)
           APK_PATH=$(find wallet/build/outputs/apk/prod/debug -name "*.apk" | head -1)
-          echo "=== APK Debug Signature ==="
-          # --verbose: hiển thị chi tiết, --print-certs: in thông tin chứng chỉ
+          echo "=== Xác minh chữ ký APK debug ==="
+          # Dùng apksigner (trong build-tools 34.0.0) để kiểm tra
+          # --verbose: hiển thị chi tiết các lược đồ chữ ký (v1, v2, v3, v4)
+          # --print-certs: in ra thông tin chứng chỉ (Distinguished Name và fingerprint)
           $ANDROID_HOME/build-tools/34.0.0/apksigner verify --verbose --print-certs "$APK_PATH"
-          # Kết quả sẽ hiển thị: CN=Android Debug, O=Android, C=US
+          # Kết quả mong đợi:
+          # - Verified using v1 scheme: true
+          # - Verified using v2 scheme: true
+          # - Verified using v3 scheme: true
+          # - Signer #1 certificate DN: CN=Android Debug, O=Android, C=US
+          # Điều này chứng tỏ APK đã được ký bằng debug key mặc định
 
-      # Bước 9: Đổi tên file APK thành bitcoin-wallet-debug.apk
-      - name: Rename APK to debug
+      # ----- BƯỚC 9: Đổi tên file APK cho đúng bản chất (debug) -----
+      - name: Rename APK to bitcoin-wallet-debug.apk
         run: |
           APK_PATH=$(find wallet/build/outputs/apk/prod/debug -name "*.apk" | head -1)
           DIR=$(dirname "$APK_PATH")
+          # Đổi tên file thành bitcoin-wallet-debug.apk
           mv "$APK_PATH" "$DIR/bitcoin-wallet-debug.apk"
           echo "Đã đổi tên thành bitcoin-wallet-debug.apk"
 
-      # Bước 10: Upload file APK debug lên artifact
-      - uses: actions/upload-artifact@v4
+      # ----- BƯỚC 10: Upload file APK lên GitHub Actions Artifact (để tải về) -----
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
         with:
-          name: debug-apk
-          path: wallet/build/outputs/apk/prod/debug/*.apk
+          name: debug-apk                    # Tên artifact hiển thị trên giao diện
+          path: wallet/build/outputs/apk/prod/debug/*.apk   # Đường dẫn file (dùng wildcard)
