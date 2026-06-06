@@ -1,31 +1,43 @@
-name: Build debug
+# Tên workflow hiển thị trên GitHub Actions
+name: Build Bitcoin Wallet - main
+
+# Chỉ chạy thủ công từ giao diện (không tự động)
 on:
   workflow_dispatch:
 
 jobs:
+  # Job chính để build
   build:
+    # Môi trường chạy: Ubuntu 22.04
     runs-on: ubuntu-22.04
+
     steps:
+      # Bước 1: Lấy mã nguồn từ nhánh main
       - uses: actions/checkout@v4
         with: {ref: main, fetch-depth: 0}
 
+      # Bước 2: Cài đặt JDK 17 (cần cho Android SDK)
       - name: Setup JDK 17 for SDK
         uses: actions/setup-java@v4
         with: {distribution: temurin, java-version: '17'}
 
+      # Bước 3: Cài đặt Android SDK 34 và build-tools 34.0.0
       - name: Setup Android SDK 34 only
         uses: android-actions/setup-android@v3
         with:
           packages: 'platform-tools platforms;android-34 build-tools;34.0.0'
 
+      # Bước 4: Chuyển sang JDK 11 để thực hiện build (dự án yêu cầu)
       - name: Setup JDK 11 for build
         uses: actions/setup-java@v4
         with: {distribution: temurin, java-version: '11'}
 
+      # Bước 5: Cài đặt Gradle 6.9.4 (phiên bản cũ của dự án)
       - name: Setup Gradle 6.9.4
         uses: gradle/actions/setup-gradle@v3
         with: {gradle-version: '6.9.4'}
 
+      # Bước 6: Ép buộc các thư viện tương thích với Gradle 6
       - name: Force libs for Gradle 6
         run: |
           mkdir -p ~/.gradle/init.d
@@ -52,11 +64,13 @@ jobs:
           }
           EOF
 
+      # Bước 7: Build file APK với flavor prod và build type debug
       - name: Build APK prodDebug
         run: |
           export ANDROID_HOME=$ANDROID_SDK_ROOT
           export JAVA_HOME=$JAVA_HOME_11_X64
           gradle :wallet:assembleProdDebug --no-daemon -Pandroid.buildToolsVersion=34.0.0 --stacktrace
 
+      # Bước 8: Upload file APK (chưa ký) lên artifact
       - uses: actions/upload-artifact@v4
         with: {name: main-apk, path: wallet/build/outputs/apk/prod/debug/*.apk}
