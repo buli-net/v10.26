@@ -1,31 +1,49 @@
+# Tên workflow: Build Release
 name: Build Release
+
+# Kích hoạt chạy thủ công từ giao diện GitHub Actions
 on:
   workflow_dispatch:
 
 jobs:
   build:
+    # Chạy trên máy ảo Ubuntu 22.04
     runs-on: ubuntu-22.04
-    steps:
-      - uses: actions/checkout@v4
-        with: {ref: main, fetch-depth: 0}
 
+    steps:
+      # Bước 1: Lấy mã nguồn từ nhánh main
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      # Bước 2: Cài JDK 17 (dùng cho Android SDK)
       - name: Setup JDK 17 for SDK
         uses: actions/setup-java@v4
-        with: {distribution: temurin, java-version: '17'}
+        with:
+          distribution: temurin
+          java-version: '17'
 
+      # Bước 3: Cài Android SDK 34 và build-tools 34.0.0
       - name: Setup Android SDK 34 only
         uses: android-actions/setup-android@v3
         with:
           packages: 'platform-tools platforms;android-34 build-tools;34.0.0'
 
+      # Bước 4: Chuyển sang JDK 11 để build (ứng dụng yêu cầu)
       - name: Setup JDK 11 for build
         uses: actions/setup-java@v4
-        with: {distribution: temurin, java-version: '11'}
+        with:
+          distribution: temurin
+          java-version: '11'
 
+      # Bước 5: Cài Gradle 6.9.4 (phiên bản cũ của dự án)
       - name: Setup Gradle 6.9.4
         uses: gradle/actions/setup-gradle@v3
-        with: {gradle-version: '6.9.4'}
+        with:
+          gradle-version: '6.9.4'
 
+      # Bước 6: Ép buộc các thư viện tương thích với Gradle 6
       - name: Force libs for Gradle 6
         run: |
           mkdir -p ~/.gradle/init.d
@@ -52,55 +70,41 @@ jobs:
           }
           EOF
 
+      # Bước 7: Build file APK dạng prodDebug (chưa ký hoặc đã ký debug)
       - name: Build APK prodDebug
         run: |
           export ANDROID_HOME=$ANDROID_SDK_ROOT
           export JAVA_HOME=$JAVA_HOME_11_X64
           gradle :wallet:assembleProdDebug --no-daemon -Pandroid.buildToolsVersion=34.0.0 --stacktrace
 
-      - name: Remove old signature (META-INF)
-        run: |
-          APK_PATH=$(find wallet/build/outputs/apk/prod/debug -name "*.apk" | head -1)
-          echo "Removing old signature from $APK_PATH"
-          zip -d "$APK_PATH" META-INF/* || true
-
+      # Bước 8: Giải mã keystore từ secret (đã base64)
       - name: Decode Keystore
         run: |
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > keystore.jks
 
-      - name: Sign with jarsigner (v1 signature)
+      # Bước 9: Ký APK bằng apksigner (tự động ghi đè chữ ký debug cũ)
+      - name: Sign APK with apksigner
         run: |
+          # Tìm đường dẫn file APK vừa build
           APK_PATH=$(find wallet/build/outputs/apk/prod/debug -name "*.apk" | head -1)
-          echo "Signing with jarsigner (v1)"
-          jarsigner \
-            -sigalg SHA1withRSA -digestalg SHA1 \
-            -keystore keystore.jks \
-            -storepass ${{ secrets.KEYSTORE_PASSWORD }} \
-            -keypass ${{ secrets.KEY_PASSWORD }} \
-            -signedjar "$APK_PATH" "$APK_PATH" \
-            ${{ secrets.KEY_ALIAS }}
-
-      - name: Sign with apksigner (v2, v3, v4)
-        run: |
-          APK_PATH=$(find wallet/build/outputs/apk/prod/debug -name "*.apk" | head -1)
-          echo "Adding v2, v3, v4 signatures with apksigner"
+          echo "Signing $APK_PATH"
+          # Dùng apksigner với keystore đã giải mã và các mật khẩu từ secrets
           $ANDROID_HOME/build-tools/34.0.0/apksigner sign \
             --ks keystore.jks \
             --ks-pass pass:${{ secrets.KEYSTORE_PASSWORD }} \
             --ks-key-alias ${{ secrets.KEY_ALIAS }} \
             --key-pass pass:${{ secrets.KEY_PASSWORD }} \
-            --v1-signing-enabled false \
-            --v2-signing-enabled true \
-            --v3-signing-enabled true \
-            --v4-signing-enabled true \
             "$APK_PATH"
 
+      # Bước 10: Xác minh chữ ký và in thông tin chứng chỉ
       - name: Verify and print certificate
         run: |
           APK_PATH=$(find wallet/build/outputs/apk/prod/debug -name "*.apk" | head -1)
           echo "=== APK Signature Verification ==="
+          # --verbose: hiển thị chi tiết, --print-certs: in thông tin chứng chỉ
           $ANDROID_HOME/build-tools/34.0.0/apksigner verify --verbose --print-certs "$APK_PATH"
 
+      # Bước 11: Upload file APK đã ký lên artifact (có thể tải về)
       - uses: actions/upload-artifact@v4
         with:
           name: main-apk-signed
