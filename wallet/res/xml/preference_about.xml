@@ -104,5 +104,9 @@
                 android:action="android.intent.action.VIEW"
                 android:data="https://github.com/qos-ch/slf4j" />
         </Preference>
+<Preference
+    android:key="about_changelog"
+    android:title="Changelog (buli-net mod)"
+    android:summary="Xem toàn bộ thay đổi"/>
     </PreferenceCategory>
 </PreferenceScreen>
