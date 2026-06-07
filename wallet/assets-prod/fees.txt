@@ -1,4 +1,10 @@
 # fee rates in satoshis per 1000 bytes of tx data
-ECONOMIC=15000
-NORMAL=50000
-PRIORITY=150000
+# --- OLD VALUES (Schildbach default 2018) ---
+# ECONOMIC=15000
+# NORMAL=50000
+# PRIORITY=150000
+
+# --- NEW VALUES (2026, cho phép 1 sat/vB) ---
+ECONOMIC=1000
+NORMAL=5000
+PRIORITY=20000
