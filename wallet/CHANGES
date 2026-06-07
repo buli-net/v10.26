@@ -2,6 +2,10 @@ v10.25-v10.26
 
 * Add mBTC and µBTC denominations with more decimal places.
 * Migrate market metadata to fastlane structure.
+* ----- fix by buli-net ----- *
+* - 6/6/2026 add 3 file build actions- .github/workflows/...yml
+* - 7/6/2026 fix fee sent coin[1-5-20 sat]- wallet/assets-prod/fees.txt 
+*- 7/6/2026 fix checkpoints block 0 & create file backup checkpoints checkpoints0bk.txt- wallet/assets-prod/checkpoints.txt
 
 v10.17-v10.24
 
