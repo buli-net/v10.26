@@ -5,7 +5,7 @@ v10.25-v10.26
 * ----- fix by buli-net ----- *
 * - 6/6/2026 create 3 file build actions- .github/workflows/...yml
 * - 7/6/2026 fix fee sent coin[1-5-20 sat]- wallet/assets-prod/fees.txt 
-*- 7/6/2026 fix checkpoints block 0 & create file backup checkpoints checkpoints0bk.txt- wallet/assets-prod/checkpoints.txt
+* - 7/6/2026 fix checkpoints block 0 & create file backup checkpoints-bk.txt- wallet/assets-prod/checkpoints.txt
 
 v10.17-v10.24
 
