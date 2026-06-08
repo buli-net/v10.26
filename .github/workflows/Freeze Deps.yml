@@ -1,33 +1,36 @@
-name: Freeze Bitcoin Wallet 10.26
+name: Freeze My Repo
 on:
   workflow_dispatch:
+
 jobs:
   freeze:
     runs-on: ubuntu-latest
     steps:
-      - name: Clone Bitcoin Wallet 10.26
-        run: |
-          git clone --depth 1 --branch v10.26 https://github.com/bitcoin-wallet/bitcoin-wallet.git .
-      
+      - uses: actions/checkout@v4
+
       - uses: actions/setup-java@v4
         with:
           java-version: '11'
           distribution: 'temurin'
 
-      - name: Download all deps
-        run: ./gradlew :wallet:dependencies --no-daemon
+      - name: Check repo
+        run: |
+          test -f gradlew || (echo "THIEU gradlew" && exit 1)
+          test -d wallet || (echo "THIEU thu muc wallet" && exit 1)
+          ls -lh
 
-      - name: Build to force download
+      - name: Build offline cache
+        run: |
+          chmod +x gradlew
+          ./gradlew :wallet:dependencies --no-daemon --stacktrace
+
+      - name: Force download
         run: ./gradlew :wallet:assembleDebug --no-daemon || true
 
-      - name: Collect offline repo
-        run: |
-          mkdir -p /tmp/offline
-          cp -r $HOME/.gradle/caches/modules-2 /tmp/offline
-          cp -r $HOME/.gradle/wrapper /tmp/offline
-          tar -czf offline-repo-10.26.tar.gz -C /tmp offline
+      - name: Pack cache
+        run: tar -czf my-offline.tar.gz -C $HOME .gradle
 
       - uses: actions/upload-artifact@v4
         with:
-          name: offline-repo-10.26
-          path: offline-repo-10.26.tar.gz
+          name: my-offline-cache
+          path: my-offline.tar.gz
