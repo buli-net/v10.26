@@ -272,7 +272,11 @@ public class Configuration {
     public boolean getDisclaimerEnabled() {
         return prefs.getBoolean(PREFS_KEY_DISCLAIMER, true);
     }
-
+// --- stick fees setting
+    public boolean getEnableDynamicFeesDefault() {
+    return true;
+    }
+    // ---end
     private String defaultCurrencyCode() {
         try {
             return Currency.getInstance(Locale.getDefault()).getCurrencyCode();
