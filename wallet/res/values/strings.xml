@@ -376,8 +376,4 @@
     <string name="error_parse">Parse error: %s</string>
     <string name="error_http">HTTP error %1$s:\n%2$s</string>
     <string name="error_bluetooth">Bluetooth error: %1$s</string>
-
-    <!-- Dynamic fees stick -->
-    <string name="preferences_enable_dynamic_fees_title">Dynamic fees</string>
-    <string name="preferences_enable_dynamic_fees_summary">Use fees from mempool.space, fallback to built-in fees</string>
 </resources>
