@@ -1,22 +1,19 @@
-name: Freeze Deps
-on: [push]
+name: freeze
+on: push
 jobs:
-  freeze:
+  build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Setup Java 11
-        uses: actions/setup-java@v4
-        with:
-          java-version: '11'
-          distribution: 'temurin'
-      - name: Create wrapper
-        run: |
-          mkdir -p gradle/wrapper
-          curl -sL https://github.com/gradle/gradle/raw/v6.9.4/gradle/wrapper/gradle-wrapper.jar -o gradle/wrapper/gradle-wrapper.jar
-          printf "distributionBase=GRADLE_USER_HOME\ndistributionPath=wrapper/dists\ndistributionUrl=https\\://services.gradle.org/distributions/gradle-6.9.4-bin.zip\nzipStoreBase=GRADLE_USER_HOME\nzipStorePath=wrapper/dists\n" > gradle/wrapper/gradle-wrapper.properties
-      - name: Fix gradlew
-        run: chmod +x gradlew
-      - name: Freeze
-        run:./gradlew :wallet:dependencies --write-locks --no-daemon
+    - uses: actions/checkout@v4
+    - uses: actions/setup-java@v4
+      with:
+        java-version: '11'
+        distribution: temurin
+    - name: make gradlew
+      run: |
+        echo '#!/bin/sh' > gradlew
+        echo 'exec gradle "$@"' >> gradlew
+        chmod +x gradlew
+    - name: deps
+      run: mkdir -p gradle/wrapper && curl -sLo gradle/wrapper/gradle-wrapper.jar https://github.com/gradle/gradle/raw/v6.9.4/gradle/wrapper/gradle-wrapper.jar
+    - run: ./gradlew --version
