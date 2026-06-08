@@ -1,5 +1,7 @@
 name: Freeze Deps
-on: workflow_dispatch
+on:
+  push:
+    branches: [ main ]
 jobs:
   freeze:
     runs-on: ubuntu-latest
@@ -10,10 +12,12 @@ jobs:
       - run: |
           mkdir -p gradle/wrapper
           curl -L -o gradle/wrapper/gradle-wrapper.jar https://github.com/gradle/gradle/raw/v6.9.4/gradle/wrapper/gradle-wrapper.jar
-          echo "distributionBase=GRADLE_USER_HOME
-distributionPath=wrapper/dists
-distributionUrl=https\://services.gradle.org/distributions/gradle-6.9.4-bin.zip
-zipStoreBase=GRADLE_USER_HOME
-zipStorePath=wrapper/dists" > gradle/wrapper/gradle-wrapper.properties
       - run: chmod +x gradlew
       - run: ./gradlew :wallet:dependencies --write-locks
+      - run: |
+          mkdir -p offline-repo
+          cp -r ~/.gradle/caches/modules-2/files-2.1/* offline-repo/ || true
+      - uses: actions/upload-artifact@v4
+        with:
+          name: offline-repo-10.26
+          path: offline-repo
