@@ -98,9 +98,9 @@ public final class SettingsFragment extends PreferenceFragment implements OnPref
 
         // --- backport v11.04: hide duplicate dynamic-fees ---
 Preference dynamicFeesFalse = findPreference("enable_dynamic_fees_default_false");
-if (dynamicFeesFalse != null)
-    dynamicFeesFalse.setVisible(false);
-        // -----end---
+if (dynamicFeesFalse != null && dynamicFeesFalse.getParent() != null)
+    dynamicFeesFalse.getParent().removePreference(dynamicFeesFalse);
+// --- end ---
 
         backgroundThread = new HandlerThread("backgroundThread", Process.THREAD_PRIORITY_BACKGROUND);
         backgroundThread.start();
