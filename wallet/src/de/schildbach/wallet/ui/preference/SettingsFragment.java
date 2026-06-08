@@ -100,7 +100,7 @@ public final class SettingsFragment extends PreferenceFragment implements OnPref
 Preference dynamicFeesFalse = findPreference("enable_dynamic_fees_default_false");
 if (dynamicFeesFalse != null)
     dynamicFeesFalse.setVisible(false);
-        //-----end---//
+        // -----end---
 
         backgroundThread = new HandlerThread("backgroundThread", Process.THREAD_PRIORITY_BACKGROUND);
         backgroundThread.start();
