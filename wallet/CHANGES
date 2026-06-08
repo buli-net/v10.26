@@ -3,9 +3,17 @@ v10.25-v10.26
 * Add mBTC and µBTC denominations with more decimal places.
 * Migrate market metadata to fastlane structure.
 * ----- fix by buli-net ----- *
-* - 6/6/2026 create 3 file build actions- .github/workflows/...yml
+
+* - 8/6/2026 add on/off check new version setting menu. 
+* + wallet/res/xml/preference_settings.xml [add code line 50->55 ]
+* + wallet/src/de/schildbach/wallet/ui/AlertDialogsFragment.java [add code line 91->93 ]
+
 * - 7/6/2026 fix fee sent coin[1-5-20 sat]- wallet/assets-prod/fees.txt 
+
 * - 7/6/2026 fix checkpoints block 0 & create file backup checkpoints-bk.txt- wallet/assets-prod/checkpoints.txt
+
+* - 6/6/2026 create 3 file build actions- .github/workflows/...yml
+
 
 v10.17-v10.24
 
