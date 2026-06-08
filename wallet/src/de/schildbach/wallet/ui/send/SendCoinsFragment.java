@@ -710,21 +710,7 @@ public final class SendCoinsFragment extends Fragment {
         final SendRequest sendRequest = finalPaymentIntent.toSendRequest();
         sendRequest.emptyWallet =
                 viewModel.paymentIntent.mayEditAmount() && amount.equals(Constants.NETWORK_PARAMETERS.getMaxMoney());
-      
-                
-// --- STICK v11 --- mode v11
-        //sendRequest.feePerKb = fees.get(viewModel.feeCategory.getValue()); // v10.26
-
-final boolean stick = android.preference.PreferenceManager
-        .getDefaultSharedPreferences(requireContext())
-        .getBoolean("stick_fee", false);
-if (stick) {
-    sendRequest.feePerKb = Constants.CONTEXT.getFeePerKb();
-} else {
-    sendRequest.feePerKb = fees.get(viewModel.feeCategory.getValue());
-}
-        //--end
-        
+        sendRequest.feePerKb = fees.get(viewModel.feeCategory.getValue());
         sendRequest.memo = viewModel.paymentIntent.memo;
         sendRequest.exchangeRate = amountCalculatorLink.getExchangeRate();
         sendRequest.aesKey = encryptionKey;
