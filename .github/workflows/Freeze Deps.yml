@@ -1,19 +1,16 @@
 name: Freeze Bitcoin Wallet 10.26
 on:
   workflow_dispatch:
-
 jobs:
   freeze:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-java@v4
         with:
           java-version: '11'
           distribution: 'temurin'
 
-      # TẢI ĐÚNG gradle-wrapper.jar chính thức
       - name: Fix wrapper
         run: |
           mkdir -p gradle/wrapper
@@ -23,13 +20,17 @@ jobs:
           printf "distributionBase=GRADLE_USER_HOME\ndistributionPath=wrapper/dists\ndistributionUrl=https\\://services.gradle.org/distributions/gradle-6.9.4-bin.zip\n" > gradle/wrapper/gradle-wrapper.properties
           chmod +x gradlew
 
-      - name: Freeze dependencies
-        run: ./gradlew :wallet:dependencies --write-locks --no-daemon
+      - name: Download all deps
+        run: ./gradlew :wallet:dependencies --no-daemon
+
+      - name: Build to force download
+        run: ./gradlew :wallet:assembleDebug --no-daemon || true
 
       - name: Collect offline repo
         run: |
           mkdir -p offline-repo
-          cp -r ~/.gradle/caches/modules-2/files-2.1 offline-repo
+          cp -r $HOME/.gradle/caches/modules-2 offline-repo || true
+          cp -r $HOME/.gradle/wrapper offline-repo || true
 
       - uses: actions/upload-artifact@v4
         with:
