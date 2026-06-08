@@ -101,4 +101,15 @@
             android:dialogMessage="@string/preferences_bluetooth_address_dialog_message"
             android:inputType="text|textNoSuggestions" />
     </PreferenceCategory>
+
+<PreferenceCategory android:title="Updates">
+
+    <SwitchPreference
+        android:key="update_check_enabled"
+        android:title="Check for new version"
+        android:summary="Bật/tắt popup 'A NEW VERSION IS AVAILABLE'"
+        android:defaultValue="true" />
+
+</PreferenceCategory>
+
 </PreferenceScreen>
