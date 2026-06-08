@@ -96,11 +96,13 @@ public final class SettingsFragment extends PreferenceFragment implements OnPref
 
         addPreferencesFromResource(R.xml.preference_settings);
 
-        // --- backport v11.04: hide duplicate dynamic-fees ---
-Preference dynamicFeesFalse = findPreference("enable_dynamic_fees_default_false");
-if (dynamicFeesFalse != null && dynamicFeesFalse.getParent() != null)
-    dynamicFeesFalse.getParent().removePreference(dynamicFeesFalse);
-// --- end ---
+    // --- backport v11.04: keep only one dynamic-fees pref ---
+    final Preference dynamicFeesToRemove = findPreference(config.getEnableDynamicFeesDefault() ?
+            Configuration.PREFS_KEY_ENABLE_DYNAMIC_FEES_DEFAULT_FALSE :
+            Configuration.PREFS_KEY_ENABLE_DYNAMIC_FEES);
+    if (dynamicFeesToRemove != null)
+        dynamicFeesToRemove.getParent().removePreference(dynamicFeesToRemove);
+    // --- end ---
 
         backgroundThread = new HandlerThread("backgroundThread", Process.THREAD_PRIORITY_BACKGROUND);
         backgroundThread.start();
