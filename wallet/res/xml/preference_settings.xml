@@ -46,6 +46,12 @@
             android:key="notifications"
             android:title="@string/preferences_notifications_title"
             android:summary="@string/preferences_notifications_summary" />
+
+        <CheckBoxPreference
+            android:key="update_check_enabled"
+            android:title="Check for new version"
+            android:summary="Show popup when a new version is available"
+            android:defaultValue="true" />
     </PreferenceCategory>
 
     <PreferenceCategory
