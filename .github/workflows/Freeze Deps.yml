@@ -5,20 +5,14 @@ jobs:
   freeze:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Clone Bitcoin Wallet 10.26
+        run: |
+          git clone --depth 1 --branch v10.26 https://github.com/bitcoin-wallet/bitcoin-wallet.git .
+      
       - uses: actions/setup-java@v4
         with:
           java-version: '11'
           distribution: 'temurin'
-
-      - name: Fix wrapper
-        run: |
-          mkdir -p gradle/wrapper
-          curl -sL https://services.gradle.org/distributions/gradle-6.9.4-bin.zip -o gradle.zip
-          unzip -j gradle.zip "gradle-6.9.4/lib/gradle-wrapper-6.9.4.jar" -d gradle/wrapper
-          mv gradle/wrapper/gradle-wrapper-6.9.4.jar gradle/wrapper/gradle-wrapper.jar
-          printf "distributionBase=GRADLE_USER_HOME\ndistributionPath=wrapper/dists\ndistributionUrl=https\\://services.gradle.org/distributions/gradle-6.9.4-bin.zip\n" > gradle/wrapper/gradle-wrapper.properties
-          chmod +x gradlew
 
       - name: Download all deps
         run: ./gradlew :wallet:dependencies --no-daemon
@@ -28,11 +22,12 @@ jobs:
 
       - name: Collect offline repo
         run: |
-          mkdir -p offline-repo
-          cp -r $HOME/.gradle/caches/modules-2 offline-repo || true
-          cp -r $HOME/.gradle/wrapper offline-repo || true
+          mkdir -p /tmp/offline
+          cp -r $HOME/.gradle/caches/modules-2 /tmp/offline
+          cp -r $HOME/.gradle/wrapper /tmp/offline
+          tar -czf offline-repo-10.26.tar.gz -C /tmp offline
 
       - uses: actions/upload-artifact@v4
         with:
           name: offline-repo-10.26
-          path: offline-repo
+          path: offline-repo-10.26.tar.gz
