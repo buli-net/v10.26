@@ -715,7 +715,9 @@ public final class SendCoinsFragment extends Fragment {
 // --- STICK v11 --- mode v11
         //sendRequest.feePerKb = fees.get(viewModel.feeCategory.getValue()); // v10.26
 
-boolean stick = config.getBoolean("stick_fee", false);
+final boolean stick = android.preference.PreferenceManager
+        .getDefaultSharedPreferences(requireContext())
+        .getBoolean("stick_fee", false);
 if (stick) {
     sendRequest.feePerKb = Constants.CONTEXT.getFeePerKb();
 } else {
