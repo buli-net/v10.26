@@ -1,0 +1,13 @@
+name: Freeze Deps
+on: workflow_dispatch
+jobs:
+  freeze:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { java-version: '11', distribution: 'temurin' }
+      - run: ./gradlew :wallet:dependencies --write-locks
+      - run: mkdir offline-repo && cp -r ~/.gradle/caches/modules-2/files-2.1/* offline-repo/
+      - uses: actions/upload-artifact@v4
+        with: { name: offline-repo, path: offline-repo }
