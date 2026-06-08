@@ -633,7 +633,10 @@ public class BlockchainService extends LifecycleService {
                 final Configuration.SyncMode syncMode = config.getSyncMode();
                 peerGroup = new PeerGroup(Constants.NETWORK_PARAMETERS, blockChain);
                 log.info("creating {}, sync mode: {}", peerGroup, syncMode);
-                peerGroup.setDownloadTxDependencies(0); // recursive implementation causes StackOverflowError
+             // peerGroup.setDownloadTxDependencies(0); //v10.26 recursive implementation causes StackOverflowError
+             // v11: enable feefilter from peers so getFeePerKb() returns dynamic network fee
+                peerGroup.setDownloadTxDependencies(true); // mod v11
+                //--end
                 peerGroup.addWallet(wallet);
                 peerGroup.setBloomFilteringEnabled(syncMode == Configuration.SyncMode.CONNECTION_FILTER);
                 peerGroup.setUserAgent(Constants.USER_AGENT, application.packageInfo().versionName);
