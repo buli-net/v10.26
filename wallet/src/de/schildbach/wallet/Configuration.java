@@ -61,6 +61,9 @@ public class Configuration {
     public static final String PREFS_KEY_DISCLAIMER = "disclaimer";
     public static final String PREFS_KEY_BLUETOOTH_ADDRESS = "bluetooth_address";
 
+    public static final String PREFS_KEY_ENABLE_DYNAMIC_FEES = "enable_dynamic_fees";
+    public static final String PREFS_KEY_ENABLE_DYNAMIC_FEES_DEFAULT_FALSE = "enable_dynamic_fees_default_false";
+    
     private static final String PREFS_KEY_LAST_VERSION = "last_version";
     private static final String PREFS_KEY_LAST_USED = "last_used";
     private static final String PREFS_KEY_BEST_CHAIN_HEIGHT_EVER = "best_chain_height_ever";
