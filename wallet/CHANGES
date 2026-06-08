@@ -4,7 +4,7 @@ v10.25-v10.26
 * Migrate market metadata to fastlane structure.
 * ----- fix by buli-net ----- *
 
-* - 8/6/2026 add on/off check new version setting menu. 
+* - 8/6/2026 add on/off check for new version in settings menu.
 * + wallet/res/xml/preference_settings.xml [add code line 50->55 ]
 * + wallet/src/de/schildbach/wallet/ui/AlertDialogsFragment.java [add code line 91->93 ]
 
