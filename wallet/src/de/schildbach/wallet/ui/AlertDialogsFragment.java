@@ -88,6 +88,9 @@ public class AlertDialogsFragment extends Fragment {
         viewModel.showVersionAlertDialog.observe(this, new Event.Observer<Installer>() {
             @Override
             protected void onEvent(final Installer market) {
+                if (!android.preference.PreferenceManager.getDefaultSharedPreferences(activity)
+                        .getBoolean("update_check_enabled", true))
+                    return;
                 log.info("showing version alert dialog");
                 createVersionAlertDialog(market).show();
             }
