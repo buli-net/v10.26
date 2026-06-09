@@ -1,0 +1,67 @@
+name: Build All APKs (Prod & Dev)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools platforms;android-34 build-tools;34.0.0'
+
+      - name: Setup JDK 11
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '11'
+
+      - name: Setup Gradle 6.9.4
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: '6.9.4'
+
+      # Xác định module name bằng cách đọc settings.gradle hoặc danh sách thư mục
+      - name: Find module name
+        run: |
+          echo "=== Directory tree ==="
+          find . -maxdepth 2 -name "build.gradle" -type f | sed 's|./||'
+          echo "=== settings.gradle content ==="
+          cat settings.gradle 2>/dev/null || echo "No settings.gradle"
+          echo "=== Gradle projects ==="
+          gradle projects --no-daemon
+
+      - name: Build all variants (fix module name)
+        run: |
+          # Dựa vào file build.gradle bạn gửi, module có thể là :wallet hoặc :app
+          # Hãy thử lần lượt, nếu thiếu thì bổ sung
+          MODULES=":wallet :app"
+          for MOD in $MODULES; do
+            echo "Trying module $MOD"
+            gradle $MOD:assembleProdDebug --no-daemon --stacktrace && break || continue
+          done
+          # Build tất cả variants nếu module tìm được
+          gradle assembleProdDebug assembleProdRelease assembleDevDebug assembleDevRelease --no-daemon --stacktrace
+
+      - name: List generated APKs
+        run: |
+          find . -name "*.apk" -type f
+          echo "--- If no APK found, build failed ---"
+
+      - name: Upload APKs
+        uses: actions/upload-artifact@v4
+        with:
+          name: all-bitcoin-apks
+          path: |
+            **/build/outputs/apk/**/*.apk
+          if-no-files-found: error   # Sẽ báo lỗi nếu không có APK nào
