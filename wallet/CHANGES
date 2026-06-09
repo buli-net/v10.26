@@ -6,7 +6,7 @@ v10.25-v10.26
 
 * - 8/6/2026 add on/off check for new version in settings menu.
 * + wallet/res/xml/preference_settings.xml [add code line 50->54 ]
-* + wallet/src/de/schildbach/wallet/ui/AlertDialogsFragment.java [add code line 91->93 ]
+* + wallet/src/de/schildbach/wallet/ui/AlertDialogsFragment.java [add code line 90->92 ]
 
 * - 7/6/2026 fix fee sent coin[1-5-20 sat]- wallet/assets-prod/fees.txt 
 
