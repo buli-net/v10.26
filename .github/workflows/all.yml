@@ -1,4 +1,4 @@
-name: Build and Upload APKs
+name: Build Bitcoin Wallet (Mainnet & Testnet)
 
 on:
   workflow_dispatch:
@@ -31,33 +31,18 @@ jobs:
         with:
           gradle-version: '6.9.4'
 
-      - name: Find module name from settings.gradle
-        id: find_module
-        run: |
-          if [ -f settings.gradle ]; then
-            MODULE=$(grep -E "include\s+':[^']+'" settings.gradle | head -1 | sed "s/.*'\(:[^']*\)'.*/\1/")
-            echo "module=$MODULE" >> $GITHUB_OUTPUT
-          else
-            echo "module=:app" >> $GITHUB_OUTPUT
-          fi
-          echo "Detected module: ${{ steps.find_module.outputs.module }}"
+      - name: List all Gradle tasks (for debugging)
+        run: gradle tasks --all
 
-      - name: Build all variants
+      - name: Build all APK variants
         run: |
-          MODULE="${{ steps.find_module.outputs.module }}"
-          echo "Building for module $MODULE"
-          gradle "$MODULE:assembleProdDebug" \
-                  "$MODULE:assembleProdRelease" \
-                  "$MODULE:assembleDevDebug" \
-                  "$MODULE:assembleDevRelease" \
-                  --no-daemon --stacktrace
-          # Nếu lệnh trên thất bại, workflow sẽ dừng và báo lỗi
+          gradle assembleProdDebug assembleProdRelease assembleDevDebug assembleDevRelease --no-daemon --stacktrace
 
-      - name: List all APKs
+      - name: List generated APKs
         run: |
-          echo "=== APK files found ==="
-          find . -name "*.apk" -type f -exec ls -lh {} \;
-          echo "=== Total count: $(find . -name "*.apk" | wc -l) ==="
+          echo "=== APK files ==="
+          find . -name "*.apk" -type f
+          echo "Total: $(find . -name "*.apk" | wc -l)"
 
       - name: Upload APKs
         uses: actions/upload-artifact@v4
