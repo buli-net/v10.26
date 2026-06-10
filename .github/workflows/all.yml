@@ -31,8 +31,24 @@ jobs:
         with:
           gradle-version: '6.9.4'
 
-      - name: List all Gradle tasks (for debugging)
-        run: gradle tasks --all
+      - name: Force Guava version via init script
+        run: |
+          mkdir -p ~/.gradle/init.d
+          cat > ~/.gradle/init.d/force.gradle <<'EOF'
+          allprojects {
+            configurations.all {
+              resolutionStrategy {
+                force 'com.google.guava:guava:31.1-android'
+              }
+            }
+          }
+          EOF
+
+      - name: Fix Guava version in build.gradle
+        run: |
+          sed -i "s/implementation 'com.google.guava:guava:33.4.0-android'/implementation 'com.google.guava:guava:31.1-android'/" build.gradle
+          echo "✅ Patched build.gradle:"
+          grep guava build.gradle || echo "No guava line found"
 
       - name: Build all APK variants
         run: |
