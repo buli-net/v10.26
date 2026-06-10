@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.buli.ui.monitor;
+package net.buli.w.ui.monitor;
 
 import android.app.Application;
 import android.os.AsyncTask;
@@ -23,9 +23,9 @@ import android.os.Handler;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MediatorLiveData;
-import net.buli.WalletApplication;
-import net.buli.data.BlockchainServiceLiveData;
-import net.buli.service.BlockchainService;
+import net.buli.w.WalletApplication;
+import net.buli.w.data.BlockchainServiceLiveData;
+import net.buli.w.service.BlockchainService;
 import org.bitcoinj.core.Peer;
 
 import java.net.InetAddress;

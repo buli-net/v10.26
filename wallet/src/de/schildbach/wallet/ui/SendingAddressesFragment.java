@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.buli.ui;
+package net.buli.w.ui;
 
 import android.content.ClipData;
 import android.content.ClipboardManager;
@@ -39,14 +39,14 @@ import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import net.buli.Constants;
-import net.buli.R;
-import net.buli.addressbook.AddressBookDao;
-import net.buli.addressbook.AddressBookDatabase;
-import net.buli.data.PaymentIntent;
-import net.buli.ui.send.SendCoinsActivity;
-import net.buli.util.Qr;
-import net.buli.util.Toast;
+import net.buli.w.Constants;
+import net.buli.w.R;
+import net.buli.w.addressbook.AddressBookDao;
+import net.buli.w.addressbook.AddressBookDatabase;
+import net.buli.w.data.PaymentIntent;
+import net.buli.w.ui.send.SendCoinsActivity;
+import net.buli.w.util.Qr;
+import net.buli.w.util.Toast;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.uri.BitcoinURI;
 import org.slf4j.Logger;

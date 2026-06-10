@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.buli.addressbook;
+package net.buli.w.addressbook;
 
 import androidx.lifecycle.LiveData;
 import androidx.room.Dao;

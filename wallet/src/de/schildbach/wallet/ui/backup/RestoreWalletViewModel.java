@@ -15,15 +15,15 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.buli.ui.backup;
+package net.buli.w.ui.backup;
 
 import android.app.Application;
 import android.net.Uri;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.MutableLiveData;
-import net.buli.WalletApplication;
-import net.buli.data.WalletBalanceLiveData;
-import net.buli.ui.Event;
+import net.buli.w.WalletApplication;
+import net.buli.w.data.WalletBalanceLiveData;
+import net.buli.w.ui.Event;
 
 /**
  * @author Andreas Schildbach

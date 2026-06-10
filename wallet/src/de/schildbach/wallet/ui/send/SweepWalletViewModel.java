@@ -15,15 +15,15 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.buli.ui.send;
+package net.buli.w.ui.send;
 
 import android.app.Application;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.MutableLiveData;
-import net.buli.WalletApplication;
-import net.buli.data.DynamicFeeLiveData;
-import net.buli.data.TransactionLiveData;
-import net.buli.ui.DialogEvent;
+import net.buli.w.WalletApplication;
+import net.buli.w.data.DynamicFeeLiveData;
+import net.buli.w.data.TransactionLiveData;
+import net.buli.w.ui.DialogEvent;
 import org.bitcoinj.core.PrefixedChecksummedBytes;
 import org.bitcoinj.wallet.Wallet;
 

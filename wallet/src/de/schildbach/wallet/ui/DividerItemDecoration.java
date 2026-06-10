@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.buli.ui;
+package net.buli.w.ui;
 
 import android.content.Context;
 import android.content.res.TypedArray;

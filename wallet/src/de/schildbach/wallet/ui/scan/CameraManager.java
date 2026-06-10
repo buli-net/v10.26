@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.buli.ui.scan;
+package net.buli.w.ui.scan;
 
 import android.annotation.SuppressLint;
 import android.graphics.Rect;

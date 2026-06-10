@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.buli.ui;
+package net.buli.w.ui;
 
 import static com.google.common.base.Preconditions.checkState;
 

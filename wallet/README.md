@@ -6,16 +6,16 @@ Technical details
 Your wallet contains your private keys and various transaction related metadata. It is stored in app-private
 storage:
 
-    Mainnet: /data/data/net.buli/files/wallet-protobuf
-    Testnet: /data/data/net.buli_test/files/wallet-protobuf-testnet
+    Mainnet: /data/data/net.buli.w/files/wallet-protobuf
+    Testnet: /data/data/net.buli.w_test/files/wallet-protobuf-testnet
 
 The wallet file format is not compatible to wallet.dat (Satoshi client). Rather, it uses a custom protobuf format
 which should be compatible between clients using bitcoinj.
 
 Certain actions cause automatic rolling backups of your wallet to app-private storage:
 
-    Mainnet: /data/data/net.buli/files/key-backup-protobuf
-    Testnet: /data/data/net.buli_test/files/key-backup-protobuf-testnet
+    Mainnet: /data/data/net.buli.w/files/key-backup-protobuf
+    Testnet: /data/data/net.buli.w_test/files/key-backup-protobuf-testnet
 
 Your wallet can be manually backed up to and restored from a share of the storage access framework (likely Google Drive):
 
@@ -28,15 +28,15 @@ itself to restore from the backup, see the separate [README.recover.md](README.r
 The current fee rate for each of the fee categories (economic, normal, priority) is cached in
 app-private storage:
 
-    Mainnet: /data/data/net.buli/files/fees.txt
-    Testnet: /data/data/net.buli_test/files/fees-testnet.txt
+    Mainnet: /data/data/net.buli.w/files/fees.txt
+    Testnet: /data/data/net.buli.w_test/files/fees-testnet.txt
 
 
 ### DEBUGGING
 
 Wallet file for Testnet can be pulled from an (even un-rooted) device using:
 
-    adb pull /data/data/net.buli_test/files/wallet-protobuf-testnet
+    adb pull /data/data/net.buli.w_test/files/wallet-protobuf-testnet
 
 Log messages can be viewed by:
 

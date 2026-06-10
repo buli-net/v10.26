@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.buli.util;
+package net.buli.w.util;
 
 import com.google.common.io.BaseEncoding;
 import org.bouncycastle.crypto.BufferedBlockCipher;

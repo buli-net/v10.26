@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.buli.ui.monitor;
+package net.buli.w.ui.monitor;
 
 import android.content.Context;
 import android.net.Uri;
@@ -33,14 +33,14 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.RecyclerView;
-import net.buli.Configuration;
-import net.buli.Constants;
-import net.buli.R;
-import net.buli.WalletApplication;
-import net.buli.addressbook.AddressBookEntry;
-import net.buli.ui.AbstractWalletActivity;
-import net.buli.ui.AbstractWalletActivityViewModel;
-import net.buli.ui.StickToTopLinearLayoutManager;
+import net.buli.w.Configuration;
+import net.buli.w.Constants;
+import net.buli.w.R;
+import net.buli.w.WalletApplication;
+import net.buli.w.addressbook.AddressBookEntry;
+import net.buli.w.ui.AbstractWalletActivity;
+import net.buli.w.ui.AbstractWalletActivityViewModel;
+import net.buli.w.ui.StickToTopLinearLayoutManager;
 import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.StoredBlock;
 import org.bitcoinj.wallet.Wallet;

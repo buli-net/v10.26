@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.buli.ui;
+package net.buli.w.ui;
 
 import android.content.Context;
 import android.content.Intent;
@@ -40,11 +40,11 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
 import androidx.viewpager2.widget.ViewPager2;
-import net.buli.R;
-import net.buli.data.PaymentIntent;
-import net.buli.ui.scan.ScanActivity;
-import net.buli.util.ViewPagerTabs;
-import net.buli.util.ZoomOutPageTransformer;
+import net.buli.w.R;
+import net.buli.w.data.PaymentIntent;
+import net.buli.w.ui.scan.ScanActivity;
+import net.buli.w.util.ViewPagerTabs;
+import net.buli.w.util.ZoomOutPageTransformer;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.VerificationException;

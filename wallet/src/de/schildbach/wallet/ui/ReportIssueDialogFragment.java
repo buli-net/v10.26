@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.buli.ui;
+package net.buli.w.ui;
 
 import android.app.ActivityManager;
 import android.app.AlertDialog;
@@ -35,14 +35,14 @@ import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.ViewModelProvider;
 import com.google.common.base.Joiner;
-import net.buli.BuildConfig;
-import net.buli.Configuration;
-import net.buli.Constants;
-import net.buli.R;
-import net.buli.WalletApplication;
-import net.buli.util.Bluetooth;
-import net.buli.util.CrashReporter;
-import net.buli.util.Installer;
+import net.buli.w.BuildConfig;
+import net.buli.w.Configuration;
+import net.buli.w.Constants;
+import net.buli.w.R;
+import net.buli.w.WalletApplication;
+import net.buli.w.util.Bluetooth;
+import net.buli.w.util.CrashReporter;
+import net.buli.w.util.Installer;
 import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionOutput;

@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.buli.ui;
+package net.buli.w.ui;
 
 import android.app.ActivityManager.TaskDescription;
 import android.content.ActivityNotFoundException;
@@ -24,9 +24,9 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.view.MenuItem;
 import androidx.fragment.app.FragmentActivity;
-import net.buli.R;
-import net.buli.WalletApplication;
-import net.buli.util.Toast;
+import net.buli.w.R;
+import net.buli.w.WalletApplication;
+import net.buli.w.util.Toast;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

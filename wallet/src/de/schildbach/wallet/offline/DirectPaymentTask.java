@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.buli.offline;
+package net.buli.w.offline;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -23,9 +23,9 @@ import android.bluetooth.BluetoothSocket;
 import android.os.Handler;
 import android.os.Looper;
 import androidx.annotation.Nullable;
-import net.buli.Constants;
-import net.buli.R;
-import net.buli.util.Bluetooth;
+import net.buli.w.Constants;
+import net.buli.w.R;
+import net.buli.w.util.Bluetooth;
 import okhttp3.CacheControl;
 import okhttp3.Call;
 import okhttp3.Headers;

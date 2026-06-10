@@ -15,15 +15,15 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.buli.exchangerate;
+package net.buli.w.exchangerate;
 
 import android.text.format.DateUtils;
 import androidx.room.InvalidationTracker;
 import com.google.common.base.Stopwatch;
 import com.squareup.moshi.Moshi;
-import net.buli.Configuration;
-import net.buli.Constants;
-import net.buli.WalletApplication;
+import net.buli.w.Configuration;
+import net.buli.w.Constants;
+import net.buli.w.WalletApplication;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.ConnectionSpec;

@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.buli;
+package net.buli.w;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.LoggerContext;

@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.buli.ui.scan;
+package net.buli.w.ui.scan;
 
 import android.Manifest;
 import android.app.Activity;
@@ -58,10 +58,10 @@ import com.google.zxing.Result;
 import com.google.zxing.ResultPointCallback;
 import com.google.zxing.common.HybridBinarizer;
 import com.google.zxing.qrcode.QRCodeReader;
-import net.buli.R;
-import net.buli.ui.AbstractWalletActivity;
-import net.buli.ui.DialogBuilder;
-import net.buli.ui.Event;
+import net.buli.w.R;
+import net.buli.w.ui.AbstractWalletActivity;
+import net.buli.w.ui.DialogBuilder;
+import net.buli.w.ui.Event;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

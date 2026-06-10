@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.buli.ui.send;
+package net.buli.w.ui.send;
 
 import android.content.Context;
 import android.content.Intent;
@@ -47,21 +47,21 @@ import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.ViewModelProvider;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.util.concurrent.ListenableFuture;
-import net.buli.Configuration;
-import net.buli.Constants;
-import net.buli.R;
-import net.buli.WalletApplication;
-import net.buli.data.PaymentIntent;
-import net.buli.ui.AbstractWalletActivity;
-import net.buli.ui.AbstractWalletActivityViewModel;
-import net.buli.ui.DialogBuilder;
-import net.buli.ui.DialogEvent;
-import net.buli.ui.InputParser.StringInputParser;
-import net.buli.ui.ProgressDialogFragment;
-import net.buli.ui.TransactionsAdapter;
-import net.buli.ui.scan.ScanActivity;
-import net.buli.util.MonetarySpannable;
-import net.buli.util.Toast;
+import net.buli.w.Configuration;
+import net.buli.w.Constants;
+import net.buli.w.R;
+import net.buli.w.WalletApplication;
+import net.buli.w.data.PaymentIntent;
+import net.buli.w.ui.AbstractWalletActivity;
+import net.buli.w.ui.AbstractWalletActivityViewModel;
+import net.buli.w.ui.DialogBuilder;
+import net.buli.w.ui.DialogEvent;
+import net.buli.w.ui.InputParser.StringInputParser;
+import net.buli.w.ui.ProgressDialogFragment;
+import net.buli.w.ui.TransactionsAdapter;
+import net.buli.w.ui.scan.ScanActivity;
+import net.buli.w.util.MonetarySpannable;
+import net.buli.w.util.Toast;
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.DumpedPrivateKey;

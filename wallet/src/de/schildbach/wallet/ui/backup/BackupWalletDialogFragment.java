@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.buli.ui.backup;
+package net.buli.w.ui.backup;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -41,16 +41,16 @@ import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import com.google.common.io.CharStreams;
-import net.buli.Constants;
-import net.buli.R;
-import net.buli.WalletApplication;
-import net.buli.ui.AbstractWalletActivity;
-import net.buli.ui.AbstractWalletActivityViewModel;
-import net.buli.ui.DialogBuilder;
-import net.buli.ui.ShowPasswordCheckListener;
-import net.buli.util.Crypto;
-import net.buli.util.Toast;
-import net.buli.util.WalletUtils;
+import net.buli.w.Constants;
+import net.buli.w.R;
+import net.buli.w.WalletApplication;
+import net.buli.w.ui.AbstractWalletActivity;
+import net.buli.w.ui.AbstractWalletActivityViewModel;
+import net.buli.w.ui.DialogBuilder;
+import net.buli.w.ui.ShowPasswordCheckListener;
+import net.buli.w.util.Crypto;
+import net.buli.w.util.Toast;
+import net.buli.w.util.WalletUtils;
 import org.bitcoinj.wallet.Protos;
 import org.bitcoinj.wallet.Wallet;
 import org.bitcoinj.wallet.WalletProtobufSerializer;

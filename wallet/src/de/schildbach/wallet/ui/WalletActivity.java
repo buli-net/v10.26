@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.buli.ui;
+package net.buli.w.ui;
 
 import android.animation.Animator;
 import android.animation.AnimatorInflater;
@@ -51,24 +51,24 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.ViewModelProvider;
 import com.google.common.primitives.Floats;
-import net.buli.Configuration;
-import net.buli.Constants;
-import net.buli.R;
-import net.buli.WalletApplication;
-import net.buli.data.PaymentIntent;
-import net.buli.service.BlockchainService;
-import net.buli.ui.InputParser.BinaryInputParser;
-import net.buli.ui.InputParser.StringInputParser;
-import net.buli.ui.backup.BackupWalletActivity;
-import net.buli.ui.backup.RestoreWalletDialogFragment;
-import net.buli.ui.monitor.NetworkMonitorActivity;
-import net.buli.ui.preference.PreferenceActivity;
-import net.buli.ui.scan.ScanActivity;
-import net.buli.ui.send.SendCoinsActivity;
-import net.buli.ui.send.SweepWalletActivity;
-import net.buli.util.CrashReporter;
-import net.buli.util.Nfc;
-import net.buli.util.OnFirstPreDraw;
+import net.buli.w.Configuration;
+import net.buli.w.Constants;
+import net.buli.w.R;
+import net.buli.w.WalletApplication;
+import net.buli.w.data.PaymentIntent;
+import net.buli.w.service.BlockchainService;
+import net.buli.w.ui.InputParser.BinaryInputParser;
+import net.buli.w.ui.InputParser.StringInputParser;
+import net.buli.w.ui.backup.BackupWalletActivity;
+import net.buli.w.ui.backup.RestoreWalletDialogFragment;
+import net.buli.w.ui.monitor.NetworkMonitorActivity;
+import net.buli.w.ui.preference.PreferenceActivity;
+import net.buli.w.ui.scan.ScanActivity;
+import net.buli.w.ui.send.SendCoinsActivity;
+import net.buli.w.ui.send.SweepWalletActivity;
+import net.buli.w.util.CrashReporter;
+import net.buli.w.util.Nfc;
+import net.buli.w.util.OnFirstPreDraw;
 import org.bitcoinj.core.PrefixedChecksummedBytes;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.VerificationException;

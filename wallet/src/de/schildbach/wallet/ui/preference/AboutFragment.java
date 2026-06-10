@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.buli.ui.preference;
+package net.buli.w.ui.preference;
 
 import android.app.Activity;
 import android.app.Dialog;
@@ -28,11 +28,11 @@ import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.PreferenceFragment;
 import androidx.annotation.Nullable;
-import net.buli.R;
-import net.buli.WalletApplication;
-import net.buli.ui.DialogBuilder;
-import net.buli.util.Installer;
-import net.buli.util.WalletUtils;
+import net.buli.w.R;
+import net.buli.w.WalletApplication;
+import net.buli.w.ui.DialogBuilder;
+import net.buli.w.util.Installer;
+import net.buli.w.util.WalletUtils;
 import org.bitcoinj.core.VersionMessage;
 
 import java.io.IOException;

@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.buli.ui.monitor;
+package net.buli.w.ui.monitor;
 
 import android.graphics.Color;
 import android.os.Bundle;
@@ -30,10 +30,10 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
 import androidx.viewpager2.widget.ViewPager2;
-import net.buli.R;
-import net.buli.ui.AbstractWalletActivity;
-import net.buli.util.ViewPagerTabs;
-import net.buli.util.ZoomOutPageTransformer;
+import net.buli.w.R;
+import net.buli.w.ui.AbstractWalletActivity;
+import net.buli.w.util.ViewPagerTabs;
+import net.buli.w.util.ZoomOutPageTransformer;
 
 /**
  * @author Andreas Schildbach

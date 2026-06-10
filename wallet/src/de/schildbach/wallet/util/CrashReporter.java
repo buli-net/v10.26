@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.buli.util;
+package net.buli.w.util;
 
 import android.content.pm.PackageInfo;
 import org.slf4j.Logger;

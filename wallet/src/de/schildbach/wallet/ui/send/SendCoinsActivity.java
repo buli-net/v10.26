@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.buli.ui.send;
+package net.buli.w.ui.send;
 
 import android.content.Context;
 import android.content.Intent;
@@ -33,13 +33,13 @@ import androidx.core.view.MenuProvider;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.lifecycle.ViewModelProvider;
-import net.buli.Constants;
-import net.buli.R;
-import net.buli.data.PaymentIntent;
-import net.buli.service.BlockchainService;
-import net.buli.ui.AbstractWalletActivity;
-import net.buli.ui.Event;
-import net.buli.ui.HelpDialogFragment;
+import net.buli.w.Constants;
+import net.buli.w.R;
+import net.buli.w.data.PaymentIntent;
+import net.buli.w.service.BlockchainService;
+import net.buli.w.ui.AbstractWalletActivity;
+import net.buli.w.ui.Event;
+import net.buli.w.ui.HelpDialogFragment;
 import org.bitcoinj.core.Coin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

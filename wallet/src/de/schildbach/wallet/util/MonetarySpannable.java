@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.buli.util;
+package net.buli.w.util;
 
 import android.graphics.Typeface;
 import android.text.Spannable;
@@ -23,7 +23,7 @@ import android.text.SpannableString;
 import android.text.style.RelativeSizeSpan;
 import android.text.style.StyleSpan;
 import androidx.annotation.Nullable;
-import net.buli.Constants;
+import net.buli.w.Constants;
 import org.bitcoinj.core.Monetary;
 import org.bitcoinj.utils.MonetaryFormat;
 

@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.buli.service;
+package net.buli.w.service;
 
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -25,14 +25,14 @@ import android.content.Intent;
 import android.text.format.DateUtils;
 import androidx.annotation.WorkerThread;
 import androidx.core.app.NotificationCompat;
-import net.buli.Configuration;
-import net.buli.Constants;
-import net.buli.R;
-import net.buli.WalletApplication;
-import net.buli.data.PaymentIntent;
-import net.buli.ui.WalletActivity;
-import net.buli.ui.send.FeeCategory;
-import net.buli.ui.send.SendCoinsActivity;
+import net.buli.w.Configuration;
+import net.buli.w.Constants;
+import net.buli.w.R;
+import net.buli.w.WalletApplication;
+import net.buli.w.data.PaymentIntent;
+import net.buli.w.ui.WalletActivity;
+import net.buli.w.ui.send.FeeCategory;
+import net.buli.w.ui.send.SendCoinsActivity;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.ContextPropagatingThreadFactory;
 import org.bitcoinj.utils.MonetaryFormat;

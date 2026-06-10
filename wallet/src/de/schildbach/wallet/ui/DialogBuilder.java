@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.buli.ui;
+package net.buli.w.ui;
 
 import android.app.AlertDialog;
 import android.content.Context;
@@ -28,7 +28,7 @@ import android.widget.TextView;
 import androidx.annotation.DrawableRes;
 import androidx.annotation.Nullable;
 import androidx.annotation.StringRes;
-import net.buli.R;
+import net.buli.w.R;
 
 /**
  * @author Andreas Schildbach

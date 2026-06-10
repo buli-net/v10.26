@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.buli.ui;
+package net.buli.w.ui;
 
 import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
@@ -56,15 +56,15 @@ import androidx.core.view.MenuProvider;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.ViewModelProvider;
-import net.buli.Configuration;
-import net.buli.Constants;
-import net.buli.R;
-import net.buli.WalletApplication;
-import net.buli.offline.AcceptBluetoothService;
-import net.buli.ui.send.SendCoinsActivity;
-import net.buli.util.Bluetooth;
-import net.buli.util.Nfc;
-import net.buli.util.Toast;
+import net.buli.w.Configuration;
+import net.buli.w.Constants;
+import net.buli.w.R;
+import net.buli.w.WalletApplication;
+import net.buli.w.offline.AcceptBluetoothService;
+import net.buli.w.ui.send.SendCoinsActivity;
+import net.buli.w.util.Bluetooth;
+import net.buli.w.util.Nfc;
+import net.buli.w.util.Toast;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.protocols.payments.PaymentProtocol;
 import org.bitcoinj.script.Script;

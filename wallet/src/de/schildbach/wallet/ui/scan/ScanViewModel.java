@@ -15,11 +15,11 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.buli.ui.scan;
+package net.buli.w.ui.scan;
 
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
-import net.buli.ui.Event;
+import net.buli.w.ui.Event;
 
 /**
  * @author Andreas Schildbach

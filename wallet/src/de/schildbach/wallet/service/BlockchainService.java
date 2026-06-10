@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.buli.service;
+package net.buli.w.service;
 
 import android.app.ForegroundServiceStartNotAllowedException;
 import android.app.NotificationManager;
@@ -48,22 +48,22 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.Observer;
 import com.google.common.base.Stopwatch;
 import com.google.common.net.HostAndPort;
-import net.buli.Configuration;
-import net.buli.Constants;
-import net.buli.R;
-import net.buli.WalletApplication;
-import net.buli.WalletBalanceWidgetProvider;
-import net.buli.addressbook.AddressBookDao;
-import net.buli.addressbook.AddressBookDatabase;
-import net.buli.data.SelectedExchangeRateLiveData;
-import net.buli.data.WalletBalanceLiveData;
-import net.buli.data.WalletLiveData;
-import net.buli.exchangerate.ExchangeRateEntry;
-import net.buli.service.BlockchainState.Impediment;
-import net.buli.ui.WalletActivity;
-import net.buli.ui.preference.ResolveDnsTask;
-import net.buli.util.CrashReporter;
-import net.buli.util.WalletUtils;
+import net.buli.w.Configuration;
+import net.buli.w.Constants;
+import net.buli.w.R;
+import net.buli.w.WalletApplication;
+import net.buli.w.WalletBalanceWidgetProvider;
+import net.buli.w.addressbook.AddressBookDao;
+import net.buli.w.addressbook.AddressBookDatabase;
+import net.buli.w.data.SelectedExchangeRateLiveData;
+import net.buli.w.data.WalletBalanceLiveData;
+import net.buli.w.data.WalletLiveData;
+import net.buli.w.exchangerate.ExchangeRateEntry;
+import net.buli.w.service.BlockchainState.Impediment;
+import net.buli.w.ui.WalletActivity;
+import net.buli.w.ui.preference.ResolveDnsTask;
+import net.buli.w.util.CrashReporter;
+import net.buli.w.util.WalletUtils;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Block;
 import org.bitcoinj.core.BlockChain;

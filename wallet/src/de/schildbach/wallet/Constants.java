@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.buli;
+package net.buli.w;
 
 import android.os.Build;
 import android.text.format.DateUtils;

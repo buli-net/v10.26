@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.buli.ui.send;
+package net.buli.w.ui.send;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -38,12 +38,12 @@ import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import com.google.common.util.concurrent.ListenableFuture;
-import net.buli.Constants;
-import net.buli.R;
-import net.buli.WalletApplication;
-import net.buli.ui.AbstractWalletActivity;
-import net.buli.ui.DialogBuilder;
-import net.buli.util.WalletUtils;
+import net.buli.w.Constants;
+import net.buli.w.R;
+import net.buli.w.WalletApplication;
+import net.buli.w.ui.AbstractWalletActivity;
+import net.buli.w.ui.DialogBuilder;
+import net.buli.w.util.WalletUtils;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.utils.MonetaryFormat;

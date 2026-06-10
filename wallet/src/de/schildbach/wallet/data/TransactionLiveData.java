@@ -15,14 +15,14 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.buli.data;
+package net.buli.w.data;
 
 import android.app.Application;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Handler;
 import androidx.lifecycle.LiveData;
-import net.buli.WalletApplication;
+import net.buli.w.WalletApplication;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
 

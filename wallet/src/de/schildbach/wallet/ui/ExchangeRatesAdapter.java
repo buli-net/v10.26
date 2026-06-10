@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.buli.ui;
+package net.buli.w.ui;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -35,10 +35,10 @@ import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
-import net.buli.Constants;
-import net.buli.R;
-import net.buli.exchangerate.ExchangeRateEntry;
-import net.buli.service.BlockchainState;
+import net.buli.w.Constants;
+import net.buli.w.R;
+import net.buli.w.exchangerate.ExchangeRateEntry;
+import net.buli.w.service.BlockchainState;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.utils.ExchangeRate;

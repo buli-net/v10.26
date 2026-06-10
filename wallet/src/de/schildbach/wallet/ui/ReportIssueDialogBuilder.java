@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.buli.ui;
+package net.buli.w.ui;
 
 import android.app.Activity;
 import android.content.DialogInterface;
@@ -29,9 +29,9 @@ import android.widget.TextView;
 import androidx.annotation.Nullable;
 import androidx.core.app.ShareCompat;
 import androidx.core.content.FileProvider;
-import net.buli.Constants;
-import net.buli.R;
-import net.buli.util.CrashReporter;
+import net.buli.w.Constants;
+import net.buli.w.R;
+import net.buli.w.util.CrashReporter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

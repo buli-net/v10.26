@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.buli.ui;
+package net.buli.w.ui;
 
 import android.app.Application;
 import androidx.annotation.MainThread;
@@ -23,11 +23,11 @@ import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MediatorLiveData;
 import androidx.lifecycle.MutableLiveData;
-import net.buli.WalletApplication;
-import net.buli.data.WalletBalanceLiveData;
-import net.buli.exchangerate.ExchangeRateDao;
-import net.buli.exchangerate.ExchangeRateEntry;
-import net.buli.exchangerate.ExchangeRatesRepository;
+import net.buli.w.WalletApplication;
+import net.buli.w.data.WalletBalanceLiveData;
+import net.buli.w.exchangerate.ExchangeRateDao;
+import net.buli.w.exchangerate.ExchangeRateEntry;
+import net.buli.w.exchangerate.ExchangeRatesRepository;
 
 import java.util.List;
 import java.util.Locale;

@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.buli.ui;
+package net.buli.w.ui;
 
 import android.content.Context;
 import android.content.Intent;
@@ -31,14 +31,14 @@ import android.widget.TextView;
 import androidx.core.view.MenuProvider;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
-import net.buli.Configuration;
-import net.buli.Constants;
-import net.buli.R;
-import net.buli.WalletApplication;
-import net.buli.exchangerate.ExchangeRateEntry;
-import net.buli.service.BlockchainState;
-import net.buli.ui.send.FeeCategory;
-import net.buli.ui.send.SendCoinsActivity;
+import net.buli.w.Configuration;
+import net.buli.w.Constants;
+import net.buli.w.R;
+import net.buli.w.WalletApplication;
+import net.buli.w.exchangerate.ExchangeRateEntry;
+import net.buli.w.service.BlockchainState;
+import net.buli.w.ui.send.FeeCategory;
+import net.buli.w.ui.send.SendCoinsActivity;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.utils.Fiat;

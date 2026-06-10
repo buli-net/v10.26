@@ -15,16 +15,16 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.buli.data;
+package net.buli.w.data;
 
 import android.os.Parcel;
 import android.os.Parcelable;
 import androidx.annotation.Nullable;
 import com.google.common.io.BaseEncoding;
-import net.buli.Constants;
-import net.buli.util.Bluetooth;
-import net.buli.util.GenericUtils;
-import net.buli.util.WalletUtils;
+import net.buli.w.Constants;
+import net.buli.w.util.Bluetooth;
+import net.buli.w.util.GenericUtils;
+import net.buli.w.util.WalletUtils;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;

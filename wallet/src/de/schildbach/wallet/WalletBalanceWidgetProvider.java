@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.buli;
+package net.buli.w;
 
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
@@ -31,14 +31,14 @@ import android.text.style.StrikethroughSpan;
 import android.view.View;
 import android.widget.RemoteViews;
 import androidx.annotation.Nullable;
-import net.buli.exchangerate.ExchangeRateEntry;
-import net.buli.exchangerate.ExchangeRatesRepository;
-import net.buli.ui.RequestCoinsActivity;
-import net.buli.ui.SendCoinsQrActivity;
-import net.buli.ui.WalletActivity;
-import net.buli.ui.send.SendCoinsActivity;
-import net.buli.util.GenericUtils;
-import net.buli.util.MonetarySpannable;
+import net.buli.w.exchangerate.ExchangeRateEntry;
+import net.buli.w.exchangerate.ExchangeRatesRepository;
+import net.buli.w.ui.RequestCoinsActivity;
+import net.buli.w.ui.SendCoinsQrActivity;
+import net.buli.w.ui.WalletActivity;
+import net.buli.w.ui.send.SendCoinsActivity;
+import net.buli.w.util.GenericUtils;
+import net.buli.w.util.MonetarySpannable;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.utils.ContextPropagatingThreadFactory;

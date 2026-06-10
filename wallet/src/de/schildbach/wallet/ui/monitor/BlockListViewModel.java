@@ -15,21 +15,21 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.buli.ui.monitor;
+package net.buli.w.ui.monitor;
 
 import android.app.Application;
 import android.os.AsyncTask;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MediatorLiveData;
-import net.buli.Constants;
-import net.buli.WalletApplication;
-import net.buli.addressbook.AddressBookDatabase;
-import net.buli.addressbook.AddressBookEntry;
-import net.buli.data.AbstractWalletLiveData;
-import net.buli.data.BlockchainServiceLiveData;
-import net.buli.data.TimeLiveData;
-import net.buli.service.BlockchainService;
+import net.buli.w.Constants;
+import net.buli.w.WalletApplication;
+import net.buli.w.addressbook.AddressBookDatabase;
+import net.buli.w.addressbook.AddressBookEntry;
+import net.buli.w.data.AbstractWalletLiveData;
+import net.buli.w.data.BlockchainServiceLiveData;
+import net.buli.w.data.TimeLiveData;
+import net.buli.w.service.BlockchainService;
 import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.StoredBlock;
 import org.bitcoinj.core.Transaction;

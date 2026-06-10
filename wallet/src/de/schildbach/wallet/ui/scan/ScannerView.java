@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.buli.ui.scan;
+package net.buli.w.ui.scan;
 
 import android.content.Context;
 import android.content.res.Resources;
@@ -29,7 +29,7 @@ import android.graphics.RectF;
 import android.util.AttributeSet;
 import android.view.View;
 import com.google.zxing.ResultPoint;
-import net.buli.R;
+import net.buli.w.R;
 
 import java.util.HashMap;
 import java.util.Iterator;

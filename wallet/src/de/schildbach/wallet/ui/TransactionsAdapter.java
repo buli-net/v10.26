@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.buli.ui;
+package net.buli.w.ui;
 
 import android.content.Context;
 import android.graphics.Color;
@@ -38,12 +38,12 @@ import androidx.core.graphics.ColorUtils;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
-import net.buli.Constants;
-import net.buli.R;
-import net.buli.addressbook.AddressBookEntry;
-import net.buli.ui.TransactionsAdapter.ListItem.TransactionItem;
-import net.buli.util.Formats;
-import net.buli.util.WalletUtils;
+import net.buli.w.Constants;
+import net.buli.w.R;
+import net.buli.w.addressbook.AddressBookEntry;
+import net.buli.w.ui.TransactionsAdapter.ListItem.TransactionItem;
+import net.buli.w.util.Formats;
+import net.buli.w.util.WalletUtils;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Sha256Hash;

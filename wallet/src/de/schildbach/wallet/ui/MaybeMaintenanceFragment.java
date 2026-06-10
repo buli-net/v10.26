@@ -15,13 +15,13 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.buli.ui;
+package net.buli.w.ui;
 
 import android.os.Bundle;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.ViewModelProvider;
-import net.buli.ui.send.MaintenanceDialogFragment;
+import net.buli.w.ui.send.MaintenanceDialogFragment;
 
 /**
  * @author Andreas Schildbach

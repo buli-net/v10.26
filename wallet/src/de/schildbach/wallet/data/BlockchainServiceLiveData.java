@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.buli.data;
+package net.buli.w.data;
 
 import android.content.ComponentName;
 import android.content.Context;
@@ -23,7 +23,7 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.IBinder;
 import androidx.lifecycle.LiveData;
-import net.buli.service.BlockchainService;
+import net.buli.w.service.BlockchainService;
 
 /**
  * @author Andreas Schildbach

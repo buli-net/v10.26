@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.buli.data;
+package net.buli.w.data;
 
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
@@ -23,11 +23,11 @@ import android.os.AsyncTask;
 import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
 import androidx.room.InvalidationTracker;
-import net.buli.Configuration;
-import net.buli.WalletApplication;
-import net.buli.exchangerate.ExchangeRateDao;
-import net.buli.exchangerate.ExchangeRateEntry;
-import net.buli.exchangerate.ExchangeRatesRepository;
+import net.buli.w.Configuration;
+import net.buli.w.WalletApplication;
+import net.buli.w.exchangerate.ExchangeRateDao;
+import net.buli.w.exchangerate.ExchangeRateEntry;
+import net.buli.w.exchangerate.ExchangeRatesRepository;
 
 import java.util.Set;
 

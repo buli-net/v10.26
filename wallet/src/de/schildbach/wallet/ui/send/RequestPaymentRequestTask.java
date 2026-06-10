@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.buli.ui.send;
+package net.buli.w.ui.send;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -25,11 +25,11 @@ import android.os.Looper;
 import androidx.annotation.Nullable;
 import com.google.protobuf.CodedInputStream;
 import com.google.protobuf.CodedOutputStream;
-import net.buli.Constants;
-import net.buli.R;
-import net.buli.data.PaymentIntent;
-import net.buli.ui.InputParser;
-import net.buli.util.Bluetooth;
+import net.buli.w.Constants;
+import net.buli.w.R;
+import net.buli.w.data.PaymentIntent;
+import net.buli.w.ui.InputParser;
+import net.buli.w.util.Bluetooth;
 import okhttp3.CacheControl;
 import okhttp3.Call;
 import okhttp3.Headers;

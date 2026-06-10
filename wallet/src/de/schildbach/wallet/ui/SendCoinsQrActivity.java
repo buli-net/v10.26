@@ -15,18 +15,18 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.buli.ui;
+package net.buli.w.ui;
 
 import android.content.DialogInterface.OnClickListener;
 import android.os.Bundle;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.lifecycle.ViewModelProvider;
-import net.buli.Constants;
-import net.buli.data.PaymentIntent;
-import net.buli.ui.InputParser.StringInputParser;
-import net.buli.ui.scan.ScanActivity;
-import net.buli.ui.send.SendCoinsActivity;
-import net.buli.ui.send.SweepWalletActivity;
+import net.buli.w.Constants;
+import net.buli.w.data.PaymentIntent;
+import net.buli.w.ui.InputParser.StringInputParser;
+import net.buli.w.ui.scan.ScanActivity;
+import net.buli.w.ui.send.SendCoinsActivity;
+import net.buli.w.ui.send.SweepWalletActivity;
 import org.bitcoinj.core.PrefixedChecksummedBytes;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.VerificationException;

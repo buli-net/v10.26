@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.buli.ui;
+package net.buli.w.ui;
 
 import android.app.Activity;
 import android.app.Dialog;
@@ -27,7 +27,7 @@ import android.view.Window;
 import android.widget.ImageView;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.FragmentManager;
-import net.buli.R;
+import net.buli.w.R;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

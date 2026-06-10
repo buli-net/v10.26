@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.buli;
+package net.buli.w;
 
 import android.app.ActivityManager;
 import android.app.Application;
@@ -42,13 +42,13 @@ import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import com.google.common.util.concurrent.SettableFuture;
-import net.buli.service.BlockchainService;
-import net.buli.service.BlockchainState;
-import net.buli.ui.Event;
-import net.buli.util.Bluetooth;
-import net.buli.util.CrashReporter;
-import net.buli.util.Toast;
-import net.buli.util.WalletUtils;
+import net.buli.w.service.BlockchainService;
+import net.buli.w.service.BlockchainState;
+import net.buli.w.ui.Event;
+import net.buli.w.util.Bluetooth;
+import net.buli.w.util.CrashReporter;
+import net.buli.w.util.Toast;
+import net.buli.w.util.WalletUtils;
 import org.bitcoinj.core.VersionMessage;
 import org.bitcoinj.crypto.MnemonicCode;
 import org.bitcoinj.utils.ContextPropagatingThreadFactory;

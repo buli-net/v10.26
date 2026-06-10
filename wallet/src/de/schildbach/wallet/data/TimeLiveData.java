@@ -15,14 +15,14 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.buli.data;
+package net.buli.w.data;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import androidx.lifecycle.LiveData;
-import net.buli.WalletApplication;
+import net.buli.w.WalletApplication;
 
 import java.util.Date;
 

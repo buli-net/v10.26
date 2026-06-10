@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.buli.ui;
+package net.buli.w.ui;
 
 import android.app.admin.DevicePolicyManager;
 import android.content.Context;
@@ -44,16 +44,16 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.RecyclerView;
-import net.buli.Configuration;
-import net.buli.Constants;
-import net.buli.R;
-import net.buli.WalletApplication;
-import net.buli.addressbook.AddressBookDao;
-import net.buli.addressbook.AddressBookDatabase;
-import net.buli.ui.TransactionsAdapter.WarningType;
-import net.buli.ui.send.RaiseFeeDialogFragment;
-import net.buli.util.Qr;
-import net.buli.util.WalletUtils;
+import net.buli.w.Configuration;
+import net.buli.w.Constants;
+import net.buli.w.R;
+import net.buli.w.WalletApplication;
+import net.buli.w.addressbook.AddressBookDao;
+import net.buli.w.addressbook.AddressBookDatabase;
+import net.buli.w.ui.TransactionsAdapter.WarningType;
+import net.buli.w.ui.send.RaiseFeeDialogFragment;
+import net.buli.w.util.Qr;
+import net.buli.w.util.WalletUtils;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Transaction;

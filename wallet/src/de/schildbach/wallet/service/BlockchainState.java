@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.buli.service;
+package net.buli.w.service;
 
 import java.util.Date;
 import java.util.EnumSet;

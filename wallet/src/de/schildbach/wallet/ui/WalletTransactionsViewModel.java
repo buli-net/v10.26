@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.buli.ui;
+package net.buli.w.ui;
 
 import android.app.Application;
 import android.graphics.Bitmap;
@@ -24,13 +24,13 @@ import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MediatorLiveData;
 import androidx.lifecycle.MutableLiveData;
-import net.buli.Constants;
-import net.buli.WalletApplication;
-import net.buli.addressbook.AddressBookDatabase;
-import net.buli.addressbook.AddressBookEntry;
-import net.buli.data.AbstractWalletLiveData;
-import net.buli.data.ConfigFormatLiveData;
-import net.buli.data.WalletLiveData;
+import net.buli.w.Constants;
+import net.buli.w.WalletApplication;
+import net.buli.w.addressbook.AddressBookDatabase;
+import net.buli.w.addressbook.AddressBookEntry;
+import net.buli.w.data.AbstractWalletLiveData;
+import net.buli.w.data.ConfigFormatLiveData;
+import net.buli.w.data.WalletLiveData;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Sha256Hash;

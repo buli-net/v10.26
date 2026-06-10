@@ -15,17 +15,17 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.buli.ui;
+package net.buli.w.ui;
 
 import android.app.Application;
 import android.os.AsyncTask;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.MediatorLiveData;
 import com.google.common.util.concurrent.ListenableFuture;
-import net.buli.Constants;
-import net.buli.WalletApplication;
-import net.buli.data.AbstractWalletLiveData;
-import net.buli.service.BlockchainState;
+import net.buli.w.Constants;
+import net.buli.w.WalletApplication;
+import net.buli.w.data.AbstractWalletLiveData;
+import net.buli.w.service.BlockchainState;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.wallet.DeterministicUpgradeRequiresPassword;
 import org.bitcoinj.wallet.Wallet;

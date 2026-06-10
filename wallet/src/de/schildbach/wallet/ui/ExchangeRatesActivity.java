@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.buli.ui;
+package net.buli.w.ui;
 
 import android.graphics.Color;
 import android.os.Bundle;
@@ -25,7 +25,7 @@ import androidx.activity.SystemBarStyle;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
-import net.buli.R;
+import net.buli.w.R;
 
 /**
  * @author Andreas Schildbach

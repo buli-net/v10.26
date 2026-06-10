@@ -15,12 +15,12 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.buli.ui.preference;
+package net.buli.w.ui.preference;
 
 import android.os.Handler;
 import android.os.Looper;
 import com.google.common.net.HostAndPort;
-import net.buli.Constants;
+import net.buli.w.Constants;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;

@@ -28,7 +28,7 @@
 
             <androidx.fragment.app.FragmentContainerView
                 android:id="@+id/wallet_address_fragment"
-                android:name="net.buli.ui.WalletAddressFragment"
+                android:name="net.buli.w.ui.WalletAddressFragment"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/list_entry_padding_vertical_lax"
@@ -53,7 +53,7 @@
 
                 <androidx.fragment.app.FragmentContainerView
                     android:id="@+id/wallet_balance_fragment"
-                    android:name="net.buli.ui.WalletBalanceFragment"
+                    android:name="net.buli.w.ui.WalletBalanceFragment"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:tag="slide_in_top" />
@@ -61,7 +61,7 @@
 
             <androidx.fragment.app.FragmentContainerView
                 android:id="@+id/wallet_transactions_fragment"
-                android:name="net.buli.ui.WalletTransactionsFragment"
+                android:name="net.buli.w.ui.WalletTransactionsFragment"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:tag="slide_in_bottom" />

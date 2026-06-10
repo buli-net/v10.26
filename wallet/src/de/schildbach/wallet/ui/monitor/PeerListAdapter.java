@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.buli.ui.monitor;
+package net.buli.w.ui.monitor;
 
 import android.content.Context;
 import android.graphics.drawable.Drawable;
@@ -34,8 +34,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 import com.google.common.net.HostAndPort;
-import net.buli.Constants;
-import net.buli.R;
+import net.buli.w.Constants;
+import net.buli.w.R;
 import org.bitcoinj.core.Peer;
 import org.bitcoinj.core.PeerAddress;
 import org.bitcoinj.core.VersionMessage;

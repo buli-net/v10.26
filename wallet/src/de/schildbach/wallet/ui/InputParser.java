@@ -15,16 +15,16 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.buli.ui;
+package net.buli.w.ui;
 
 import com.google.common.hash.Hashing;
 import com.google.common.io.ByteStreams;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.UninitializedMessageException;
-import net.buli.Constants;
-import net.buli.R;
-import net.buli.data.PaymentIntent;
-import net.buli.util.Qr;
+import net.buli.w.Constants;
+import net.buli.w.R;
+import net.buli.w.data.PaymentIntent;
+import net.buli.w.util.Qr;
 import org.bitcoin.protocols.payments.Protos;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;

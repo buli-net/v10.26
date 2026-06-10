@@ -8,8 +8,8 @@
         android:shortcutShortLabel="@string/button_scan">
         <intent
             android:action="android.intent.action.VIEW"
-            android:targetClass="net.buli.ui.SendCoinsQrActivity"
-            android:targetPackage="net.buli" />
+            android:targetClass="net.buli.w.ui.SendCoinsQrActivity"
+            android:targetPackage="net.buli.w" />
     </shortcut>
     <shortcut
         android:icon="@drawable/shortcut_send_coins"
@@ -17,8 +17,8 @@
         android:shortcutShortLabel="@string/button_send_coins">
         <intent
             android:action="android.intent.action.VIEW"
-            android:targetClass="net.buli.ui.send.SendCoinsActivity"
-            android:targetPackage="net.buli" />
+            android:targetClass="net.buli.w.ui.send.SendCoinsActivity"
+            android:targetPackage="net.buli.w" />
     </shortcut>
     <shortcut
         android:icon="@drawable/shortcut_request_coins"
@@ -26,7 +26,7 @@
         android:shortcutShortLabel="@string/button_request_coins">
         <intent
             android:action="android.intent.action.VIEW"
-            android:targetClass="net.buli.ui.RequestCoinsActivity"
-            android:targetPackage="net.buli" />
+            android:targetClass="net.buli.w.ui.RequestCoinsActivity"
+            android:targetPackage="net.buli.w" />
     </shortcut>
 </shortcuts>

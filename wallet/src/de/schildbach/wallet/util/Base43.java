@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.buli.util;
+package net.buli.w.util;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;

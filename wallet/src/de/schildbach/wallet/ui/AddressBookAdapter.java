@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.buli.ui;
+package net.buli.w.ui;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -36,10 +36,10 @@ import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
-import net.buli.Constants;
-import net.buli.R;
-import net.buli.addressbook.AddressBookEntry;
-import net.buli.util.WalletUtils;
+import net.buli.w.Constants;
+import net.buli.w.R;
+import net.buli.w.addressbook.AddressBookEntry;
+import net.buli.w.util.WalletUtils;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.wallet.Wallet;

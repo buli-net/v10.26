@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.buli.ui;
+package net.buli.w.ui;
 
 import android.content.Context;
 import android.os.Bundle;
@@ -25,7 +25,7 @@ import android.view.ViewGroup;
 import android.view.ViewParent;
 import android.widget.FrameLayout;
 import androidx.fragment.app.Fragment;
-import net.buli.R;
+import net.buli.w.R;
 
 /**
  * @author Andreas Schildbach

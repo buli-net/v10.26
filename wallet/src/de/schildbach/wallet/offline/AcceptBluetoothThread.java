@@ -15,13 +15,13 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.buli.offline;
+package net.buli.w.offline;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
-import net.buli.Constants;
-import net.buli.util.Bluetooth;
+import net.buli.w.Constants;
+import net.buli.w.util.Bluetooth;
 import org.bitcoin.protocols.payments.Protos;
 import org.bitcoin.protocols.payments.Protos.PaymentACK;
 import org.bitcoinj.core.ProtocolException;

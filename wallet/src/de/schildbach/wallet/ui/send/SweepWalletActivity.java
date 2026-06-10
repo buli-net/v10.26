@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.buli.ui.send;
+package net.buli.w.ui.send;
 
 import android.content.Context;
 import android.content.Intent;
@@ -27,9 +27,9 @@ import androidx.activity.SystemBarStyle;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
-import net.buli.R;
-import net.buli.service.BlockchainService;
-import net.buli.ui.AbstractWalletActivity;
+import net.buli.w.R;
+import net.buli.w.service.BlockchainService;
+import net.buli.w.ui.AbstractWalletActivity;
 import org.bitcoinj.core.PrefixedChecksummedBytes;
 
 /**

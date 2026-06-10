@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.buli.ui.preference;
+package net.buli.w.ui.preference;
 
 import android.app.Activity;
 import android.app.Dialog;
@@ -27,9 +27,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ImageView;
 import androidx.core.app.ShareCompat;
-import net.buli.R;
-import net.buli.ui.DialogBuilder;
-import net.buli.util.Qr;
+import net.buli.w.R;
+import net.buli.w.ui.DialogBuilder;
+import net.buli.w.util.Qr;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.buli.ui;
+package net.buli.w.ui;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -41,10 +41,10 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.google.common.base.Strings;
-import net.buli.Configuration;
-import net.buli.R;
-import net.buli.WalletApplication;
-import net.buli.exchangerate.ExchangeRateEntry;
+import net.buli.w.Configuration;
+import net.buli.w.R;
+import net.buli.w.WalletApplication;
+import net.buli.w.exchangerate.ExchangeRateEntry;
 
 import java.util.List;
 

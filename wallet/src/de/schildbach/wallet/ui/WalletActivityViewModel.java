@@ -15,16 +15,16 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.buli.ui;
+package net.buli.w.ui;
 
 import android.app.Application;
 import android.os.AsyncTask;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.MutableLiveData;
-import net.buli.Constants;
-import net.buli.WalletApplication;
-import net.buli.data.AbstractWalletLiveData;
-import net.buli.util.OnFirstPreDraw;
+import net.buli.w.Constants;
+import net.buli.w.WalletApplication;
+import net.buli.w.data.AbstractWalletLiveData;
+import net.buli.w.util.OnFirstPreDraw;
 import org.bitcoinj.script.Script;
 import org.bitcoinj.wallet.Wallet;
 

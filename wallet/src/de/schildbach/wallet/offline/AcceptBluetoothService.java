@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.buli.offline;
+package net.buli.w.offline;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothManager;
@@ -33,13 +33,13 @@ import android.text.format.DateUtils;
 import androidx.annotation.WorkerThread;
 import androidx.core.app.NotificationCompat;
 import androidx.lifecycle.LifecycleService;
-import net.buli.Constants;
-import net.buli.R;
-import net.buli.WalletApplication;
-import net.buli.data.BlockchainServiceLiveData;
-import net.buli.data.WalletLiveData;
-import net.buli.util.CrashReporter;
-import net.buli.util.Toast;
+import net.buli.w.Constants;
+import net.buli.w.R;
+import net.buli.w.WalletApplication;
+import net.buli.w.data.BlockchainServiceLiveData;
+import net.buli.w.data.WalletLiveData;
+import net.buli.w.util.CrashReporter;
+import net.buli.w.util.Toast;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.VerificationException;
 import org.bitcoinj.wallet.Wallet;

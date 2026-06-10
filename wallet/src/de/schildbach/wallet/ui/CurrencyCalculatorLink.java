@@ -15,12 +15,12 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.buli.ui;
+package net.buli.w.ui;
 
 import android.view.View;
 import androidx.annotation.Nullable;
-import net.buli.Constants;
-import net.buli.ui.CurrencyAmountView.Listener;
+import net.buli.w.Constants;
+import net.buli.w.ui.CurrencyAmountView.Listener;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.ExchangeRate;
 import org.bitcoinj.utils.Fiat;

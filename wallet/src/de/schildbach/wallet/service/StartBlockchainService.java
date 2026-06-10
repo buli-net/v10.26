@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.buli.service;
+package net.buli.w.service;
 
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
@@ -26,9 +26,9 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.PowerManager;
 import android.text.format.DateUtils;
-import net.buli.Configuration;
-import net.buli.Constants;
-import net.buli.WalletApplication;
+import net.buli.w.Configuration;
+import net.buli.w.Constants;
+import net.buli.w.WalletApplication;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

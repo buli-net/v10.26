@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.buli.ui.monitor;
+package net.buli.w.ui.monitor;
 
 import android.content.Context;
 import android.os.Bundle;
@@ -31,8 +31,8 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.google.common.net.HostAndPort;
-import net.buli.R;
-import net.buli.ui.AbstractWalletActivity;
+import net.buli.w.R;
+import net.buli.w.ui.AbstractWalletActivity;
 import org.bitcoinj.core.Peer;
 
 import java.util.List;

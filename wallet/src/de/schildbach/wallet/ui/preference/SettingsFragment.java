@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.buli.ui.preference;
+package net.buli.w.ui.preference;
 
 import android.Manifest;
 import android.app.Activity;
@@ -43,11 +43,11 @@ import android.text.Spanned;
 import android.text.TextWatcher;
 import androidx.core.content.ContextCompat;
 import com.google.common.net.HostAndPort;
-import net.buli.Configuration;
-import net.buli.Constants;
-import net.buli.R;
-import net.buli.WalletApplication;
-import net.buli.util.Bluetooth;
+import net.buli.w.Configuration;
+import net.buli.w.Constants;
+import net.buli.w.R;
+import net.buli.w.WalletApplication;
+import net.buli.w.util.Bluetooth;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

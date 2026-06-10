@@ -15,10 +15,10 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.buli.util;
+package net.buli.w.util;
 
 import androidx.annotation.Nullable;
-import net.buli.Constants;
+import net.buli.w.Constants;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

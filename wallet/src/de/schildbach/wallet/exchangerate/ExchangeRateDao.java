@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.buli.exchangerate;
+package net.buli.w.exchangerate;
 
 import androidx.lifecycle.LiveData;
 import androidx.room.Dao;
