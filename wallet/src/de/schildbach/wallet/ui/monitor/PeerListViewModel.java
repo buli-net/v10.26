@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.schildbach.wallet.ui.monitor;
+package net.buli.ui.monitor;
 
 import android.app.Application;
 import android.os.AsyncTask;
@@ -23,9 +23,9 @@ import android.os.Handler;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MediatorLiveData;
-import de.schildbach.wallet.WalletApplication;
-import de.schildbach.wallet.data.BlockchainServiceLiveData;
-import de.schildbach.wallet.service.BlockchainService;
+import net.buli.WalletApplication;
+import net.buli.data.BlockchainServiceLiveData;
+import net.buli.service.BlockchainService;
 import org.bitcoinj.core.Peer;
 
 import java.net.InetAddress;

@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.schildbach.wallet.ui.backup;
+package net.buli.ui.backup;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;

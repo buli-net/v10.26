@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.schildbach.wallet.ui.monitor;
+package net.buli.ui.monitor;
 
 import android.content.Context;
 import android.os.Bundle;
@@ -31,8 +31,8 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.google.common.net.HostAndPort;
-import de.schildbach.wallet.R;
-import de.schildbach.wallet.ui.AbstractWalletActivity;
+import net.buli.R;
+import net.buli.ui.AbstractWalletActivity;
 import org.bitcoinj.core.Peer;
 
 import java.util.List;

@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.schildbach.wallet.ui.send;
+package net.buli.ui.send;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -25,11 +25,11 @@ import android.os.Looper;
 import androidx.annotation.Nullable;
 import com.google.protobuf.CodedInputStream;
 import com.google.protobuf.CodedOutputStream;
-import de.schildbach.wallet.Constants;
-import de.schildbach.wallet.R;
-import de.schildbach.wallet.data.PaymentIntent;
-import de.schildbach.wallet.ui.InputParser;
-import de.schildbach.wallet.util.Bluetooth;
+import net.buli.Constants;
+import net.buli.R;
+import net.buli.data.PaymentIntent;
+import net.buli.ui.InputParser;
+import net.buli.util.Bluetooth;
 import okhttp3.CacheControl;
 import okhttp3.Call;
 import okhttp3.Headers;

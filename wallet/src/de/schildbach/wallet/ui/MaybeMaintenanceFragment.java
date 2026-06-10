@@ -15,13 +15,13 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.schildbach.wallet.ui;
+package net.buli.ui;
 
 import android.os.Bundle;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.ViewModelProvider;
-import de.schildbach.wallet.ui.send.MaintenanceDialogFragment;
+import net.buli.ui.send.MaintenanceDialogFragment;
 
 /**
  * @author Andreas Schildbach

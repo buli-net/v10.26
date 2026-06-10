@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.schildbach.wallet;
+package net.buli;
 
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
@@ -31,14 +31,14 @@ import android.text.style.StrikethroughSpan;
 import android.view.View;
 import android.widget.RemoteViews;
 import androidx.annotation.Nullable;
-import de.schildbach.wallet.exchangerate.ExchangeRateEntry;
-import de.schildbach.wallet.exchangerate.ExchangeRatesRepository;
-import de.schildbach.wallet.ui.RequestCoinsActivity;
-import de.schildbach.wallet.ui.SendCoinsQrActivity;
-import de.schildbach.wallet.ui.WalletActivity;
-import de.schildbach.wallet.ui.send.SendCoinsActivity;
-import de.schildbach.wallet.util.GenericUtils;
-import de.schildbach.wallet.util.MonetarySpannable;
+import net.buli.exchangerate.ExchangeRateEntry;
+import net.buli.exchangerate.ExchangeRatesRepository;
+import net.buli.ui.RequestCoinsActivity;
+import net.buli.ui.SendCoinsQrActivity;
+import net.buli.ui.WalletActivity;
+import net.buli.ui.send.SendCoinsActivity;
+import net.buli.util.GenericUtils;
+import net.buli.util.MonetarySpannable;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.utils.ContextPropagatingThreadFactory;

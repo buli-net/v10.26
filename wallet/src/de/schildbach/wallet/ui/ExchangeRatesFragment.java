@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.schildbach.wallet.ui;
+package net.buli.ui;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -41,10 +41,10 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.google.common.base.Strings;
-import de.schildbach.wallet.Configuration;
-import de.schildbach.wallet.R;
-import de.schildbach.wallet.WalletApplication;
-import de.schildbach.wallet.exchangerate.ExchangeRateEntry;
+import net.buli.Configuration;
+import net.buli.R;
+import net.buli.WalletApplication;
+import net.buli.exchangerate.ExchangeRateEntry;
 
 import java.util.List;
 

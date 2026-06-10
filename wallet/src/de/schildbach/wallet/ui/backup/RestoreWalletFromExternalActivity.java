@@ -15,10 +15,10 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.schildbach.wallet.ui.backup;
+package net.buli.ui.backup;
 
 import android.os.Bundle;
-import de.schildbach.wallet.ui.AbstractWalletActivity;
+import net.buli.ui.AbstractWalletActivity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

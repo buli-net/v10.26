@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.schildbach.wallet.ui.scan;
+package net.buli.ui.scan;
 
 import android.annotation.SuppressLint;
 import android.graphics.Rect;

@@ -15,21 +15,21 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.schildbach.wallet.ui.monitor;
+package net.buli.ui.monitor;
 
 import android.app.Application;
 import android.os.AsyncTask;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MediatorLiveData;
-import de.schildbach.wallet.Constants;
-import de.schildbach.wallet.WalletApplication;
-import de.schildbach.wallet.addressbook.AddressBookDatabase;
-import de.schildbach.wallet.addressbook.AddressBookEntry;
-import de.schildbach.wallet.data.AbstractWalletLiveData;
-import de.schildbach.wallet.data.BlockchainServiceLiveData;
-import de.schildbach.wallet.data.TimeLiveData;
-import de.schildbach.wallet.service.BlockchainService;
+import net.buli.Constants;
+import net.buli.WalletApplication;
+import net.buli.addressbook.AddressBookDatabase;
+import net.buli.addressbook.AddressBookEntry;
+import net.buli.data.AbstractWalletLiveData;
+import net.buli.data.BlockchainServiceLiveData;
+import net.buli.data.TimeLiveData;
+import net.buli.service.BlockchainService;
 import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.StoredBlock;
 import org.bitcoinj.core.Transaction;

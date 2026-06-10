@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.schildbach.wallet.exchangerate;
+package net.buli.exchangerate;
 
 import android.content.Context;
 import androidx.room.Database;

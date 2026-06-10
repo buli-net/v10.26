@@ -15,10 +15,10 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.schildbach.wallet.util;
+package net.buli.util;
 
 import androidx.annotation.Nullable;
-import de.schildbach.wallet.Constants;
+import net.buli.Constants;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

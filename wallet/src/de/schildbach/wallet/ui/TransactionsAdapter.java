@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.schildbach.wallet.ui;
+package net.buli.ui;
 
 import android.content.Context;
 import android.graphics.Color;
@@ -38,12 +38,12 @@ import androidx.core.graphics.ColorUtils;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
-import de.schildbach.wallet.Constants;
-import de.schildbach.wallet.R;
-import de.schildbach.wallet.addressbook.AddressBookEntry;
-import de.schildbach.wallet.ui.TransactionsAdapter.ListItem.TransactionItem;
-import de.schildbach.wallet.util.Formats;
-import de.schildbach.wallet.util.WalletUtils;
+import net.buli.Constants;
+import net.buli.R;
+import net.buli.addressbook.AddressBookEntry;
+import net.buli.ui.TransactionsAdapter.ListItem.TransactionItem;
+import net.buli.util.Formats;
+import net.buli.util.WalletUtils;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Sha256Hash;

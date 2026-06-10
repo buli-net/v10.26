@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.schildbach.wallet.data;
+package net.buli.data;
 
 import android.os.Handler;
 import androidx.annotation.MainThread;

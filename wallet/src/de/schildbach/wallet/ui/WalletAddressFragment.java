@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.schildbach.wallet.ui;
+package net.buli.ui;
 
 import android.content.Context;
 import android.graphics.drawable.BitmapDrawable;
@@ -32,8 +32,8 @@ import androidx.cardview.widget.CardView;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.ViewModelProvider;
-import de.schildbach.wallet.R;
-import de.schildbach.wallet.util.Nfc;
+import net.buli.R;
+import net.buli.util.Nfc;
 import org.bitcoinj.core.Address;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

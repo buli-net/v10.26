@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.schildbach.wallet.ui;
+package net.buli.ui;
 
 import android.app.Application;
 import androidx.annotation.MainThread;
@@ -23,11 +23,11 @@ import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MediatorLiveData;
 import androidx.lifecycle.MutableLiveData;
-import de.schildbach.wallet.WalletApplication;
-import de.schildbach.wallet.data.WalletBalanceLiveData;
-import de.schildbach.wallet.exchangerate.ExchangeRateDao;
-import de.schildbach.wallet.exchangerate.ExchangeRateEntry;
-import de.schildbach.wallet.exchangerate.ExchangeRatesRepository;
+import net.buli.WalletApplication;
+import net.buli.data.WalletBalanceLiveData;
+import net.buli.exchangerate.ExchangeRateDao;
+import net.buli.exchangerate.ExchangeRateEntry;
+import net.buli.exchangerate.ExchangeRatesRepository;
 
 import java.util.List;
 import java.util.Locale;

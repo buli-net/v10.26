@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.schildbach.wallet.ui.monitor;
+package net.buli.ui.monitor;
 
 import android.content.Context;
 import android.graphics.Typeface;
@@ -37,12 +37,12 @@ import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
-import de.schildbach.wallet.Constants;
-import de.schildbach.wallet.R;
-import de.schildbach.wallet.addressbook.AddressBookEntry;
-import de.schildbach.wallet.ui.CurrencyTextView;
-import de.schildbach.wallet.ui.SeparatorViewHolder;
-import de.schildbach.wallet.util.WalletUtils;
+import net.buli.Constants;
+import net.buli.R;
+import net.buli.addressbook.AddressBookEntry;
+import net.buli.ui.CurrencyTextView;
+import net.buli.ui.SeparatorViewHolder;
+import net.buli.util.WalletUtils;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Sha256Hash;

@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.schildbach.wallet.ui.monitor;
+package net.buli.ui.monitor;
 
 import android.graphics.Color;
 import android.os.Bundle;
@@ -30,10 +30,10 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
 import androidx.viewpager2.widget.ViewPager2;
-import de.schildbach.wallet.R;
-import de.schildbach.wallet.ui.AbstractWalletActivity;
-import de.schildbach.wallet.util.ViewPagerTabs;
-import de.schildbach.wallet.util.ZoomOutPageTransformer;
+import net.buli.R;
+import net.buli.ui.AbstractWalletActivity;
+import net.buli.util.ViewPagerTabs;
+import net.buli.util.ZoomOutPageTransformer;
 
 /**
  * @author Andreas Schildbach

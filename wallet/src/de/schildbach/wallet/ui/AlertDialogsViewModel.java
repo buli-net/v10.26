@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.schildbach.wallet.ui;
+package net.buli.ui;
 
 import android.Manifest;
 import android.app.Application;
@@ -34,11 +34,11 @@ import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.MutableLiveData;
 import com.google.common.base.Splitter;
 import com.google.common.primitives.Ints;
-import de.schildbach.wallet.Configuration;
-import de.schildbach.wallet.Constants;
-import de.schildbach.wallet.WalletApplication;
-import de.schildbach.wallet.util.CrashReporter;
-import de.schildbach.wallet.util.Installer;
+import net.buli.Configuration;
+import net.buli.Constants;
+import net.buli.WalletApplication;
+import net.buli.util.CrashReporter;
+import net.buli.util.Installer;
 import okhttp3.Call;
 import okhttp3.ConnectionSpec;
 import okhttp3.Headers;

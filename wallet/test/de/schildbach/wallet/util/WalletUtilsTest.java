@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.schildbach.wallet.util;
+package net.buli.util;
 
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.TestNet3Params;

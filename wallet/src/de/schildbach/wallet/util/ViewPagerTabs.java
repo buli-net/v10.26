@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.schildbach.wallet.util;
+package net.buli.util;
 
 import android.content.Context;
 import android.graphics.Canvas;
@@ -28,7 +28,7 @@ import android.util.AttributeSet;
 import android.view.View;
 import androidx.annotation.ColorInt;
 import androidx.viewpager2.widget.ViewPager2;
-import de.schildbach.wallet.R;
+import net.buli.R;
 
 import java.util.ArrayList;
 import java.util.List;

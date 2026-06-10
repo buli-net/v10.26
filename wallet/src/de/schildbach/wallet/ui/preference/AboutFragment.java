@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.schildbach.wallet.ui.preference;
+package net.buli.ui.preference;
 
 import android.app.Activity;
 import android.app.Dialog;
@@ -28,11 +28,11 @@ import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.PreferenceFragment;
 import androidx.annotation.Nullable;
-import de.schildbach.wallet.R;
-import de.schildbach.wallet.WalletApplication;
-import de.schildbach.wallet.ui.DialogBuilder;
-import de.schildbach.wallet.util.Installer;
-import de.schildbach.wallet.util.WalletUtils;
+import net.buli.R;
+import net.buli.WalletApplication;
+import net.buli.ui.DialogBuilder;
+import net.buli.util.Installer;
+import net.buli.util.WalletUtils;
 import org.bitcoinj.core.VersionMessage;
 
 import java.io.IOException;

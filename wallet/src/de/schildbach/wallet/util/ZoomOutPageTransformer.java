@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.schildbach.wallet.util;
+package net.buli.util;
 
 import android.view.View;
 import androidx.viewpager2.widget.ViewPager2;

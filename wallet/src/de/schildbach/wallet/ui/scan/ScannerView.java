@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.schildbach.wallet.ui.scan;
+package net.buli.ui.scan;
 
 import android.content.Context;
 import android.content.res.Resources;
@@ -29,7 +29,7 @@ import android.graphics.RectF;
 import android.util.AttributeSet;
 import android.view.View;
 import com.google.zxing.ResultPoint;
-import de.schildbach.wallet.R;
+import net.buli.R;
 
 import java.util.HashMap;
 import java.util.Iterator;

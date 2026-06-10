@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.schildbach.wallet.ui;
+package net.buli.ui;
 
 import android.app.ActivityManager.TaskDescription;
 import android.content.ActivityNotFoundException;
@@ -24,9 +24,9 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.view.MenuItem;
 import androidx.fragment.app.FragmentActivity;
-import de.schildbach.wallet.R;
-import de.schildbach.wallet.WalletApplication;
-import de.schildbach.wallet.util.Toast;
+import net.buli.R;
+import net.buli.WalletApplication;
+import net.buli.util.Toast;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

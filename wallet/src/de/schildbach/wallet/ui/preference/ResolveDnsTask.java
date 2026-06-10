@@ -15,12 +15,12 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.schildbach.wallet.ui.preference;
+package net.buli.ui.preference;
 
 import android.os.Handler;
 import android.os.Looper;
 import com.google.common.net.HostAndPort;
-import de.schildbach.wallet.Constants;
+import net.buli.Constants;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;

@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.schildbach.wallet.ui.scan;
+package net.buli.ui.scan;
 
 import android.Manifest;
 import android.app.Activity;
@@ -58,10 +58,10 @@ import com.google.zxing.Result;
 import com.google.zxing.ResultPointCallback;
 import com.google.zxing.common.HybridBinarizer;
 import com.google.zxing.qrcode.QRCodeReader;
-import de.schildbach.wallet.R;
-import de.schildbach.wallet.ui.AbstractWalletActivity;
-import de.schildbach.wallet.ui.DialogBuilder;
-import de.schildbach.wallet.ui.Event;
+import net.buli.R;
+import net.buli.ui.AbstractWalletActivity;
+import net.buli.ui.DialogBuilder;
+import net.buli.ui.Event;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

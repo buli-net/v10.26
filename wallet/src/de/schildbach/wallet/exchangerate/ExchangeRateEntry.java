@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.schildbach.wallet.exchangerate;
+package net.buli.exchangerate;
 
 import androidx.annotation.NonNull;
 import androidx.room.ColumnInfo;

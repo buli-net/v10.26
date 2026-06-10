@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.schildbach.wallet.util;
+package net.buli.util;
 
 import android.content.Context;
 import android.net.Uri;
@@ -26,8 +26,8 @@ import android.text.SpannedString;
 import android.text.style.TypefaceSpan;
 import androidx.annotation.Nullable;
 import com.google.common.base.Stopwatch;
-import de.schildbach.wallet.Constants;
-import de.schildbach.wallet.service.BlockchainService;
+import net.buli.Constants;
+import net.buli.service.BlockchainService;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Sha256Hash;

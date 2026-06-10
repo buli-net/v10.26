@@ -15,14 +15,14 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.schildbach.wallet.ui.preference;
+package net.buli.ui.preference;
 
 import android.os.Bundle;
 import android.view.MenuItem;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
-import de.schildbach.wallet.R;
+import net.buli.R;
 
 import java.util.List;
 

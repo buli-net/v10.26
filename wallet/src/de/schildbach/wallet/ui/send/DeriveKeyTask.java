@@ -15,11 +15,11 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.schildbach.wallet.ui.send;
+package net.buli.ui.send;
 
 import android.os.Handler;
 import android.os.Looper;
-import de.schildbach.wallet.Constants;
+import net.buli.Constants;
 import org.bitcoinj.crypto.KeyCrypter;
 import org.bitcoinj.crypto.KeyCrypterScrypt;
 import org.bitcoinj.wallet.Wallet;

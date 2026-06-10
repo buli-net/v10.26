@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.schildbach.wallet.ui.send;
+package net.buli.ui.send;
 
 import android.content.Context;
 import android.content.Intent;
@@ -47,21 +47,21 @@ import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.ViewModelProvider;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.util.concurrent.ListenableFuture;
-import de.schildbach.wallet.Configuration;
-import de.schildbach.wallet.Constants;
-import de.schildbach.wallet.R;
-import de.schildbach.wallet.WalletApplication;
-import de.schildbach.wallet.data.PaymentIntent;
-import de.schildbach.wallet.ui.AbstractWalletActivity;
-import de.schildbach.wallet.ui.AbstractWalletActivityViewModel;
-import de.schildbach.wallet.ui.DialogBuilder;
-import de.schildbach.wallet.ui.DialogEvent;
-import de.schildbach.wallet.ui.InputParser.StringInputParser;
-import de.schildbach.wallet.ui.ProgressDialogFragment;
-import de.schildbach.wallet.ui.TransactionsAdapter;
-import de.schildbach.wallet.ui.scan.ScanActivity;
-import de.schildbach.wallet.util.MonetarySpannable;
-import de.schildbach.wallet.util.Toast;
+import net.buli.Configuration;
+import net.buli.Constants;
+import net.buli.R;
+import net.buli.WalletApplication;
+import net.buli.data.PaymentIntent;
+import net.buli.ui.AbstractWalletActivity;
+import net.buli.ui.AbstractWalletActivityViewModel;
+import net.buli.ui.DialogBuilder;
+import net.buli.ui.DialogEvent;
+import net.buli.ui.InputParser.StringInputParser;
+import net.buli.ui.ProgressDialogFragment;
+import net.buli.ui.TransactionsAdapter;
+import net.buli.ui.scan.ScanActivity;
+import net.buli.util.MonetarySpannable;
+import net.buli.util.Toast;
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.DumpedPrivateKey;

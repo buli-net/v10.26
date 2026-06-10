@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package de.schildbach.wallet.util;
+package net.buli.util;
 
 import com.google.common.io.BaseEncoding;
 import org.bouncycastle.crypto.BufferedBlockCipher;

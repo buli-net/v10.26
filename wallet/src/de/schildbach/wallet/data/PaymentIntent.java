@@ -15,16 +15,16 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.schildbach.wallet.data;
+package net.buli.data;
 
 import android.os.Parcel;
 import android.os.Parcelable;
 import androidx.annotation.Nullable;
 import com.google.common.io.BaseEncoding;
-import de.schildbach.wallet.Constants;
-import de.schildbach.wallet.util.Bluetooth;
-import de.schildbach.wallet.util.GenericUtils;
-import de.schildbach.wallet.util.WalletUtils;
+import net.buli.Constants;
+import net.buli.util.Bluetooth;
+import net.buli.util.GenericUtils;
+import net.buli.util.WalletUtils;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;

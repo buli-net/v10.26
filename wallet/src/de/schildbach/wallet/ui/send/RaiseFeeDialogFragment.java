@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.schildbach.wallet.ui.send;
+package net.buli.ui.send;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -37,14 +37,14 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.ViewModelProvider;
-import de.schildbach.wallet.Configuration;
-import de.schildbach.wallet.Constants;
-import de.schildbach.wallet.R;
-import de.schildbach.wallet.WalletApplication;
-import de.schildbach.wallet.ui.AbstractWalletActivity;
-import de.schildbach.wallet.ui.AbstractWalletActivityViewModel;
-import de.schildbach.wallet.ui.DialogBuilder;
-import de.schildbach.wallet.util.WalletUtils;
+import net.buli.Configuration;
+import net.buli.Constants;
+import net.buli.R;
+import net.buli.WalletApplication;
+import net.buli.ui.AbstractWalletActivity;
+import net.buli.ui.AbstractWalletActivityViewModel;
+import net.buli.ui.DialogBuilder;
+import net.buli.util.WalletUtils;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Transaction;

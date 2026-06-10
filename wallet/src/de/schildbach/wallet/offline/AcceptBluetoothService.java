@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.schildbach.wallet.offline;
+package net.buli.offline;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothManager;
@@ -33,13 +33,13 @@ import android.text.format.DateUtils;
 import androidx.annotation.WorkerThread;
 import androidx.core.app.NotificationCompat;
 import androidx.lifecycle.LifecycleService;
-import de.schildbach.wallet.Constants;
-import de.schildbach.wallet.R;
-import de.schildbach.wallet.WalletApplication;
-import de.schildbach.wallet.data.BlockchainServiceLiveData;
-import de.schildbach.wallet.data.WalletLiveData;
-import de.schildbach.wallet.util.CrashReporter;
-import de.schildbach.wallet.util.Toast;
+import net.buli.Constants;
+import net.buli.R;
+import net.buli.WalletApplication;
+import net.buli.data.BlockchainServiceLiveData;
+import net.buli.data.WalletLiveData;
+import net.buli.util.CrashReporter;
+import net.buli.util.Toast;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.VerificationException;
 import org.bitcoinj.wallet.Wallet;

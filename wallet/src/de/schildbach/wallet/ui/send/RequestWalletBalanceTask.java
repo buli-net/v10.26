@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.schildbach.wallet.ui.send;
+package net.buli.ui.send;
 
 import android.content.res.AssetManager;
 import android.os.Handler;
@@ -29,9 +29,9 @@ import com.google.common.hash.Hashing;
 import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.JsonDataException;
 import com.squareup.moshi.Moshi;
-import de.schildbach.wallet.Constants;
-import de.schildbach.wallet.R;
-import de.schildbach.wallet.util.Assets;
+import net.buli.Constants;
+import net.buli.R;
+import net.buli.util.Assets;
 import okio.BufferedSink;
 import okio.BufferedSource;
 import okio.Okio;

@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.schildbach.wallet.ui;
+package net.buli.ui;
 
 import android.content.Context;
 import android.graphics.Paint;
@@ -34,10 +34,10 @@ import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 import androidx.annotation.Nullable;
-import de.schildbach.wallet.Constants;
-import de.schildbach.wallet.R;
-import de.schildbach.wallet.util.GenericUtils;
-import de.schildbach.wallet.util.MonetarySpannable;
+import net.buli.Constants;
+import net.buli.R;
+import net.buli.util.GenericUtils;
+import net.buli.util.MonetarySpannable;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Monetary;
 import org.bitcoinj.utils.Fiat;

@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.schildbach.wallet.data;
+package net.buli.data;
 
 import android.content.pm.PackageInfo;
 import android.content.res.AssetManager;
@@ -23,9 +23,9 @@ import android.os.AsyncTask;
 import androidx.lifecycle.LiveData;
 import com.google.common.base.Stopwatch;
 import com.google.common.io.ByteStreams;
-import de.schildbach.wallet.Constants;
-import de.schildbach.wallet.WalletApplication;
-import de.schildbach.wallet.ui.send.FeeCategory;
+import net.buli.Constants;
+import net.buli.WalletApplication;
+import net.buli.ui.send.FeeCategory;
 import okhttp3.Call;
 import okhttp3.ConnectionSpec;
 import okhttp3.Headers;

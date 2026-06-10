@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.schildbach.wallet.ui.backup;
+package net.buli.ui.backup;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -41,16 +41,16 @@ import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import com.google.common.io.CharStreams;
-import de.schildbach.wallet.Constants;
-import de.schildbach.wallet.R;
-import de.schildbach.wallet.WalletApplication;
-import de.schildbach.wallet.ui.AbstractWalletActivity;
-import de.schildbach.wallet.ui.AbstractWalletActivityViewModel;
-import de.schildbach.wallet.ui.DialogBuilder;
-import de.schildbach.wallet.ui.ShowPasswordCheckListener;
-import de.schildbach.wallet.util.Crypto;
-import de.schildbach.wallet.util.Toast;
-import de.schildbach.wallet.util.WalletUtils;
+import net.buli.Constants;
+import net.buli.R;
+import net.buli.WalletApplication;
+import net.buli.ui.AbstractWalletActivity;
+import net.buli.ui.AbstractWalletActivityViewModel;
+import net.buli.ui.DialogBuilder;
+import net.buli.ui.ShowPasswordCheckListener;
+import net.buli.util.Crypto;
+import net.buli.util.Toast;
+import net.buli.util.WalletUtils;
 import org.bitcoinj.wallet.Protos;
 import org.bitcoinj.wallet.Wallet;
 import org.bitcoinj.wallet.WalletProtobufSerializer;

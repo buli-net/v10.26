@@ -15,15 +15,15 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.schildbach.wallet.ui;
+package net.buli.ui;
 
 import android.app.Application;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
-import de.schildbach.wallet.Configuration;
-import de.schildbach.wallet.WalletApplication;
+import net.buli.Configuration;
+import net.buli.WalletApplication;
 
 /**
  * @author Andreas Schildbach

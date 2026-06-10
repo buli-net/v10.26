@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.schildbach.wallet.ui;
+package net.buli.ui;
 
 import android.content.Context;
 import android.os.Bundle;
@@ -29,10 +29,10 @@ import android.widget.FrameLayout;
 import android.widget.TextView;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
-import de.schildbach.wallet.R;
-import de.schildbach.wallet.WalletApplication;
-import de.schildbach.wallet.service.BlockchainState;
-import de.schildbach.wallet.service.BlockchainState.Impediment;
+import net.buli.R;
+import net.buli.WalletApplication;
+import net.buli.service.BlockchainState;
+import net.buli.service.BlockchainState.Impediment;
 
 import java.util.Set;
 

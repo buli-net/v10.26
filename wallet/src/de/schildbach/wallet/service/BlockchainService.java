@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.schildbach.wallet.service;
+package net.buli.service;
 
 import android.app.ForegroundServiceStartNotAllowedException;
 import android.app.NotificationManager;
@@ -48,22 +48,22 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.Observer;
 import com.google.common.base.Stopwatch;
 import com.google.common.net.HostAndPort;
-import de.schildbach.wallet.Configuration;
-import de.schildbach.wallet.Constants;
-import de.schildbach.wallet.R;
-import de.schildbach.wallet.WalletApplication;
-import de.schildbach.wallet.WalletBalanceWidgetProvider;
-import de.schildbach.wallet.addressbook.AddressBookDao;
-import de.schildbach.wallet.addressbook.AddressBookDatabase;
-import de.schildbach.wallet.data.SelectedExchangeRateLiveData;
-import de.schildbach.wallet.data.WalletBalanceLiveData;
-import de.schildbach.wallet.data.WalletLiveData;
-import de.schildbach.wallet.exchangerate.ExchangeRateEntry;
-import de.schildbach.wallet.service.BlockchainState.Impediment;
-import de.schildbach.wallet.ui.WalletActivity;
-import de.schildbach.wallet.ui.preference.ResolveDnsTask;
-import de.schildbach.wallet.util.CrashReporter;
-import de.schildbach.wallet.util.WalletUtils;
+import net.buli.Configuration;
+import net.buli.Constants;
+import net.buli.R;
+import net.buli.WalletApplication;
+import net.buli.WalletBalanceWidgetProvider;
+import net.buli.addressbook.AddressBookDao;
+import net.buli.addressbook.AddressBookDatabase;
+import net.buli.data.SelectedExchangeRateLiveData;
+import net.buli.data.WalletBalanceLiveData;
+import net.buli.data.WalletLiveData;
+import net.buli.exchangerate.ExchangeRateEntry;
+import net.buli.service.BlockchainState.Impediment;
+import net.buli.ui.WalletActivity;
+import net.buli.ui.preference.ResolveDnsTask;
+import net.buli.util.CrashReporter;
+import net.buli.util.WalletUtils;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Block;
 import org.bitcoinj.core.BlockChain;

@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.schildbach.wallet;
+package net.buli;
 
 import android.os.Build;
 import android.text.format.DateUtils;

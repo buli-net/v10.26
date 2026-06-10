@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.schildbach.wallet.util;
+package net.buli.util;
 
 import com.google.common.io.CharStreams;
 import org.bitcoinj.wallet.WalletProtobufSerializer;

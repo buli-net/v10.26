@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.schildbach.wallet.data;
+package net.buli.data;
 
 import android.content.ComponentName;
 import android.content.Context;
@@ -23,7 +23,7 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.IBinder;
 import androidx.lifecycle.LiveData;
-import de.schildbach.wallet.service.BlockchainService;
+import net.buli.service.BlockchainService;
 
 /**
  * @author Andreas Schildbach

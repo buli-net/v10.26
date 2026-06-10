@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package de.schildbach.wallet.util;
+package net.buli.util;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;

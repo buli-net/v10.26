@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.schildbach.wallet.service;
+package net.buli.service;
 
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -25,14 +25,14 @@ import android.content.Intent;
 import android.text.format.DateUtils;
 import androidx.annotation.WorkerThread;
 import androidx.core.app.NotificationCompat;
-import de.schildbach.wallet.Configuration;
-import de.schildbach.wallet.Constants;
-import de.schildbach.wallet.R;
-import de.schildbach.wallet.WalletApplication;
-import de.schildbach.wallet.data.PaymentIntent;
-import de.schildbach.wallet.ui.WalletActivity;
-import de.schildbach.wallet.ui.send.FeeCategory;
-import de.schildbach.wallet.ui.send.SendCoinsActivity;
+import net.buli.Configuration;
+import net.buli.Constants;
+import net.buli.R;
+import net.buli.WalletApplication;
+import net.buli.data.PaymentIntent;
+import net.buli.ui.WalletActivity;
+import net.buli.ui.send.FeeCategory;
+import net.buli.ui.send.SendCoinsActivity;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.ContextPropagatingThreadFactory;
 import org.bitcoinj.utils.MonetaryFormat;

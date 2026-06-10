@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.schildbach.wallet.ui;
+package net.buli.ui;
 
 import android.animation.Animator;
 import android.animation.AnimatorInflater;
@@ -51,24 +51,24 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.ViewModelProvider;
 import com.google.common.primitives.Floats;
-import de.schildbach.wallet.Configuration;
-import de.schildbach.wallet.Constants;
-import de.schildbach.wallet.R;
-import de.schildbach.wallet.WalletApplication;
-import de.schildbach.wallet.data.PaymentIntent;
-import de.schildbach.wallet.service.BlockchainService;
-import de.schildbach.wallet.ui.InputParser.BinaryInputParser;
-import de.schildbach.wallet.ui.InputParser.StringInputParser;
-import de.schildbach.wallet.ui.backup.BackupWalletActivity;
-import de.schildbach.wallet.ui.backup.RestoreWalletDialogFragment;
-import de.schildbach.wallet.ui.monitor.NetworkMonitorActivity;
-import de.schildbach.wallet.ui.preference.PreferenceActivity;
-import de.schildbach.wallet.ui.scan.ScanActivity;
-import de.schildbach.wallet.ui.send.SendCoinsActivity;
-import de.schildbach.wallet.ui.send.SweepWalletActivity;
-import de.schildbach.wallet.util.CrashReporter;
-import de.schildbach.wallet.util.Nfc;
-import de.schildbach.wallet.util.OnFirstPreDraw;
+import net.buli.Configuration;
+import net.buli.Constants;
+import net.buli.R;
+import net.buli.WalletApplication;
+import net.buli.data.PaymentIntent;
+import net.buli.service.BlockchainService;
+import net.buli.ui.InputParser.BinaryInputParser;
+import net.buli.ui.InputParser.StringInputParser;
+import net.buli.ui.backup.BackupWalletActivity;
+import net.buli.ui.backup.RestoreWalletDialogFragment;
+import net.buli.ui.monitor.NetworkMonitorActivity;
+import net.buli.ui.preference.PreferenceActivity;
+import net.buli.ui.scan.ScanActivity;
+import net.buli.ui.send.SendCoinsActivity;
+import net.buli.ui.send.SweepWalletActivity;
+import net.buli.util.CrashReporter;
+import net.buli.util.Nfc;
+import net.buli.util.OnFirstPreDraw;
 import org.bitcoinj.core.PrefixedChecksummedBytes;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.VerificationException;

@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.schildbach.wallet.ui;
+package net.buli.ui;
 
 import android.content.Context;
 import android.content.Intent;
@@ -40,11 +40,11 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
 import androidx.viewpager2.widget.ViewPager2;
-import de.schildbach.wallet.R;
-import de.schildbach.wallet.data.PaymentIntent;
-import de.schildbach.wallet.ui.scan.ScanActivity;
-import de.schildbach.wallet.util.ViewPagerTabs;
-import de.schildbach.wallet.util.ZoomOutPageTransformer;
+import net.buli.R;
+import net.buli.data.PaymentIntent;
+import net.buli.ui.scan.ScanActivity;
+import net.buli.util.ViewPagerTabs;
+import net.buli.util.ZoomOutPageTransformer;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.VerificationException;

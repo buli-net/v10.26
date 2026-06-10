@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.schildbach.wallet;
+package net.buli;
 
 import android.app.ActivityManager;
 import android.app.Application;
@@ -42,13 +42,13 @@ import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import com.google.common.util.concurrent.SettableFuture;
-import de.schildbach.wallet.service.BlockchainService;
-import de.schildbach.wallet.service.BlockchainState;
-import de.schildbach.wallet.ui.Event;
-import de.schildbach.wallet.util.Bluetooth;
-import de.schildbach.wallet.util.CrashReporter;
-import de.schildbach.wallet.util.Toast;
-import de.schildbach.wallet.util.WalletUtils;
+import net.buli.service.BlockchainService;
+import net.buli.service.BlockchainState;
+import net.buli.ui.Event;
+import net.buli.util.Bluetooth;
+import net.buli.util.CrashReporter;
+import net.buli.util.Toast;
+import net.buli.util.WalletUtils;
 import org.bitcoinj.core.VersionMessage;
 import org.bitcoinj.crypto.MnemonicCode;
 import org.bitcoinj.utils.ContextPropagatingThreadFactory;

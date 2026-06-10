@@ -15,14 +15,14 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.schildbach.wallet.data;
+package net.buli.data;
 
 import android.app.Application;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Handler;
 import androidx.lifecycle.LiveData;
-import de.schildbach.wallet.WalletApplication;
+import net.buli.WalletApplication;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
 

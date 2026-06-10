@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.schildbach.wallet.data;
+package net.buli.data;
 
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
@@ -23,11 +23,11 @@ import android.os.AsyncTask;
 import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
 import androidx.room.InvalidationTracker;
-import de.schildbach.wallet.Configuration;
-import de.schildbach.wallet.WalletApplication;
-import de.schildbach.wallet.exchangerate.ExchangeRateDao;
-import de.schildbach.wallet.exchangerate.ExchangeRateEntry;
-import de.schildbach.wallet.exchangerate.ExchangeRatesRepository;
+import net.buli.Configuration;
+import net.buli.WalletApplication;
+import net.buli.exchangerate.ExchangeRateDao;
+import net.buli.exchangerate.ExchangeRateEntry;
+import net.buli.exchangerate.ExchangeRatesRepository;
 
 import java.util.Set;
 

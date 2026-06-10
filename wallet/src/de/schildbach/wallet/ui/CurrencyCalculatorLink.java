@@ -15,12 +15,12 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.schildbach.wallet.ui;
+package net.buli.ui;
 
 import android.view.View;
 import androidx.annotation.Nullable;
-import de.schildbach.wallet.Constants;
-import de.schildbach.wallet.ui.CurrencyAmountView.Listener;
+import net.buli.Constants;
+import net.buli.ui.CurrencyAmountView.Listener;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.ExchangeRate;
 import org.bitcoinj.utils.Fiat;

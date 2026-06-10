@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.schildbach.wallet.ui;
+package net.buli.ui;
 
 import android.app.AlertDialog;
 import android.content.Context;
@@ -28,7 +28,7 @@ import android.widget.TextView;
 import androidx.annotation.DrawableRes;
 import androidx.annotation.Nullable;
 import androidx.annotation.StringRes;
-import de.schildbach.wallet.R;
+import net.buli.R;
 
 /**
  * @author Andreas Schildbach

@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.schildbach.wallet.ui;
+package net.buli.ui;
 
 import android.app.Application;
 import android.graphics.Bitmap;
@@ -23,10 +23,10 @@ import android.os.AsyncTask;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
-import de.schildbach.wallet.Constants;
-import de.schildbach.wallet.WalletApplication;
-import de.schildbach.wallet.addressbook.AddressBookEntry;
-import de.schildbach.wallet.data.AbstractWalletLiveData;
+import net.buli.Constants;
+import net.buli.WalletApplication;
+import net.buli.addressbook.AddressBookEntry;
+import net.buli.data.AbstractWalletLiveData;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.LegacyAddress;

@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.schildbach.wallet.ui;
+package net.buli.ui;
 
 import android.app.Activity;
 import android.app.Dialog;
@@ -27,7 +27,7 @@ import android.view.Window;
 import android.widget.ImageView;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.FragmentManager;
-import de.schildbach.wallet.R;
+import net.buli.R;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
