@@ -1,4 +1,4 @@
-name: Build All APKs (Prod & Dev)
+name: Build and Upload APKs
 
 on:
   workflow_dispatch:
@@ -31,37 +31,37 @@ jobs:
         with:
           gradle-version: '6.9.4'
 
-      # Xác định module name bằng cách đọc settings.gradle hoặc danh sách thư mục
-      - name: Find module name
+      - name: Find module name from settings.gradle
+        id: find_module
         run: |
-          echo "=== Directory tree ==="
-          find . -maxdepth 2 -name "build.gradle" -type f | sed 's|./||'
-          echo "=== settings.gradle content ==="
-          cat settings.gradle 2>/dev/null || echo "No settings.gradle"
-          echo "=== Gradle projects ==="
-          gradle projects --no-daemon
+          if [ -f settings.gradle ]; then
+            MODULE=$(grep -E "include\s+':[^']+'" settings.gradle | head -1 | sed "s/.*'\(:[^']*\)'.*/\1/")
+            echo "module=$MODULE" >> $GITHUB_OUTPUT
+          else
+            echo "module=:app" >> $GITHUB_OUTPUT
+          fi
+          echo "Detected module: ${{ steps.find_module.outputs.module }}"
 
-      - name: Build all variants (fix module name)
+      - name: Build all variants
         run: |
-          # Dựa vào file build.gradle bạn gửi, module có thể là :wallet hoặc :app
-          # Hãy thử lần lượt, nếu thiếu thì bổ sung
-          MODULES=":wallet :app"
-          for MOD in $MODULES; do
-            echo "Trying module $MOD"
-            gradle $MOD:assembleProdDebug --no-daemon --stacktrace && break || continue
-          done
-          # Build tất cả variants nếu module tìm được
-          gradle assembleProdDebug assembleProdRelease assembleDevDebug assembleDevRelease --no-daemon --stacktrace
+          MODULE="${{ steps.find_module.outputs.module }}"
+          echo "Building for module $MODULE"
+          gradle "$MODULE:assembleProdDebug" \
+                  "$MODULE:assembleProdRelease" \
+                  "$MODULE:assembleDevDebug" \
+                  "$MODULE:assembleDevRelease" \
+                  --no-daemon --stacktrace
+          # Nếu lệnh trên thất bại, workflow sẽ dừng và báo lỗi
 
-      - name: List generated APKs
+      - name: List all APKs
         run: |
-          find . -name "*.apk" -type f
-          echo "--- If no APK found, build failed ---"
+          echo "=== APK files found ==="
+          find . -name "*.apk" -type f -exec ls -lh {} \;
+          echo "=== Total count: $(find . -name "*.apk" | wc -l) ==="
 
       - name: Upload APKs
         uses: actions/upload-artifact@v4
         with:
-          name: all-bitcoin-apks
-          path: |
-            **/build/outputs/apk/**/*.apk
-          if-no-files-found: error   # Sẽ báo lỗi nếu không có APK nào
+          name: bitcoin-wallet-apks
+          path: "**/build/outputs/apk/**/*.apk"
+          if-no-files-found: error
