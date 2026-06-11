@@ -1,9 +1,14 @@
 # =================================================================
 # FILE: .github/workflows/build-release.yml
-# MỤC ĐÍCH: Build cả 4 loại APK và ký các bản release
+# MỤC ĐÍCH: Build 4 loại APK đúng theo cấu hình Gradle
+#            - devDebug (debug, có thể gỡ lỗi)
+#            - devRelease (release thật, tối ưu, không gỡ lỗi)
+#            - prodDebug (debug, dùng tài nguyên prod)
+#            - prodRelease (release thật, dùng tài nguyên prod, tối ưu)
+#            Sau đó ký cả 2 bản release bằng keystore riêng
 # =================================================================
 
-name: Build Bitcoin Wallet - All Variants
+name: Build Bitcoin Wallet - All Real Variants
 
 on:
   workflow_dispatch:
@@ -67,7 +72,8 @@ jobs:
           }
           EOF
 
-      - name: Build all APK variants
+      # ----- BUILD TẤT CẢ 4 VARIANT (2 DEBUG + 2 RELEASE THẬT) -----
+      - name: Build all APK variants (including real releases)
         run: |
           export ANDROID_HOME=$ANDROID_SDK_ROOT
           export JAVA_HOME=$JAVA_HOME_11_X64
@@ -76,9 +82,9 @@ jobs:
       - name: Decode Keystore
         run: |
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > keystore.jks
-          echo "Keystore decoded successfully."
 
-      - name: Sign devRelease APK
+      # ----- KÝ CÁC BẢN RELEASE THẬT (devRelease và prodRelease) -----
+      - name: Sign devRelease APK (real release)
         run: |
           APK_PATH=$(find wallet/build/outputs/apk/dev/release -name "*.apk" | head -1)
           $ANDROID_HOME/build-tools/34.0.0/apksigner sign \
@@ -88,7 +94,7 @@ jobs:
             --key-pass pass:${{ secrets.KEY_PASSWORD }} \
             "$APK_PATH"
 
-      - name: Sign prodRelease APK
+      - name: Sign prodRelease APK (real release)
         run: |
           APK_PATH=$(find wallet/build/outputs/apk/prod/release -name "*.apk" | head -1)
           $ANDROID_HOME/build-tools/34.0.0/apksigner sign \
@@ -98,29 +104,31 @@ jobs:
             --key-pass pass:${{ secrets.KEY_PASSWORD }} \
             "$APK_PATH"
 
-      - name: Verify release signatures
+      # ----- XÁC MINH CHỮ KÝ (kiểm tra bản release đã được ký đúng) -----
+      - name: Verify signatures of release APKs
         run: |
           for variant in dev/release prod/release; do
             APK_PATH=$(find wallet/build/outputs/apk/${variant} -name "*.apk" | head -1)
+            echo "Verifying $APK_PATH"
             $ANDROID_HOME/build-tools/34.0.0/apksigner verify --verbose --print-certs "$APK_PATH"
           done
 
-      # ----- BƯỚC RENAME ĐÃ ĐƯỢC SỬA LẠI (KHÔNG BỊ XUỐNG DÒNG SAI) -----
+      # ----- ĐỔI TÊN CÁC FILE APK CHO DỄ NHẬN BIẾT -----
       - name: Rename APKs
         run: |
+          # Tạo thư mục tạm để tránh xung đột
           mkdir -p wallet/build/outputs/apk/final
           cp wallet/build/outputs/apk/dev/debug/*.apk wallet/build/outputs/apk/final/bitcoin-wallet-dev-debug.apk
-          cp wallet/build/outputs/apk/dev/release/*.apk wallet/build/outputs/apk/final/bitcoin-wallet-dev-release.apk
+          cp wallet/build/outputs/apk/dev/release/*.apk wallet/build/outputs/apk/final/bitcoin-wallet-dev-release-signed.apk
           cp wallet/build/outputs/apk/prod/debug/*.apk wallet/build/outputs/apk/final/bitcoin-wallet-prod-debug.apk
-          cp wallet/build/outputs/apk/prod/release/*.apk wallet/build/outputs/apk/final/bitcoin-wallet-prod-release.apk
-          # Xóa các file cũ (tuỳ chọn)
+          cp wallet/build/outputs/apk/prod/release/*.apk wallet/build/outputs/apk/final/bitcoin-wallet-prod-release-signed.apk
+          # Dọn dẹp thư mục cũ và di chuyển ra ngoài
           rm -rf wallet/build/outputs/apk/dev wallet/build/outputs/apk/prod
-          # Giữ lại thư mục final
           mv wallet/build/outputs/apk/final/* wallet/build/outputs/apk/
           rmdir wallet/build/outputs/apk/final
 
-      - name: Upload all APKs
+      - name: Upload all APKs (including real releases)
         uses: actions/upload-artifact@v4
         with:
-          name: bitcoin-wallet-apks
+          name: bitcoin-wallet-all-variants
           path: wallet/build/outputs/apk/*.apk
