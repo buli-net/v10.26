@@ -41,7 +41,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewParent;
 import android.view.ViewTreeObserver;
-import android.view.animation.DecelerateInterpolator;
+import import android.view.animation.DecelerateInterpolator;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -146,60 +146,67 @@ public final class WalletActivity extends AbstractWalletActivity {
         getActionBar().setDisplayHomeAsUpEnabled(false);
         contentView = findViewById(android.R.id.content);
 
-        // --- SYNC BAR FIX V2 - KHÔNG CẦN XML ---
-        final ProgressBar syncBar = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
-        syncBar.setMax(10000);
-        syncBar.setProgressTintList(android.content.res.ColorStateList.valueOf(0xFFFFCC99));
-        syncBar.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (int)(4*getResources().getDisplayMetrics().density)));
-
-        final TextView syncPercent = new TextView(this);
-        syncPercent.setTextSize(12);
-        syncPercent.setTextColor(0xFFFFCC99);
-
+        // --- SYNC BAR + % CHUẨN MỌI MÀN HÌNH ---
         final View root = findViewById(android.R.id.content);
         final SharedPreferences prefs = getSharedPreferences("sync_prefs", MODE_PRIVATE);
-        final int[] last = {-1};
+        final int[] lastProg = {-1};
 
         root.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
             public void onGlobalLayout() {
                 TextView tv = findSync((ViewGroup)root);
-                if (tv==null) return;
+                if (tv==null || tv.getTag(R.id.sync_wrapped)!=null) return;
 
-                if (syncBar.getParent()==null) {
-                    ViewGroup p = (ViewGroup)tv.getParent();
-                    p.addView(syncBar, p.indexOfChild(tv)+1);
-                }
-                if (syncPercent.getParent()==null) {
-                    ViewGroup p = (ViewGroup)tv.getParent();
-                    syncPercent.setTranslationY(-tv.getHeight()-4);
-                    p.addView(syncPercent);
-                    syncPercent.post(() -> syncPercent.setX(p.getWidth() - syncPercent.getWidth() - 16));
-                }
+                ViewGroup parent = (ViewGroup)tv.getParent();
+                int idx = parent.indexOfChild(tv);
+                parent.removeView(tv);
 
-                boolean show = tv.getVisibility()==View.VISIBLE;
-                syncBar.setVisibility(show?View.VISIBLE:View.GONE);
-                syncPercent.setVisibility(show?View.VISIBLE:View.GONE);
+                LinearLayout container = new LinearLayout(WalletActivity.this);
+                container.setOrientation(LinearLayout.VERTICAL);
+                container.setLayoutParams(tv.getLayoutParams());
 
-                if (show) {
-                    String s = tv.getText().toString().toLowerCase();
-                    int h=0;
-                    try {
-                        int v=Integer.parseInt(s.replaceAll("[^0-9]",""));
-                        if(s.contains("hour")) h=v;
-                        else if(s.contains("day")) h=v*24;
-                        else if(s.contains("week")) h=v*7*24;
-                        else if(s.contains("month")) h=v*30*24;
-                        else if(s.contains("year")) h=v*365*24;
-                    } catch(Exception ignored){}
-                    int max=prefs.getInt("max_hours",0);
-                    if(h>max){max=h; prefs.edit().putInt("max_hours",max).apply();}
-                    if(h==0&&max!=0){prefs.edit().remove("max_hours").apply(); max=0;}
-                    int prog = max>0?(int)((max-h)*10000L/max):0;
-                    prog = Math.max(0, Math.min(10000, prog));
-                    syncBar.setProgress(prog);
-                    if(prog!=last[0]){last[0]=prog; syncPercent.setText(String.format(Locale.US,"%.2f%%",prog/100f));}
-                }
+                LinearLayout row = new LinearLayout(WalletActivity.this);
+                row.setOrientation(LinearLayout.HORIZONTAL);
+                TextView percent = new TextView(WalletActivity.this);
+                percent.setTextSize(12);
+                percent.setTextColor(0xFFFFCC99);
+                percent.setPadding((int)(8*getResources().getDisplayMetrics().density),0,0,0);
+
+                row.addView(tv, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+                row.addView(percent, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+
+                ProgressBar bar = new ProgressBar(WalletActivity.this, null, android.R.attr.progressBarStyleHorizontal);
+                bar.setMax(10000);
+                bar.setProgressTintList(android.content.res.ColorStateList.valueOf(0xFFFFCC99));
+                LinearLayout.LayoutParams barLp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (int)(3*getResources().getDisplayMetrics().density));
+                barLp.topMargin = (int)(2*getResources().getDisplayMetrics().density);
+                bar.setLayoutParams(barLp);
+
+                container.addView(row);
+                container.addView(bar);
+                parent.addView(container, idx);
+                tv.setTag(R.id.sync_wrapped, true);
+
+                final String[] base = {tv.getText().toString()};
+                Runnable updater = new Runnable() {
+                    @Override public void run() {
+                        if (tv.getVisibility()!=View.VISIBLE) { tv.postDelayed(this,1000); return; }
+                        String cur = tv.getText().toString();
+                        if(!cur.contains("%")) base[0]=cur.replaceAll(" [0-9.]+%","").trim();
+                        String s = base[0].toLowerCase();
+                        int h=0; try{int v=Integer.parseInt(s.replaceAll("[^0-9]",""));
+                            if(s.contains("hour"))h=v; else if(s.contains("day"))h=v*24;
+                            else if(s.contains("week"))h=v*7*24; else if(s.contains("month"))h=v*30*24;
+                            else if(s.contains("year"))h=v*365*24;}catch(Exception ignored){}
+                        int max=prefs.getInt("max_hours",0);
+                        if(h>max){max=h; prefs.edit().putInt("max_hours",max).apply();}
+                        if(h==0&&max!=0){prefs.edit().remove("max_hours").apply(); max=0;}
+                        int prog = max>0?(int)((max-h)*10000L/max):0;
+                        if(prog!=lastProg[0]){lastProg[0]=prog; percent.setText(String.format(Locale.US,"%.2f%%",prog/100f)); bar.setProgress(prog);}
+                        tv.postDelayed(this,500);
+                    }
+                };
+                tv.post(updater);
             }
             private TextView findSync(ViewGroup g){
                 for(int i=0;i<g.getChildCount();i++){
@@ -529,7 +536,7 @@ public final class WalletActivity extends AbstractWalletActivity {
         if (NfcAdapter.ACTION_NDEF_DISCOVERED.equals(action)) {
             final String inputType = intent.getType();
             final NdefMessage ndefMessage = (NdefMessage) intent
-                  .getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES)[0];
+                 .getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES)[0];
             final byte[] input = Nfc.extractMimePayload(Constants.MIMETYPE_TRANSACTION, ndefMessage);
             new BinaryInputParser(inputType, input) {
                 @Override
