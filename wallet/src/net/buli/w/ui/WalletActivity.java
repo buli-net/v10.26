@@ -79,6 +79,7 @@ import org.bitcoinj.core.PrefixedChecksummedBytes;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.VerificationException;
 import org.bitcoinj.script.Script;
+import java.util.Locale;
 
 /**
  * @author Andreas Schildbach
@@ -145,7 +146,7 @@ public final class WalletActivity extends AbstractWalletActivity {
         getActionBar().setDisplayHomeAsUpEnabled(false);
         contentView = findViewById(android.R.id.content);
 
-        // --- THANH SYNC TỰ HỌC MAX VÀ LƯU LÂU DÀI ---
+        // --- THANH SYNC + % CÙNG DÒNG (CHÈN THÊM, KHÔNG SỬA GỐC) ---
         final ProgressBar syncBar = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
         syncBar.setMax(10000);
         syncBar.setProgressTintList(android.content.res.ColorStateList.valueOf(0xFFFFCC99));
@@ -168,13 +169,21 @@ public final class WalletActivity extends AbstractWalletActivity {
                         lp.topMargin = (int) (4 * getResources().getDisplayMetrics().density);
                         syncBar.setLayoutParams(lp);
                         vg.addView(syncBar, idx + 1);
+                        if (realSync.getTag() == null) {
+                            realSync.setTag(realSync.getText().toString());
+                        }
                     }
                 }
                 if (realSync!= null) {
                     boolean visible = realSync.getVisibility() == View.VISIBLE;
                     syncBar.setVisibility(visible? View.VISIBLE : View.GONE);
                     if (visible) {
-                        String txt = realSync.getText().toString().toLowerCase();
+                        String baseText = (String) realSync.getTag();
+                        if (baseText == null) {
+                            baseText = realSync.getText().toString().replaceAll(" •.*", "");
+                            realSync.setTag(baseText);
+                        }
+                        String txt = baseText.toLowerCase();
                         int totalHours = 0;
                         try {
                             int value = Integer.parseInt(txt.replaceAll("[^0-9]", ""));
@@ -193,6 +202,8 @@ public final class WalletActivity extends AbstractWalletActivity {
                         if (totalHours == 0 && storedMax!= 0) {
                             syncPrefs.edit().remove("max_hours").apply();
                             storedMax = 0;
+                            realSync.setText(baseText);
+                            return;
                         }
 
                         int progress = 0;
@@ -202,6 +213,8 @@ public final class WalletActivity extends AbstractWalletActivity {
                         }
                         syncBar.setIndeterminate(false);
                         syncBar.setProgress(progress);
+                        String percentText = String.format(Locale.US, "%.2f%%", progress / 100f);
+                        realSync.setText(baseText + " • " + percentText);
                     }
                 }
             }
@@ -221,6 +234,7 @@ public final class WalletActivity extends AbstractWalletActivity {
                 return null;
             }
         });
+        // --- HẾT PHẦN CHÈN ---
 
         final View insetTopView = contentView.findViewWithTag("inset_top");
         if (insetTopView!= null) {
@@ -428,8 +442,10 @@ public final class WalletActivity extends AbstractWalletActivity {
     @Override
     protected void onResume() {
         super.onResume();
+
         if (exchangeRatesFragment!= null)
             exchangeRatesFragment.setVisibility(config.isEnableExchangeRates()? View.VISIBLE : View.GONE);
+
         handler.postDelayed(() -> {
             BlockchainService.start(WalletActivity.this, true);
         }, 1000);
@@ -442,19 +458,20 @@ public final class WalletActivity extends AbstractWalletActivity {
     }
 
     private AnimatorSet buildEnterAnimation(final View contentView) {
-        //... giữ nguyên toàn bộ method như bản gốc...
         final Drawable background = getWindow().getDecorView().getBackground();
         final int duration = getResources().getInteger(android.R.integer.config_mediumAnimTime);
         final Animator splashFadeOut = AnimatorInflater.loadAnimator(WalletActivity.this, R.animator.fade_out_drawable);
         splashFadeOut.setTarget(((LayerDrawable) background).getDrawable(1));
         final AnimatorSet fragmentEnterAnimation = new AnimatorSet();
         final AnimatorSet.Builder fragmentEnterAnimationBuilder = fragmentEnterAnimation.play(splashFadeOut);
+
         final View slideInLeftView = contentView.findViewWithTag("slide_in_left");
         if (slideInLeftView!= null) {
             final ValueAnimator slide = ValueAnimator.ofFloat(-1.0f, 0.0f);
             slide.addUpdateListener(animator -> {
                 float animatedValue = (float) animator.getAnimatedValue();
-                slideInLeftView.setTranslationX(animatedValue * (slideInLeftView.getWidth() + slideInLeftView.getPaddingLeft()));
+                slideInLeftView.setTranslationX(
+                        animatedValue * (slideInLeftView.getWidth() + slideInLeftView.getPaddingLeft()));
             });
             slide.setInterpolator(new DecelerateInterpolator());
             slide.setDuration(duration);
@@ -463,12 +480,14 @@ public final class WalletActivity extends AbstractWalletActivity {
             fadeIn.setTarget(slideInLeftView);
             fragmentEnterAnimationBuilder.before(slide).before(fadeIn);
         }
+
         final View slideInRightView = contentView.findViewWithTag("slide_in_right");
         if (slideInRightView!= null) {
             final ValueAnimator slide = ValueAnimator.ofFloat(1.0f, 0.0f);
             slide.addUpdateListener(animator -> {
                 float animatedValue = (float) animator.getAnimatedValue();
-                slideInRightView.setTranslationX(animatedValue * (slideInRightView.getWidth() + slideInRightView.getPaddingRight()));
+                slideInRightView.setTranslationX(
+                        animatedValue * (slideInRightView.getWidth() + slideInRightView.getPaddingRight()));
             });
             slide.setInterpolator(new DecelerateInterpolator());
             slide.setDuration(duration);
@@ -477,12 +496,14 @@ public final class WalletActivity extends AbstractWalletActivity {
             fadeIn.setTarget(slideInRightView);
             fragmentEnterAnimationBuilder.before(slide).before(fadeIn);
         }
+
         final View slideInTopView = contentView.findViewWithTag("slide_in_top");
         if (slideInTopView!= null) {
             final ValueAnimator slide = ValueAnimator.ofFloat(-1.0f, 0.0f);
             slide.addUpdateListener(animator -> {
                 float animatedValue = (float) animator.getAnimatedValue();
-                slideInTopView.setTranslationY(animatedValue * (slideInTopView.getHeight() + slideInTopView.getPaddingTop()));
+                slideInTopView.setTranslationY(
+                        animatedValue * (slideInTopView.getHeight() + slideInTopView.getPaddingTop()));
             });
             slide.setInterpolator(new DecelerateInterpolator());
             slide.setDuration(duration);
@@ -491,12 +512,14 @@ public final class WalletActivity extends AbstractWalletActivity {
             fadeIn.setTarget(slideInTopView);
             fragmentEnterAnimationBuilder.before(slide).before(fadeIn);
         }
+
         final View slideInBottomView = contentView.findViewWithTag("slide_in_bottom");
         if (slideInBottomView!= null) {
             final ValueAnimator slide = ValueAnimator.ofFloat(1.0f, 0.0f);
             slide.addUpdateListener(animator -> {
                 float animatedValue = (float) animator.getAnimatedValue();
-                slideInBottomView.setTranslationY(animatedValue * (slideInBottomView.getHeight() + slideInBottomView.getPaddingBottom()));
+                slideInBottomView.setTranslationY(
+                        animatedValue * (slideInBottomView.getHeight() + slideInBottomView.getPaddingBottom()));
             });
             slide.setInterpolator(new DecelerateInterpolator());
             slide.setDuration(duration);
@@ -505,8 +528,10 @@ public final class WalletActivity extends AbstractWalletActivity {
             fadeIn.setTarget(slideInBottomView);
             fragmentEnterAnimationBuilder.before(slide).before(fadeIn);
         }
+
         if (levitateView!= null) {
-            final ObjectAnimator elevate = ObjectAnimator.ofFloat(levitateView, "elevation", 0.0f, levitateView.getElevation());
+            final ObjectAnimator elevate = ObjectAnimator.ofFloat(levitateView, "elevation", 0.0f,
+                    levitateView.getElevation());
             elevate.setDuration(duration);
             fragmentEnterAnimationBuilder.before(elevate);
             final Drawable levitateBackground = levitateView.getBackground();
@@ -514,6 +539,7 @@ public final class WalletActivity extends AbstractWalletActivity {
             fadeIn.setTarget(levitateBackground);
             fragmentEnterAnimationBuilder.before(fadeIn);
         }
+
         return fragmentEnterAnimation;
     }
 
@@ -527,7 +553,8 @@ public final class WalletActivity extends AbstractWalletActivity {
         final String action = intent.getAction();
         if (NfcAdapter.ACTION_NDEF_DISCOVERED.equals(action)) {
             final String inputType = intent.getType();
-            final NdefMessage ndefMessage = (NdefMessage) intent.getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES)[0];
+            final NdefMessage ndefMessage = (NdefMessage) intent
+                   .getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES)[0];
             final byte[] input = Nfc.extractMimePayload(Constants.MIMETYPE_TRANSACTION, ndefMessage);
             new BinaryInputParser(inputType, input) {
                 @Override
@@ -544,12 +571,19 @@ public final class WalletActivity extends AbstractWalletActivity {
         }
     }
 
-    public void handleRequestCoins() { RequestCoinsActivity.start(this); }
-    public void handleSendCoins() { startActivity(new Intent(this, SendCoinsActivity.class)); }
+    public void handleRequestCoins() {
+        RequestCoinsActivity.start(this);
+    }
+
+    public void handleSendCoins() {
+        startActivity(new Intent(this, SendCoinsActivity.class));
+    }
+
     public void handleScan(final View clickView) {
         enterAnimation.end();
         if (clickView!= null) {
-            final ActivityOptionsCompat options = ActivityOptionsCompat.makeClipRevealAnimation(clickView, 0, 0, clickView.getWidth(), clickView.getHeight());
+            final ActivityOptionsCompat options = ActivityOptionsCompat.makeClipRevealAnimation(clickView, 0, 0,
+                    clickView.getWidth(), clickView.getHeight());
             scanLauncher.launch(null, options);
         } else {
             scanLauncher.launch(null);
@@ -558,11 +592,14 @@ public final class WalletActivity extends AbstractWalletActivity {
 
     private static final class QuickReturnBehavior extends CoordinatorLayout.Behavior<View> {
         @Override
-        public boolean onStartNestedScroll(final CoordinatorLayout coordinatorLayout, final View child, final View directTargetChild, final View target, final int nestedScrollAxes, final int type) {
+        public boolean onStartNestedScroll(final CoordinatorLayout coordinatorLayout, final View child,
+                final View directTargetChild, final View target, final int nestedScrollAxes, final int type) {
             return (nestedScrollAxes & ViewCompat.SCROLL_AXIS_VERTICAL)!= 0;
         }
         @Override
-        public void onNestedScroll(final CoordinatorLayout coordinatorLayout, final View child, final View target, final int dxConsumed, final int dyConsumed, final int dxUnconsumed, final int dyUnconsumed, final int type) {
+        public void onNestedScroll(final CoordinatorLayout coordinatorLayout, final View child, final View target,
+                final int dxConsumed, final int dyConsumed, final int dxUnconsumed, final int dyUnconsumed,
+                final int type) {
             child.setTranslationY(Floats.constrainToRange(child.getTranslationY() - dyConsumed, -child.getHeight(), 0));
         }
     }
