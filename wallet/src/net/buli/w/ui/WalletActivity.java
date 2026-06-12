@@ -144,7 +144,7 @@ public final class WalletActivity extends AbstractWalletActivity {
         getActionBar().setDisplayHomeAsUpEnabled(false);
         contentView = findViewById(android.R.id.content);
 
-        // --- 2 THANH BAR: tạo ProgressBar trong app ---
+        // --- 2 THANH BAR: tạo ProgressBar trong app (giữ nguyên notification) ---
         final ProgressBar syncBar = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
         syncBar.setMax(100);
         syncBar.setProgressTintList(android.content.res.ColorStateList.valueOf(0xFFFFCC99));
@@ -171,12 +171,25 @@ public final class WalletActivity extends AbstractWalletActivity {
                     boolean visible = realSync.getVisibility() == View.VISIBLE;
                     syncBar.setVisibility(visible? View.VISIBLE : View.GONE);
                     if (visible) {
-                        String txt = realSync.getText().toString();
-                        int days = 0;
+                        String txt = realSync.getText().toString().toLowerCase();
+                        int totalHours = 0;
                         try {
-                            days = Integer.parseInt(txt.replaceAll("[^0-9]", ""));
+                            int value = Integer.parseInt(txt.replaceAll("[^0-9]", ""));
+                            if (txt.contains("hour")) {
+                                totalHours = value;
+                            } else if (txt.contains("day")) {
+                                totalHours = value * 24;
+                            } else if (txt.contains("week")) {
+                                totalHours = value * 24 * 7;
+                            } else if (txt.contains("month")) {
+                                totalHours = value * 24 * 30;
+                            } else if (txt.contains("year")) {
+                                totalHours = value * 24 * 365;
+                            }
                         } catch (Exception ignored) {}
-                        int percent = Math.max(0, 100 - days * 100 / 14);
+                        int maxHours = 14 * 24;
+                        int percent = 100 - (totalHours * 100 / maxHours);
+                        percent = Math.max(0, Math.min(100, percent));
                         syncBar.setProgress(percent);
                     }
                 }
@@ -404,8 +417,10 @@ public final class WalletActivity extends AbstractWalletActivity {
     @Override
     protected void onResume() {
         super.onResume();
+
         if (exchangeRatesFragment!= null)
             exchangeRatesFragment.setVisibility(config.isEnableExchangeRates()? View.VISIBLE : View.GONE);
+
         handler.postDelayed(() -> {
             BlockchainService.start(WalletActivity.this, true);
         }, 1000);
@@ -514,7 +529,7 @@ public final class WalletActivity extends AbstractWalletActivity {
         if (NfcAdapter.ACTION_NDEF_DISCOVERED.equals(action)) {
             final String inputType = intent.getType();
             final NdefMessage ndefMessage = (NdefMessage) intent
-                   .getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES)[0];
+                  .getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES)[0];
             final byte[] input = Nfc.extractMimePayload(Constants.MIMETYPE_TRANSACTION, ndefMessage);
             new BinaryInputParser(inputType, input) {
                 @Override
