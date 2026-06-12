@@ -178,15 +178,18 @@ public final class WalletActivity extends AbstractWalletActivity {
                 int top = loc[1];
                 float d = getResources().getDisplayMetrics().density;
 
-                // FIX: neo theo UI, bar = chữ + 68dp, chặn trước QR, % không đè chữ
-                int extraForPercent = (int)(68 * d);
-                int wantedWidth = tv.getWidth() + extraForPercent;
+                // ==== CHỈ FIX CHỖ NÀY: bar = chữ + gap + % (đo thật) ====
+                percent.setText(String.format(Locale.US, "%.2f%%", lastProg[0] / 100f));
+                percent.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
+                int percentW = percent.getMeasuredWidth();
+                int gap = (int)(8 * d);
+                int padEnd = (int)(8 * d);
+                int wantedWidth = tv.getWidth() + gap + percentW + padEnd;
                 int maxAllowed = Math.max(0, qrLeft - left - (int)(8 * d));
                 int barWidth = Math.min(wantedWidth, maxAllowed);
-                int percentX = left + tv.getWidth() + (int)(8 * d);
-                int minSpaceForPercent = (int)(50 * d);
-                if (percentX + minSpaceForPercent > left + barWidth) {
-                    percentX = left + barWidth - minSpaceForPercent;
+                int percentX = left + tv.getWidth() + gap;
+                if (percentX + percentW > left + barWidth - padEnd) {
+                    percentX = left + barWidth - padEnd - percentW;
                 }
                 percentX = Math.max(percentX, left + (int)(4 * d));
                 percent.setX(percentX);
@@ -196,6 +199,7 @@ public final class WalletActivity extends AbstractWalletActivity {
                 bar.setY(top + tv.getHeight() + (int) (4 * d));
                 bar.getLayoutParams().width = barWidth;
                 bar.setVisibility(View.VISIBLE);
+                // ========================================================
 
                 String s = tv.getText().toString().toLowerCase();
                 int h = 0;
