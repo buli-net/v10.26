@@ -24,7 +24,6 @@ import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
@@ -39,13 +38,8 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
-import android.view.ViewTreeObserver;
 import android.view.animation.DecelerateInterpolator;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.ProgressBar;
-import android.widget.TextView;
 import androidx.activity.EdgeToEdge;
 import androidx.activity.SystemBarStyle;
 import androidx.activity.result.ActivityResultLauncher;
@@ -80,7 +74,16 @@ import org.bitcoinj.core.PrefixedChecksummedBytes;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.VerificationException;
 import org.bitcoinj.script.Script;
+// add bar sync
+import android.content.SharedPreferences;
+import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
+import android.widget.FrameLayout;
+import android.widget.ImageView;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 import java.util.Locale;
+//end
 
 /**
  * @author Andreas Schildbach
@@ -146,151 +149,158 @@ public final class WalletActivity extends AbstractWalletActivity {
         setActionBar(findViewById(R.id.wallet_appbar));
         getActionBar().setDisplayHomeAsUpEnabled(false);
         contentView = findViewById(android.R.id.content);
-        // --- SYNC BAR + % AUTO CANH KHONG DAM QR + MINING CIRCLE ---
-        final View root = findViewById(android.R.id.content);
-        final SharedPreferences prefs = getSharedPreferences("sync_prefs", MODE_PRIVATE);
-        final int[] lastProg = { -1 };
-        final float d = getResources().getDisplayMetrics().density;
-        final ProgressBar bar = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
-        bar.setMax(10000);
-        bar.setProgressTintList(android.content.res.ColorStateList.valueOf(0xFFFFCC99));
-        bar.setVisibility(View.GONE);
-        ((ViewGroup) getWindow().getDecorView()).addView(bar,
-                new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,
-                        (int) (3 * getResources().getDisplayMetrics().density)));
-        final TextView percent = new TextView(this);
-        percent.setTextSize(12);
-        percent.setTextColor(0xFFFFCC99);
-        percent.setVisibility(View.GONE);
-        ((ViewGroup) getWindow().getDecorView()).addView(percent);
-        final MiningCircleView circle = new MiningCircleView(this);
+
+//add sync bar
+final View root = findViewById(android.R.id.content);
+final SharedPreferences prefs = getSharedPreferences("sync_prefs", MODE_PRIVATE);
+final int[] lastProg = { -1 };
+final float d = getResources().getDisplayMetrics().density;
+final ProgressBar bar = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
+bar.setMax(10000);
+bar.setProgressTintList(android.content.res.ColorStateList.valueOf(0xFFFFCC99));
+bar.setVisibility(View.GONE);
+((ViewGroup) getWindow().getDecorView()).addView(bar,
+        new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,
+                (int) (3 * d)));
+final TextView percent = new TextView(this);
+percent.setTextSize(12);
+percent.setTextColor(0xFFFFCC99);
+percent.setVisibility(View.GONE);
+((ViewGroup) getWindow().getDecorView()).addView(percent);
+
+//==== THÊM VÒNG TRÒN PIE - giữ nguyên file gốc, chỉ thêm ====
+final ViewGroup rootContent = findViewById(android.R.id.content);
+final MiningCircleView circle = new MiningCircleView(this);
+circle.setVisibility(View.GONE);
+FrameLayout.LayoutParams circleLp = new FrameLayout.LayoutParams((int)(36*d), (int)(36*d));
+circleLp.gravity = Gravity.TOP | Gravity.START;
+circleLp.leftMargin = (int)(16*d);
+circleLp.topMargin = (int)(72*d);
+rootContent.addView(circle, circleLp);
+
+final TextView blockInfo = new TextView(this);
+blockInfo.setTextSize(11);
+blockInfo.setTextColor(0xFFFFCC99);
+blockInfo.setGravity(Gravity.CENTER);
+blockInfo.setSingleLine(true);
+blockInfo.setVisibility(View.GONE);
+FrameLayout.LayoutParams infoLp = new FrameLayout.LayoutParams((int)(140*d), ViewGroup.LayoutParams.WRAP_CONTENT);
+infoLp.gravity = Gravity.TOP | Gravity.START;
+infoLp.leftMargin = (int)(4*d);
+infoLp.topMargin = (int)(112*d);
+rootContent.addView(blockInfo, infoLp);
+//==== HẾT THÊM ====
+
+root.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+    @Override
+    public void onGlobalLayout() {
+        TextView tv = findSync((ViewGroup) root);
+        View qr = findQr((ViewGroup) root);
+        int current = 0; long lastSecs = 0;
+        try { if (application.getWallet()!= null) { current = application.getWallet().getLastBlockSeenHeight(); lastSecs = application.getWallet().getLastBlockSeenTimeSecs(); } } catch (Exception ignored) {}
+        if (tv == null || tv.getVisibility()!= View.VISIBLE) {
+            bar.setVisibility(View.GONE);
+            percent.setVisibility(View.GONE);
+            // hiện pie khi đã sync xong
+            long now = System.currentTimeMillis()/1000;
+            float elapsed = Math.max(0, now - lastSecs);
+            boolean late = elapsed > 660;
+            float prog = elapsed / 600f;
+            circle.setProgress(prog, late);
+            circle.setVisibility(View.VISIBLE);
+            int next = current + 1;
+            String txt = String.format(Locale.US, "%d/%d (%.2f%%)", current, next, Math.min(prog,1f)*100f);
+            blockInfo.setText(txt);
+            blockInfo.setVisibility(View.VISIBLE);
+            return;
+        }
+        // đang sync -> ẩn pie
         circle.setVisibility(View.GONE);
-        ((ViewGroup) getWindow().getDecorView()).addView(circle,
-                new ViewGroup.LayoutParams((int)(36*d), (int)(36*d)));
-        final TextView blockInfo = new TextView(this);
-        blockInfo.setTextSize(11);
-        blockInfo.setTextColor(0xFFFFCC99);
-        blockInfo.setGravity(Gravity.CENTER);
-        blockInfo.setSingleLine(true);
         blockInfo.setVisibility(View.GONE);
-        ((ViewGroup) getWindow().getDecorView()).addView(blockInfo);
-        root.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-            @Override
-            public void onGlobalLayout() {
-                TextView tv = findSync((ViewGroup) root);
-                View qr = findQr((ViewGroup) root);
-                if (qr == null) {
-                    bar.setVisibility(View.GONE);
-                    percent.setVisibility(View.GONE);
-                    circle.setVisibility(View.GONE);
-                    blockInfo.setVisibility(View.GONE);
-                    return;
-                }
-                int[] qrLoc = new int[2];
-                qr.getLocationOnScreen(qrLoc);
-                int qrLeft = qrLoc[0];
-                int qrTop = qrLoc[1];
-                int qrSize = qr.getWidth();
-                int current = 0;
-                long lastSecs = 0;
-                try {
-                    if (application.getWallet()!= null) {
-                        current = application.getWallet().getLastBlockSeenHeight();
-                        lastSecs = application.getWallet().getLastBlockSeenTimeSecs();
-                    }
-                } catch (Exception ignored) {}
-                if (tv == null || tv.getVisibility()!= View.VISIBLE) {
-                    bar.setVisibility(View.GONE);
-                    percent.setVisibility(View.GONE);
-                    long now = System.currentTimeMillis()/1000;
-                    float elapsed = Math.max(0, now - lastSecs);
-                    boolean late = elapsed > 660;
-                    float prog = elapsed / 600f;
-                    circle.setProgress(prog, late);
-                    circle.setX(16*d);
-                    circle.setY(root.getHeight() - 180*d);
-                    circle.setVisibility(View.VISIBLE);
-                    int next = current + 1;
-                    String txt = String.format(Locale.US, "%d/%d (%.2f%%)", current, next, Math.min(prog,1f)*100f);
-                    blockInfo.setText(txt);
-                    blockInfo.setX(8*d);
-                    blockInfo.setY(circle.getY() + 40*d);
-                    blockInfo.getLayoutParams().width = (int)(120*d);
-                    blockInfo.setVisibility(View.VISIBLE);
-                    handler.postDelayed(() -> root.requestLayout(), 1000);
-                    return;
-                }
-                circle.setVisibility(View.GONE);
-                blockInfo.setVisibility(View.GONE);
-                int[] loc = new int[2];
-                tv.getLocationOnScreen(loc);
-                int left = loc[0];
-                int top = loc[1];
-                percent.setText(String.format(Locale.US, "%.2f%%", lastProg[0] / 100f));
-                percent.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
-                int percentW = percent.getMeasuredWidth();
-                int gap = (int)(8 * d);
-                int padEnd = (int)(8 * d);
-                int wantedWidth = tv.getWidth() + gap + percentW + padEnd;
-                int maxAllowed = Math.max(0, qrLeft - left - (int)(8 * d));
-                int barWidth = Math.min(wantedWidth, maxAllowed);
-                int percentX = left + tv.getWidth() + gap;
-                if (percentX + percentW > left + barWidth - padEnd) {
-                    percentX = left + barWidth - padEnd - percentW;
-                }
-                percentX = Math.max(percentX, left + (int)(4 * d));
-                percent.setX(percentX);
-                percent.setY(top);
-                percent.setVisibility(View.VISIBLE);
-                bar.setX(left);
-                bar.setY(top + tv.getHeight() + (int) (4 * d));
-                bar.getLayoutParams().width = barWidth;
-                bar.setVisibility(View.VISIBLE);
-                String s = tv.getText().toString().toLowerCase();
-                int h = 0;
-                try {
-                    int v = Integer.parseInt(s.replaceAll("[^0-9]", ""));
-                    if (s.contains("hour")) h = v;
-                    else if (s.contains("day")) h = v * 24;
-                    else if (s.contains("week")) h = v * 7 * 24;
-                    else if (s.contains("month")) h = v * 30 * 24;
-                    else if (s.contains("year")) h = v * 365 * 24;
-                } catch (Exception ignored) {}
-                int max = prefs.getInt("max_hours", 0);
-                if (h > max) { max = h; prefs.edit().putInt("max_hours", max).apply(); }
-                if (h == 0 && max!= 0) { prefs.edit().remove("max_hours").apply(); max = 0; }
-                int prog = max > 0? (int) ((max - h) * 10000L / max) : 0;
-                if (prog!= lastProg[0]) {
-                    lastProg[0] = prog;
-                    percent.setText(String.format(Locale.US, "%.2f%%", prog / 100f));
-                    bar.setProgress(prog);
-                }
+        int[] loc = new int[2];
+        tv.getLocationOnScreen(loc);
+        int left = loc[0];
+        int top = loc[1];
+        float dd = getResources().getDisplayMetrics().density;
+
+        percent.setText(String.format(Locale.US, "%.2f%%", lastProg[0] / 100f));
+        percent.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
+        int percentW = percent.getMeasuredWidth();
+        int gap = (int)(8 * dd);
+        int padEnd = (int)(8 * dd);
+        int textW = (int) tv.getPaint().measureText(tv.getText().toString());
+        int wantedWidth = textW + gap + percentW + padEnd;
+
+        int qrLeft = qr!= null? getLeftOnScreen(qr) : root.getWidth();
+        int maxAllowed = Math.max(0, qrLeft - left - (int)(8 * dd));
+        int barWidth = Math.min(wantedWidth, maxAllowed);
+
+        int percentX = left + textW + gap;
+        if (percentX + percentW > left + barWidth - padEnd) {
+            percentX = left + barWidth - padEnd - percentW;
+        }
+        percentX = Math.max(percentX, left + (int)(4 * dd));
+
+        percent.setX(percentX);
+        percent.setY(top);
+        percent.setVisibility(View.VISIBLE);
+        bar.setX(left);
+        bar.setY(top + tv.getHeight() + (int)(4 * dd));
+        bar.getLayoutParams().width = barWidth;
+        bar.setVisibility(View.VISIBLE);
+
+        String s = tv.getText().toString().toLowerCase();
+        int h = 0;
+        try {
+            int v = Integer.parseInt(s.replaceAll("[^0-9]", ""));
+            if (s.contains("hour")) h = v;
+            else if (s.contains("day")) h = v * 24;
+            else if (s.contains("week")) h = v * 7 * 24;
+            else if (s.contains("month")) h = v * 30 * 24;
+            else if (s.contains("year")) h = v * 365 * 24;
+        } catch (Exception ignored) {}
+        int max = prefs.getInt("max_hours", 0);
+        if (h > max) { max = h; prefs.edit().putInt("max_hours", max).apply(); }
+        if (h == 0 && max!= 0) { prefs.edit().remove("max_hours").apply(); max = 0; }
+        int prog = max > 0? (int)((max - h) * 10000L / max) : 0;
+        if (prog!= lastProg[0]) {
+            lastProg[0] = prog;
+            percent.setText(String.format(Locale.US, "%.2f%%", prog / 100f));
+            bar.setProgress(prog);
+        }
+    }
+    private TextView findSync(ViewGroup g) {
+        for (int i = 0; i < g.getChildCount(); i++) {
+            View v = g.getChildAt(i);
+            if (v instanceof TextView && ((TextView) v).getText().toString().contains("Synchronizing"))
+                return (TextView) v;
+            if (v instanceof ViewGroup) {
+                TextView t = findSync((ViewGroup) v);
+                if (t!= null) return t;
             }
-            private TextView findSync(ViewGroup g) {
-                for (int i = 0; i < g.getChildCount(); i++) {
-                    View v = g.getChildAt(i);
-                    if (v instanceof TextView && ((TextView) v).getText().toString().contains("Synchronizing"))
-                        return (TextView) v;
-                    if (v instanceof ViewGroup) {
-                        TextView t = findSync((ViewGroup) v);
-                        if (t!= null) return t;
-                    }
-                }
-                return null;
+        }
+        return null;
+    }
+    private View findQr(ViewGroup g) {
+        for (int i = 0; i < g.getChildCount(); i++) {
+            View v = g.getChildAt(i);
+            if (v instanceof ImageView && v.getWidth() > 50 && v.getX() > g.getWidth() * 0.6)
+                return v;
+            if (v instanceof ViewGroup) {
+                View t = findQr((ViewGroup) v);
+                if (t!= null) return t;
             }
-            private View findQr(ViewGroup g) {
-                for (int i = 0; i < g.getChildCount(); i++) {
-                    View v = g.getChildAt(i);
-                    if (v instanceof ImageView && v.getWidth() > 50 && v.getX() > g.getWidth() * 0.6)
-                        return v;
-                    if (v instanceof ViewGroup) {
-                        View t = findQr((ViewGroup) v);
-                        if (t!= null) return t;
-                    }
-                }
-                return null;
-            }
-        });
+        }
+        return null;
+    }
+    private int getLeftOnScreen(View v) {
+        int[] l = new int[2];
+        v.getLocationOnScreen(l);
+        return l[0];
+    }
+});
+        //end
+
         final View insetTopView = contentView.findViewWithTag("inset_top");
         if (insetTopView!= null) {
             ViewCompat.setOnApplyWindowInsetsListener(insetTopView, (v, windowInsets) -> {
@@ -315,6 +325,7 @@ public final class WalletActivity extends AbstractWalletActivity {
         exchangeRatesFragment = findViewById(R.id.wallet_main_twopanes_exchange_rates);
         levitateView = contentView.findViewWithTag("levitate");
 
+        // Make view tagged with 'levitate' scroll away and quickly return.
         if (levitateView!= null) {
             final CoordinatorLayout.LayoutParams layoutParams = new CoordinatorLayout.LayoutParams(
                     levitateView.getLayoutParams().width, levitateView.getLayoutParams().height);
@@ -502,6 +513,7 @@ public final class WalletActivity extends AbstractWalletActivity {
             exchangeRatesFragment.setVisibility(config.isEnableExchangeRates()? View.VISIBLE : View.GONE);
 
         handler.postDelayed(() -> {
+            // delayed start so that UI has enough time to initialize
             BlockchainService.start(WalletActivity.this, true);
         }, 1000);
     }
@@ -520,6 +532,7 @@ public final class WalletActivity extends AbstractWalletActivity {
         splashFadeOut.setTarget(((LayerDrawable) background).getDrawable(1));
         final AnimatorSet fragmentEnterAnimation = new AnimatorSet();
         final AnimatorSet.Builder fragmentEnterAnimationBuilder = fragmentEnterAnimation.play(splashFadeOut);
+
         final View slideInLeftView = contentView.findViewWithTag("slide_in_left");
         if (slideInLeftView!= null) {
             final ValueAnimator slide = ValueAnimator.ofFloat(-1.0f, 0.0f);
@@ -535,6 +548,7 @@ public final class WalletActivity extends AbstractWalletActivity {
             fadeIn.setTarget(slideInLeftView);
             fragmentEnterAnimationBuilder.before(slide).before(fadeIn);
         }
+
         final View slideInRightView = contentView.findViewWithTag("slide_in_right");
         if (slideInRightView!= null) {
             final ValueAnimator slide = ValueAnimator.ofFloat(1.0f, 0.0f);
@@ -550,6 +564,7 @@ public final class WalletActivity extends AbstractWalletActivity {
             fadeIn.setTarget(slideInRightView);
             fragmentEnterAnimationBuilder.before(slide).before(fadeIn);
         }
+
         final View slideInTopView = contentView.findViewWithTag("slide_in_top");
         if (slideInTopView!= null) {
             final ValueAnimator slide = ValueAnimator.ofFloat(-1.0f, 0.0f);
@@ -565,6 +580,7 @@ public final class WalletActivity extends AbstractWalletActivity {
             fadeIn.setTarget(slideInTopView);
             fragmentEnterAnimationBuilder.before(slide).before(fadeIn);
         }
+
         final View slideInBottomView = contentView.findViewWithTag("slide_in_bottom");
         if (slideInBottomView!= null) {
             final ValueAnimator slide = ValueAnimator.ofFloat(1.0f, 0.0f);
@@ -580,6 +596,7 @@ public final class WalletActivity extends AbstractWalletActivity {
             fadeIn.setTarget(slideInBottomView);
             fragmentEnterAnimationBuilder.before(slide).before(fadeIn);
         }
+
         if (levitateView!= null) {
             final ObjectAnimator elevate = ObjectAnimator.ofFloat(levitateView, "elevation", 0.0f,
                     levitateView.getElevation());
@@ -590,6 +607,7 @@ public final class WalletActivity extends AbstractWalletActivity {
             fadeIn.setTarget(levitateBackground);
             fragmentEnterAnimationBuilder.before(fadeIn);
         }
+
         return fragmentEnterAnimation;
     }
 
@@ -601,16 +619,19 @@ public final class WalletActivity extends AbstractWalletActivity {
 
     private void handleIntent(final Intent intent) {
         final String action = intent.getAction();
+
         if (NfcAdapter.ACTION_NDEF_DISCOVERED.equals(action)) {
             final String inputType = intent.getType();
             final NdefMessage ndefMessage = (NdefMessage) intent
-               .getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES)[0];
+                   .getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES)[0];
             final byte[] input = Nfc.extractMimePayload(Constants.MIMETYPE_TRANSACTION, ndefMessage);
+
             new BinaryInputParser(inputType, input) {
                 @Override
                 protected void handlePaymentIntent(final PaymentIntent paymentIntent) {
                     cannotClassify(inputType);
                 }
+
                 @Override
                 protected void error(final int messageResId, final Object... messageArgs) {
                     final DialogBuilder dialog = DialogBuilder.dialog(WalletActivity.this, 0, messageResId, messageArgs);
@@ -621,9 +642,17 @@ public final class WalletActivity extends AbstractWalletActivity {
         }
     }
 
-    public void handleRequestCoins() { RequestCoinsActivity.start(this); }
-    public void handleSendCoins() { startActivity(new Intent(this, SendCoinsActivity.class)); }
+    public void handleRequestCoins() {
+        RequestCoinsActivity.start(this);
+    }
+
+    public void handleSendCoins() {
+        startActivity(new Intent(this, SendCoinsActivity.class));
+    }
+
     public void handleScan(final View clickView) {
+        // The animation must be ended because of several graphical glitching that happens when the
+        // Camera/SurfaceView is used while the animation is running.
         enterAnimation.end();
         if (clickView!= null) {
             final ActivityOptionsCompat options = ActivityOptionsCompat.makeClipRevealAnimation(clickView, 0, 0,
@@ -640,6 +669,7 @@ public final class WalletActivity extends AbstractWalletActivity {
                 final View directTargetChild, final View target, final int nestedScrollAxes, final int type) {
             return (nestedScrollAxes & ViewCompat.SCROLL_AXIS_VERTICAL)!= 0;
         }
+
         @Override
         public void onNestedScroll(final CoordinatorLayout coordinatorLayout, final View child, final View target,
                 final int dxConsumed, final int dyConsumed, final int dxUnconsumed, final int dyUnconsumed,
