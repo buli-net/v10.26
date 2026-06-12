@@ -144,12 +144,14 @@ public final class WalletActivity extends AbstractWalletActivity {
         getActionBar().setDisplayHomeAsUpEnabled(false);
         contentView = findViewById(android.R.id.content);
 
-        // --- 2 THANH BAR: tạo ProgressBar trong app (giữ nguyên notification) ---
+        // --- THANH SYNC TỰ ĐỘNG THEO TỶ LỆ THỰC ---
         final ProgressBar syncBar = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
-        syncBar.setMax(100);
+        syncBar.setMax(10000);
         syncBar.setProgressTintList(android.content.res.ColorStateList.valueOf(0xFFFFCC99));
 
         final View root = findViewById(android.R.id.content);
+        final int[] initialMaxHours = {0};
+
         root.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
             public void onGlobalLayout() {
@@ -175,22 +177,25 @@ public final class WalletActivity extends AbstractWalletActivity {
                         int totalHours = 0;
                         try {
                             int value = Integer.parseInt(txt.replaceAll("[^0-9]", ""));
-                            if (txt.contains("hour")) {
-                                totalHours = value;
-                            } else if (txt.contains("day")) {
-                                totalHours = value * 24;
-                            } else if (txt.contains("week")) {
-                                totalHours = value * 24 * 7;
-                            } else if (txt.contains("month")) {
-                                totalHours = value * 24 * 30;
-                            } else if (txt.contains("year")) {
-                                totalHours = value * 24 * 365;
-                            }
+                            if (txt.contains("hour")) totalHours = value;
+                            else if (txt.contains("day")) totalHours = value * 24;
+                            else if (txt.contains("week")) totalHours = value * 7 * 24;
+                            else if (txt.contains("month")) totalHours = value * 30 * 24;
+                            else if (txt.contains("year")) totalHours = value * 365 * 24;
                         } catch (Exception ignored) {}
-                        int maxHours = 14 * 24;
-                        int percent = 100 - (totalHours * 100 / maxHours);
-                        percent = Math.max(0, Math.min(100, percent));
-                        syncBar.setProgress(percent);
+
+                        if (initialMaxHours[0] == 0 && totalHours > 0) {
+                            initialMaxHours[0] = totalHours;
+                        }
+                        if (totalHours == 0) initialMaxHours[0] = 0;
+
+                        int progress = 0;
+                        if (initialMaxHours[0] > 0) {
+                            progress = (int) ((initialMaxHours[0] - totalHours) * 10000L / initialMaxHours[0]);
+                            progress = Math.max(0, Math.min(10000, progress));
+                        }
+                        syncBar.setIndeterminate(false);
+                        syncBar.setProgress(progress);
                     }
                 }
             }
@@ -529,7 +534,7 @@ public final class WalletActivity extends AbstractWalletActivity {
         if (NfcAdapter.ACTION_NDEF_DISCOVERED.equals(action)) {
             final String inputType = intent.getType();
             final NdefMessage ndefMessage = (NdefMessage) intent
-                  .getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES)[0];
+                   .getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES)[0];
             final byte[] input = Nfc.extractMimePayload(Constants.MIMETYPE_TRANSACTION, ndefMessage);
             new BinaryInputParser(inputType, input) {
                 @Override
