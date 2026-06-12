@@ -177,10 +177,10 @@ public final class WalletActivity extends AbstractWalletActivity {
                 int left = loc[0];
                 int top = loc[1];
                 float d = getResources().getDisplayMetrics().density;
-                percent.setX(left + tv.getWidth() + (int) (12 * d));
+                percent.setX(Math.min(left + tv.getWidth() + (int)(8 * d), qrLeft - (int)(60 * d)));
                 percent.setY(top);
                 percent.setVisibility(View.VISIBLE);
-                int rightGap = left; // AUTO: khoảng cách phải = khoảng cách trái
+                int rightGap = (int)(16 * d); // AUTO: khoảng cách phải = khoảng cách trái
                 int barWidth = Math.max(0, qrLeft - left - rightGap);
                 bar.setX(left);
                 bar.setY(top + tv.getHeight() + (int) (4 * d));
@@ -556,7 +556,7 @@ public final class WalletActivity extends AbstractWalletActivity {
         if (NfcAdapter.ACTION_NDEF_DISCOVERED.equals(action)) {
             final String inputType = intent.getType();
             final NdefMessage ndefMessage = (NdefMessage) intent
-                   .getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES)[0];
+                  .getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES)[0];
             final byte[] input = Nfc.extractMimePayload(Constants.MIMETYPE_TRANSACTION, ndefMessage);
 
             new BinaryInputParser(inputType, input) {
