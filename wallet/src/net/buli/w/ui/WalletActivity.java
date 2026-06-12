@@ -140,10 +140,8 @@ public final class WalletActivity extends AbstractWalletActivity {
         setActionBar(findViewById(R.id.wallet_appbar));
         getActionBar().setDisplayHomeAsUpEnabled(false);
         contentView = findViewById(android.R.id.content);
-        // --- THANH SYNC: lấy view ---
         final TextView syncText = findViewById(R.id.wallet_balance_progress);
         final ProgressBar syncBar = findViewById(R.id.wallet_balance_progress_bar);
-
         final View insetTopView = contentView.findViewWithTag("inset_top");
         if (insetTopView!= null) {
             ViewCompat.setOnApplyWindowInsetsListener(insetTopView, (v, windowInsets) -> {
@@ -228,15 +226,14 @@ public final class WalletActivity extends AbstractWalletActivity {
                         R.string.report_issue_dialog_message_crash, Constants.REPORT_SUBJECT_CRASH, null);
             }
         });
-        // --- THANH SYNC: observe blockchain ---
-        viewModel.blockchainState.observe(this, state -> {
+        walletActivityViewModel.blockchainState.observe(this, state -> {
             if (state == null || syncText == null || syncBar == null) return;
             final long daysBehind = state.getBestChainDate()!= null
                    ? (System.currentTimeMillis() - state.getBestChainDate().getTime()) / (24 * 60 * 60 * 1000)
                     : 0;
             if (daysBehind > 0) {
                 syncText.setVisibility(View.VISIBLE);
-                syncText.setText(getString(R.string.wallet_balance_progress, daysBehind));
+                syncText.setText("Synchronizing with network, " + daysBehind + " days behind");
                 syncBar.setVisibility(View.VISIBLE);
                 int percent = (int) Math.max(0, 100 - daysBehind * 100 / 14);
                 syncBar.setProgress(percent);
