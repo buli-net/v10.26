@@ -205,8 +205,8 @@ public final class WalletActivity extends AbstractWalletActivity {
                 blockInfo.setVisibility(View.VISIBLE);
                 int current = 0;
                 try {
-                    if (application.getBlockchain()!= null) {
-                        current = application.getBlockchain().getBestChainHeight();
+                    if (application.getWallet()!= null) {
+                        current = application.getWallet().getLastBlockSeenHeight();
                     }
                 } catch (Exception ignored) {}
                 if (tv == null || tv.getVisibility()!= View.VISIBLE) {
@@ -294,6 +294,7 @@ public final class WalletActivity extends AbstractWalletActivity {
                 return l[0];
             }
         });
+        //... phần còn lại giữ nguyên như file gốc...
         final View insetTopView = contentView.findViewWithTag("inset_top");
         if (insetTopView!= null) {
             ViewCompat.setOnApplyWindowInsetsListener(insetTopView, (v, windowInsets) -> {
@@ -516,14 +517,13 @@ public final class WalletActivity extends AbstractWalletActivity {
         super.onPause();
     }
 
-    private AnimatorSet buildEnterAnimation(final View contentView) {
+    private AnimatorSet buildEnterAnimation(final View contentView) { /* giữ nguyên */
         final Drawable background = getWindow().getDecorView().getBackground();
         final int duration = getResources().getInteger(android.R.integer.config_mediumAnimTime);
         final Animator splashFadeOut = AnimatorInflater.loadAnimator(WalletActivity.this, R.animator.fade_out_drawable);
         splashFadeOut.setTarget(((LayerDrawable) background).getDrawable(1));
         final AnimatorSet fragmentEnterAnimation = new AnimatorSet();
         final AnimatorSet.Builder fragmentEnterAnimationBuilder = fragmentEnterAnimation.play(splashFadeOut);
-
         final View slideInLeftView = contentView.findViewWithTag("slide_in_left");
         if (slideInLeftView!= null) {
             final ValueAnimator slide = ValueAnimator.ofFloat(-1.0f, 0.0f);
@@ -539,7 +539,6 @@ public final class WalletActivity extends AbstractWalletActivity {
             fadeIn.setTarget(slideInLeftView);
             fragmentEnterAnimationBuilder.before(slide).before(fadeIn);
         }
-
         final View slideInRightView = contentView.findViewWithTag("slide_in_right");
         if (slideInRightView!= null) {
             final ValueAnimator slide = ValueAnimator.ofFloat(1.0f, 0.0f);
@@ -555,7 +554,6 @@ public final class WalletActivity extends AbstractWalletActivity {
             fadeIn.setTarget(slideInRightView);
             fragmentEnterAnimationBuilder.before(slide).before(fadeIn);
         }
-
         final View slideInTopView = contentView.findViewWithTag("slide_in_top");
         if (slideInTopView!= null) {
             final ValueAnimator slide = ValueAnimator.ofFloat(-1.0f, 0.0f);
@@ -571,7 +569,6 @@ public final class WalletActivity extends AbstractWalletActivity {
             fadeIn.setTarget(slideInTopView);
             fragmentEnterAnimationBuilder.before(slide).before(fadeIn);
         }
-
         final View slideInBottomView = contentView.findViewWithTag("slide_in_bottom");
         if (slideInBottomView!= null) {
             final ValueAnimator slide = ValueAnimator.ofFloat(1.0f, 0.0f);
@@ -587,7 +584,6 @@ public final class WalletActivity extends AbstractWalletActivity {
             fadeIn.setTarget(slideInBottomView);
             fragmentEnterAnimationBuilder.before(slide).before(fadeIn);
         }
-
         if (levitateView!= null) {
             final ObjectAnimator elevate = ObjectAnimator.ofFloat(levitateView, "elevation", 0.0f,
                     levitateView.getElevation());
@@ -598,7 +594,6 @@ public final class WalletActivity extends AbstractWalletActivity {
             fadeIn.setTarget(levitateBackground);
             fragmentEnterAnimationBuilder.before(fadeIn);
         }
-
         return fragmentEnterAnimation;
     }
 
@@ -610,19 +605,16 @@ public final class WalletActivity extends AbstractWalletActivity {
 
     private void handleIntent(final Intent intent) {
         final String action = intent.getAction();
-
         if (NfcAdapter.ACTION_NDEF_DISCOVERED.equals(action)) {
             final String inputType = intent.getType();
             final NdefMessage ndefMessage = (NdefMessage) intent
-                 .getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES)[0];
+                .getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES)[0];
             final byte[] input = Nfc.extractMimePayload(Constants.MIMETYPE_TRANSACTION, ndefMessage);
-
             new BinaryInputParser(inputType, input) {
                 @Override
                 protected void handlePaymentIntent(final PaymentIntent paymentIntent) {
                     cannotClassify(inputType);
                 }
-
                 @Override
                 protected void error(final int messageResId, final Object... messageArgs) {
                     final DialogBuilder dialog = DialogBuilder.dialog(WalletActivity.this, 0, messageResId, messageArgs);
@@ -633,14 +625,8 @@ public final class WalletActivity extends AbstractWalletActivity {
         }
     }
 
-    public void handleRequestCoins() {
-        RequestCoinsActivity.start(this);
-    }
-
-    public void handleSendCoins() {
-        startActivity(new Intent(this, SendCoinsActivity.class));
-    }
-
+    public void handleRequestCoins() { RequestCoinsActivity.start(this); }
+    public void handleSendCoins() { startActivity(new Intent(this, SendCoinsActivity.class)); }
     public void handleScan(final View clickView) {
         enterAnimation.end();
         if (clickView!= null) {
@@ -658,7 +644,6 @@ public final class WalletActivity extends AbstractWalletActivity {
                 final View directTargetChild, final View target, final int nestedScrollAxes, final int type) {
             return (nestedScrollAxes & ViewCompat.SCROLL_AXIS_VERTICAL)!= 0;
         }
-
         @Override
         public void onNestedScroll(final CoordinatorLayout coordinatorLayout, final View child, final View target,
                 final int dxConsumed, final int dyConsumed, final int dxUnconsumed, final int dyUnconsumed,
