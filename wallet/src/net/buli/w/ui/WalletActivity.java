@@ -39,9 +39,9 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewParent;
 import android.view.ViewTreeObserver;
 import android.view.animation.DecelerateInterpolator;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -145,69 +145,96 @@ public final class WalletActivity extends AbstractWalletActivity {
         setActionBar(findViewById(R.id.wallet_appbar));
         getActionBar().setDisplayHomeAsUpEnabled(false);
         contentView = findViewById(android.R.id.content);
-
-        // --- SYNC BAR + % OVERLAY (không bọc view) ---
+        // --- SYNC BAR + % KHONG DAM QR ---
         final View root = findViewById(android.R.id.content);
         final SharedPreferences prefs = getSharedPreferences("sync_prefs", MODE_PRIVATE);
-        final int[] lastProg = {-1};
-
+        final int[] lastProg = { -1 };
         final ProgressBar bar = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
         bar.setMax(10000);
         bar.setProgressTintList(android.content.res.ColorStateList.valueOf(0xFFFFCC99));
         bar.setVisibility(View.GONE);
-        ((ViewGroup)getWindow().getDecorView()).addView(bar, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (int)(3*getResources().getDisplayMetrics().density)));
-
+        ((ViewGroup) getWindow().getDecorView()).addView(bar,
+                new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,
+                        (int) (3 * getResources().getDisplayMetrics().density)));
         final TextView percent = new TextView(this);
         percent.setTextSize(12);
         percent.setTextColor(0xFFFFCC99);
         percent.setVisibility(View.GONE);
-        ((ViewGroup)getWindow().getDecorView()).addView(percent);
-
+        ((ViewGroup) getWindow().getDecorView()).addView(percent);
         root.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
             public void onGlobalLayout() {
-                TextView tv = findSync((ViewGroup)root);
-                if (tv==null || tv.getVisibility()!=View.VISIBLE) {
+                TextView tv = findSync((ViewGroup) root);
+                if (tv == null || tv.getVisibility()!= View.VISIBLE) {
                     bar.setVisibility(View.GONE);
                     percent.setVisibility(View.GONE);
                     return;
                 }
                 int[] loc = new int[2];
                 tv.getLocationOnScreen(loc);
-                int y = loc[1] + tv.getHeight() + (int)(4*getResources().getDisplayMetrics().density);
-                bar.setX(0);
-                bar.setY(y);
-                bar.getLayoutParams().width = root.getWidth();
-                bar.setVisibility(View.VISIBLE);
-                percent.setY(loc[1]);
-                percent.setX(root.getWidth() - (int)(70*getResources().getDisplayMetrics().density));
+                View qr = findQr((ViewGroup) root);
+                int qrLeft = qr!= null? getLeftOnScreen(qr) : root.getWidth();
+                int left = loc[0];
+                int top = loc[1];
+                float d = getResources().getDisplayMetrics().density;
+                percent.setX(left + tv.getWidth() + (int) (12 * d));
+                percent.setY(top);
                 percent.setVisibility(View.VISIBLE);
+                int barWidth = Math.max(0, qrLeft - left - (int) (16 * d));
+                bar.setX(left);
+                bar.setY(top + tv.getHeight() + (int) (4 * d));
+                bar.getLayoutParams().width = barWidth;
+                bar.setVisibility(View.VISIBLE);
                 String s = tv.getText().toString().toLowerCase();
-                int h=0;
+                int h = 0;
                 try {
-                    int v=Integer.parseInt(s.replaceAll("[^0-9]",""));
-                    if(s.contains("hour")) h=v;
-                    else if(s.contains("day")) h=v*24;
-                    else if(s.contains("week")) h=v*7*24;
-                    else if(s.contains("month")) h=v*30*24;
-                    else if(s.contains("year")) h=v*365*24;
-                } catch(Exception ignored){}
-                int max=prefs.getInt("max_hours",0);
-                if(h>max){max=h; prefs.edit().putInt("max_hours",max).apply();}
-                if(h==0&&max!=0){prefs.edit().remove("max_hours").apply(); max=0;}
-                int prog = max>0?(int)((max-h)*10000L/max):0;
-                if(prog!=lastProg[0]){lastProg[0]=prog; percent.setText(String.format(Locale.US,"%.2f%%",prog/100f)); bar.setProgress(prog);}
+                    int v = Integer.parseInt(s.replaceAll("[^0-9]", ""));
+                    if (s.contains("hour")) h = v;
+                    else if (s.contains("day")) h = v * 24;
+                    else if (s.contains("week")) h = v * 7 * 24;
+                    else if (s.contains("month")) h = v * 30 * 24;
+                    else if (s.contains("year")) h = v * 365 * 24;
+                } catch (Exception ignored) {}
+                int max = prefs.getInt("max_hours", 0);
+                if (h > max) { max = h; prefs.edit().putInt("max_hours", max).apply(); }
+                if (h == 0 && max!= 0) { prefs.edit().remove("max_hours").apply(); max = 0; }
+                int prog = max > 0? (int) ((max - h) * 10000L / max) : 0;
+                if (prog!= lastProg[0]) {
+                    lastProg[0] = prog;
+                    percent.setText(String.format(Locale.US, "%.2f%%", prog / 100f));
+                    bar.setProgress(prog);
+                }
             }
-            private TextView findSync(ViewGroup g){
-                for(int i=0;i<g.getChildCount();i++){
-                    View v=g.getChildAt(i);
-                    if(v instanceof TextView && ((TextView)v).getText().toString().contains("Synchronizing")) return (TextView)v;
-                    if(v instanceof ViewGroup){TextView t=findSync((ViewGroup)v); if(t!=null) return t;}
+            private TextView findSync(ViewGroup g) {
+                for (int i = 0; i < g.getChildCount(); i++) {
+                    View v = g.getChildAt(i);
+                    if (v instanceof TextView && ((TextView) v).getText().toString().contains("Synchronizing"))
+                        return (TextView) v;
+                    if (v instanceof ViewGroup) {
+                        TextView t = findSync((ViewGroup) v);
+                        if (t!= null) return t;
+                    }
                 }
                 return null;
             }
+            private View findQr(ViewGroup g) {
+                for (int i = 0; i < g.getChildCount(); i++) {
+                    View v = g.getChildAt(i);
+                    if (v instanceof ImageView && v.getWidth() > 50 && v.getX() > g.getWidth() * 0.6)
+                        return v;
+                    if (v instanceof ViewGroup) {
+                        View t = findQr((ViewGroup) v);
+                        if (t!= null) return t;
+                    }
+                }
+                return null;
+            }
+            private int getLeftOnScreen(View v) {
+                int[] l = new int[2];
+                v.getLocationOnScreen(l);
+                return l[0];
+            }
         });
-
         final View insetTopView = contentView.findViewWithTag("inset_top");
         if (insetTopView!= null) {
             ViewCompat.setOnApplyWindowInsetsListener(insetTopView, (v, windowInsets) -> {
@@ -232,6 +259,7 @@ public final class WalletActivity extends AbstractWalletActivity {
         exchangeRatesFragment = findViewById(R.id.wallet_main_twopanes_exchange_rates);
         levitateView = contentView.findViewWithTag("levitate");
 
+        // Make view tagged with 'levitate' scroll away and quickly return.
         if (levitateView!= null) {
             final CoordinatorLayout.LayoutParams layoutParams = new CoordinatorLayout.LayoutParams(
                     levitateView.getLayoutParams().width, levitateView.getLayoutParams().height);
@@ -419,6 +447,7 @@ public final class WalletActivity extends AbstractWalletActivity {
             exchangeRatesFragment.setVisibility(config.isEnableExchangeRates()? View.VISIBLE : View.GONE);
 
         handler.postDelayed(() -> {
+            // delayed start so that UI has enough time to initialize
             BlockchainService.start(WalletActivity.this, true);
         }, 1000);
     }
@@ -426,6 +455,7 @@ public final class WalletActivity extends AbstractWalletActivity {
     @Override
     protected void onPause() {
         handler.removeCallbacksAndMessages(null);
+
         super.onPause();
     }
 
@@ -523,16 +553,19 @@ public final class WalletActivity extends AbstractWalletActivity {
 
     private void handleIntent(final Intent intent) {
         final String action = intent.getAction();
+
         if (NfcAdapter.ACTION_NDEF_DISCOVERED.equals(action)) {
             final String inputType = intent.getType();
             final NdefMessage ndefMessage = (NdefMessage) intent
-                  .getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES)[0];
+                   .getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES)[0];
             final byte[] input = Nfc.extractMimePayload(Constants.MIMETYPE_TRANSACTION, ndefMessage);
+
             new BinaryInputParser(inputType, input) {
                 @Override
                 protected void handlePaymentIntent(final PaymentIntent paymentIntent) {
                     cannotClassify(inputType);
                 }
+
                 @Override
                 protected void error(final int messageResId, final Object... messageArgs) {
                     final DialogBuilder dialog = DialogBuilder.dialog(WalletActivity.this, 0, messageResId, messageArgs);
@@ -552,6 +585,8 @@ public final class WalletActivity extends AbstractWalletActivity {
     }
 
     public void handleScan(final View clickView) {
+        // The animation must be ended because of several graphical glitching that happens when the
+        // Camera/SurfaceView is used while the animation is running.
         enterAnimation.end();
         if (clickView!= null) {
             final ActivityOptionsCompat options = ActivityOptionsCompat.makeClipRevealAnimation(clickView, 0, 0,
@@ -568,6 +603,7 @@ public final class WalletActivity extends AbstractWalletActivity {
                 final View directTargetChild, final View target, final int nestedScrollAxes, final int type) {
             return (nestedScrollAxes & ViewCompat.SCROLL_AXIS_VERTICAL)!= 0;
         }
+
         @Override
         public void onNestedScroll(final CoordinatorLayout coordinatorLayout, final View child, final View target,
                 final int dxConsumed, final int dyConsumed, final int dxUnconsumed, final int dyUnconsumed,
