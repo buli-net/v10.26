@@ -28,35 +28,14 @@
             android:textSize="@dimen/font_size_small" />
     </LinearLayout>
 
-    <!-- Khối chứa text + thanh progress -->
-    <LinearLayout
-        android:layout_width="match_parent"
+    <TextView
+        android:id="@+id/wallet_balance_progress"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:orientation="vertical"
-        android:gravity="center_horizontal"
-        android:paddingLeft="@dimen/list_entry_padding_horizontal_lax"
-        android:paddingRight="@dimen/list_entry_padding_horizontal_lax">
-
-        <TextView
-            android:id="@+id/wallet_balance_progress"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textColor="@color/fg_less_significant"
-            android:textSize="@dimen/font_size_small"
-            android:visibility="gone" />
-
-        <!-- THANH PROGRESS MỚI -->
-        <ProgressBar
-            android:id="@+id/wallet_balance_progress_bar"
-            style="?android:attr/progressBarStyleHorizontal"
-            android:layout_width="200dp"
-            android:layout_height="3dp"
-            android:layout_marginTop="6dp"
-            android:max="100"
-            android:progress="0"
-            android:progressTint="#ffcc99"
-            android:indeterminate="false"
-            android:visibility="gone" />
-    </LinearLayout>
+        android:layout_marginLeft="@dimen/list_entry_padding_horizontal_lax"
+        android:layout_marginRight="@dimen/list_entry_padding_horizontal_lax"
+        android:textColor="@color/fg_less_significant"
+        android:textSize="@dimen/font_size_small"
+        android:visibility="gone" />
 </FrameLayout>
