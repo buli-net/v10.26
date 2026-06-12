@@ -166,7 +166,6 @@ public final class WalletActivity extends AbstractWalletActivity {
         exchangeRatesFragment = findViewById(R.id.wallet_main_twopanes_exchange_rates);
         levitateView = contentView.findViewWithTag("levitate");
 
-        // Make view tagged with 'levitate' scroll away and quickly return.
         if (levitateView!= null) {
             final CoordinatorLayout.LayoutParams layoutParams = new CoordinatorLayout.LayoutParams(
                     levitateView.getLayoutParams().width, levitateView.getLayoutParams().height);
@@ -226,22 +225,23 @@ public final class WalletActivity extends AbstractWalletActivity {
                         R.string.report_issue_dialog_message_crash, Constants.REPORT_SUBJECT_CRASH, null);
             }
         });
-        walletActivityViewModel.blockchainState.observe(this, state -> {
-            if (state == null || syncText == null || syncBar == null) return;
-            final long daysBehind = state.getBestChainDate()!= null
-                   ? (System.currentTimeMillis() - state.getBestChainDate().getTime()) / (24 * 60 * 60 * 1000)
-                    : 0;
-            if (daysBehind > 0) {
-                syncText.setVisibility(View.VISIBLE);
-                syncText.setText("Synchronizing with network, " + daysBehind + " days behind");
-                syncBar.setVisibility(View.VISIBLE);
-                int percent = (int) Math.max(0, 100 - daysBehind * 100 / 14);
-                syncBar.setProgress(percent);
-            } else {
-                syncText.setVisibility(View.GONE);
-                syncBar.setVisibility(View.GONE);
-            }
-        });
+        if (syncText!= null && syncBar!= null) {
+            syncText.addOnLayoutChangeListener((v, l, t, r, b, ol, ot, or, ob) -> {
+                boolean visible = v.getVisibility() == View.VISIBLE;
+                syncBar.setVisibility(visible? View.VISIBLE : View.GONE);
+                if (visible) {
+                    syncBar.setIndeterminate(false);
+                    syncBar.setMax(100);
+                    String txt = syncText.getText().toString();
+                    int days = 0;
+                    try {
+                        days = Integer.parseInt(txt.replaceAll("[^0-9]", ""));
+                    } catch (Exception ignored) {}
+                    int percent = Math.max(0, 100 - days * 100 / 14);
+                    syncBar.setProgress(percent);
+                }
+            });
+        }
         viewModel.enterAnimation.observe(this, state -> {
             if (state == WalletActivityViewModel.EnterAnimationState.WAITING) {
                 enterAnimation.setCurrentPlayTime(0);
@@ -370,7 +370,6 @@ public final class WalletActivity extends AbstractWalletActivity {
             exchangeRatesFragment.setVisibility(config.isEnableExchangeRates()? View.VISIBLE : View.GONE);
 
         handler.postDelayed(() -> {
-            // delayed start so that UI has enough time to initialize
             BlockchainService.start(WalletActivity.this, true);
         }, 1000);
     }
@@ -378,7 +377,6 @@ public final class WalletActivity extends AbstractWalletActivity {
     @Override
     protected void onPause() {
         handler.removeCallbacksAndMessages(null);
-
         super.onPause();
     }
 
@@ -476,19 +474,16 @@ public final class WalletActivity extends AbstractWalletActivity {
 
     private void handleIntent(final Intent intent) {
         final String action = intent.getAction();
-
         if (NfcAdapter.ACTION_NDEF_DISCOVERED.equals(action)) {
             final String inputType = intent.getType();
             final NdefMessage ndefMessage = (NdefMessage) intent
                    .getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES)[0];
             final byte[] input = Nfc.extractMimePayload(Constants.MIMETYPE_TRANSACTION, ndefMessage);
-
             new BinaryInputParser(inputType, input) {
                 @Override
                 protected void handlePaymentIntent(final PaymentIntent paymentIntent) {
                     cannotClassify(inputType);
                 }
-
                 @Override
                 protected void error(final int messageResId, final Object... messageArgs) {
                     final DialogBuilder dialog = DialogBuilder.dialog(WalletActivity.this, 0, messageResId, messageArgs);
@@ -508,8 +503,6 @@ public final class WalletActivity extends AbstractWalletActivity {
     }
 
     public void handleScan(final View clickView) {
-        // The animation must be ended because of several graphical glitching that happens when the
-        // Camera/SurfaceView is used while the animation is running.
         enterAnimation.end();
         if (clickView!= null) {
             final ActivityOptionsCompat options = ActivityOptionsCompat.makeClipRevealAnimation(clickView, 0, 0,
@@ -526,7 +519,6 @@ public final class WalletActivity extends AbstractWalletActivity {
                 final View directTargetChild, final View target, final int nestedScrollAxes, final int type) {
             return (nestedScrollAxes & ViewCompat.SCROLL_AXIS_VERTICAL)!= 0;
         }
-
         @Override
         public void onNestedScroll(final CoordinatorLayout coordinatorLayout, final View child, final View target,
                 final int dxConsumed, final int dyConsumed, final int dxUnconsumed, final int dyUnconsumed,
