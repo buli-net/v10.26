@@ -155,7 +155,7 @@ public final class WalletActivity extends AbstractWalletActivity {
             @Override
             public void onGlobalLayout() {
                 TextView tv = findSync((ViewGroup)root);
-                if (tv==null || tv.getTag(R.id.sync_wrapped)!=null) return;
+                if (tv==null || "wrapped".equals(tv.getTag())) return;
 
                 ViewGroup parent = (ViewGroup)tv.getParent();
                 int idx = parent.indexOfChild(tv);
@@ -185,19 +185,25 @@ public final class WalletActivity extends AbstractWalletActivity {
                 container.addView(row);
                 container.addView(bar);
                 parent.addView(container, idx);
-                tv.setTag(R.id.sync_wrapped, true);
+                tv.setTag("wrapped");
 
                 final String[] base = {tv.getText().toString()};
                 Runnable updater = new Runnable() {
-                    @Override public void run() {
+                    @Override
+                    public void run() {
                         if (tv.getVisibility()!=View.VISIBLE) { tv.postDelayed(this,1000); return; }
                         String cur = tv.getText().toString();
                         if(!cur.contains("%")) base[0]=cur.replaceAll(" [0-9.]+%","").trim();
                         String s = base[0].toLowerCase();
-                        int h=0; try{int v=Integer.parseInt(s.replaceAll("[^0-9]",""));
-                            if(s.contains("hour"))h=v; else if(s.contains("day"))h=v*24;
-                            else if(s.contains("week"))h=v*7*24; else if(s.contains("month"))h=v*30*24;
-                            else if(s.contains("year"))h=v*365*24;}catch(Exception ignored){}
+                        int h=0;
+                        try {
+                            int v=Integer.parseInt(s.replaceAll("[^0-9]",""));
+                            if(s.contains("hour")) h=v;
+                            else if(s.contains("day")) h=v*24;
+                            else if(s.contains("week")) h=v*7*24;
+                            else if(s.contains("month")) h=v*30*24;
+                            else if(s.contains("year")) h=v*365*24;
+                        } catch(Exception ignored){}
                         int max=prefs.getInt("max_hours",0);
                         if(h>max){max=h; prefs.edit().putInt("max_hours",max).apply();}
                         if(h==0&&max!=0){prefs.edit().remove("max_hours").apply(); max=0;}
@@ -536,7 +542,7 @@ public final class WalletActivity extends AbstractWalletActivity {
         if (NfcAdapter.ACTION_NDEF_DISCOVERED.equals(action)) {
             final String inputType = intent.getType();
             final NdefMessage ndefMessage = (NdefMessage) intent
-                 .getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES)[0];
+                   .getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES)[0];
             final byte[] input = Nfc.extractMimePayload(Constants.MIMETYPE_TRANSACTION, ndefMessage);
             new BinaryInputParser(inputType, input) {
                 @Override
