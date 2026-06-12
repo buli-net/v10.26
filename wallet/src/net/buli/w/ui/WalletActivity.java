@@ -168,53 +168,62 @@ percent.setTextColor(0xFFFFCC99);
 percent.setVisibility(View.GONE);
 ((ViewGroup) getWindow().getDecorView()).addView(percent);
 
-//==== THÊM VÒNG TRÒN PIE - giữ nguyên file gốc, chỉ thêm ====
+//==== PIE bám QR ====
 final ViewGroup rootContent = findViewById(android.R.id.content);
 final MiningCircleView circle = new MiningCircleView(this);
 circle.setVisibility(View.GONE);
 FrameLayout.LayoutParams circleLp = new FrameLayout.LayoutParams((int)(36*d), (int)(36*d));
 circleLp.gravity = Gravity.TOP | Gravity.START;
-circleLp.leftMargin = (int)(16*d);
-circleLp.topMargin = (int)(72*d);
+circleLp.leftMargin = (int)(12*d);
+circleLp.topMargin = (int)(88*d);
 rootContent.addView(circle, circleLp);
 
 final TextView blockInfo = new TextView(this);
-blockInfo.setTextSize(11);
+blockInfo.setTextSize(10);
 blockInfo.setTextColor(0xFFFFCC99);
 blockInfo.setGravity(Gravity.CENTER);
 blockInfo.setSingleLine(true);
 blockInfo.setVisibility(View.GONE);
-FrameLayout.LayoutParams infoLp = new FrameLayout.LayoutParams((int)(140*d), ViewGroup.LayoutParams.WRAP_CONTENT);
+FrameLayout.LayoutParams infoLp = new FrameLayout.LayoutParams((int)(160*d), ViewGroup.LayoutParams.WRAP_CONTENT);
 infoLp.gravity = Gravity.TOP | Gravity.START;
-infoLp.leftMargin = (int)(4*d);
-infoLp.topMargin = (int)(112*d);
+infoLp.leftMargin = (int)(2*d);
+infoLp.topMargin = (int)(128*d);
 rootContent.addView(blockInfo, infoLp);
-//==== HẾT THÊM ====
+//====
 
 root.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
     @Override
     public void onGlobalLayout() {
         TextView tv = findSync((ViewGroup) root);
-        View qr = findQr((ViewGroup) root);
         int current = 0; long lastSecs = 0;
-        try { if (application.getWallet()!= null) { current = application.getWallet().getLastBlockSeenHeight(); lastSecs = application.getWallet().getLastBlockSeenTimeSecs(); } } catch (Exception ignored) {}
+        try { if (application.getWallet()!= null) { current = Math.max(0, application.getWallet().getLastBlockSeenHeight()); lastSecs = application.getWallet().getLastBlockSeenTimeSecs(); } } catch (Exception ignored) {}
         if (tv == null || tv.getVisibility()!= View.VISIBLE) {
             bar.setVisibility(View.GONE);
             percent.setVisibility(View.GONE);
-            // hiện pie khi đã sync xong
             long now = System.currentTimeMillis()/1000;
-            float elapsed = Math.max(0, now - lastSecs);
-            boolean late = elapsed > 660;
-            float prog = elapsed / 600f;
+            float elapsed = (lastSecs > 1000000000L)? Math.max(0, now - lastSecs) : 0;
+            float prog = Math.min(elapsed / 600f, 1f);
+            boolean late = elapsed > 660 && prog >= 1f;
             circle.setProgress(prog, late);
             circle.setVisibility(View.VISIBLE);
             int next = current + 1;
-            String txt = String.format(Locale.US, "%d/%d (%.2f%%)", current, next, Math.min(prog,1f)*100f);
+            String txt = String.format(Locale.US, "%d/%d (%.2f%%)", current, next, prog*100f);
             blockInfo.setText(txt);
             blockInfo.setVisibility(View.VISIBLE);
+            // bám theo QR
+            View qr = findQr((ViewGroup) root);
+            if (qr!= null) {
+                int[] qrPos = new int[2]; int[] rootPos = new int[2];
+                qr.getLocationOnScreen(qrPos); root.getLocationOnScreen(rootPos);
+                float qrY = qrPos[1] - rootPos[1];
+                circle.setX(12 * d);
+                circle.setY(qrY + (qr.getHeight() - circle.getHeight()) / 2f);
+                blockInfo.setX(2 * d);
+                blockInfo.setY(circle.getY() + circle.getHeight() + 4 * d);
+            }
+            handler.postDelayed(() -> root.requestLayout(), 1000);
             return;
         }
-        // đang sync -> ẩn pie
         circle.setVisibility(View.GONE);
         blockInfo.setVisibility(View.GONE);
         int[] loc = new int[2];
@@ -231,6 +240,7 @@ root.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlob
         int textW = (int) tv.getPaint().measureText(tv.getText().toString());
         int wantedWidth = textW + gap + percentW + padEnd;
 
+        View qr = findQr((ViewGroup) root);
         int qrLeft = qr!= null? getLeftOnScreen(qr) : root.getWidth();
         int maxAllowed = Math.max(0, qrLeft - left - (int)(8 * dd));
         int barWidth = Math.min(wantedWidth, maxAllowed);
