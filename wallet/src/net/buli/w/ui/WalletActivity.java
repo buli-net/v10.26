@@ -34,6 +34,7 @@ import android.nfc.NfcAdapter;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -145,7 +146,7 @@ public final class WalletActivity extends AbstractWalletActivity {
         setActionBar(findViewById(R.id.wallet_appbar));
         getActionBar().setDisplayHomeAsUpEnabled(false);
         contentView = findViewById(android.R.id.content);
-        // --- SYNC BAR + % AUTO CANH KHONG DAM QR + VONG TRON TRAI ---
+        // --- SYNC BAR + % AUTO CANH KHONG DAM QR + MINING CIRCLE ---
         final View root = findViewById(android.R.id.content);
         final SharedPreferences prefs = getSharedPreferences("sync_prefs", MODE_PRIVATE);
         final int[] lastProg = { -1 };
@@ -162,18 +163,15 @@ public final class WalletActivity extends AbstractWalletActivity {
         percent.setTextColor(0xFFFFCC99);
         percent.setVisibility(View.GONE);
         ((ViewGroup) getWindow().getDecorView()).addView(percent);
-        final ProgressBar circle = new ProgressBar(this, null, android.R.attr.progressBarStyleLarge);
-        circle.setIndeterminate(false);
-        circle.setMax(10000);
-        circle.setProgressTintList(android.content.res.ColorStateList.valueOf(0xFFFFCC99));
-        circle.setRotation(-90);
+        final MiningCircleView circle = new MiningCircleView(this);
         circle.setVisibility(View.GONE);
         ((ViewGroup) getWindow().getDecorView()).addView(circle,
-                new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+                new ViewGroup.LayoutParams((int)(36*d), (int)(36*d)));
         final TextView blockInfo = new TextView(this);
         blockInfo.setTextSize(11);
         blockInfo.setTextColor(0xFFFFCC99);
-        blockInfo.setGravity(android.view.Gravity.CENTER);
+        blockInfo.setGravity(Gravity.CENTER);
+        blockInfo.setSingleLine(true);
         blockInfo.setVisibility(View.GONE);
         ((ViewGroup) getWindow().getDecorView()).addView(blockInfo);
         root.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
@@ -193,29 +191,37 @@ public final class WalletActivity extends AbstractWalletActivity {
                 int qrLeft = qrLoc[0];
                 int qrTop = qrLoc[1];
                 int qrSize = qr.getWidth();
-                int leftMargin = (int)(16 * d);
-                circle.getLayoutParams().width = qrSize;
-                circle.getLayoutParams().height = qrSize;
-                circle.setX(leftMargin);
-                circle.setY(qrTop);
-                circle.setVisibility(View.VISIBLE);
-                blockInfo.setX(leftMargin);
-                blockInfo.setY(qrTop + qrSize + (int)(4 * d));
-                blockInfo.getLayoutParams().width = qrSize;
-                blockInfo.setVisibility(View.VISIBLE);
                 int current = 0;
+                long lastSecs = 0;
                 try {
                     if (application.getWallet()!= null) {
                         current = application.getWallet().getLastBlockSeenHeight();
+                        lastSecs = application.getWallet().getLastBlockSeenTimeSecs();
                     }
                 } catch (Exception ignored) {}
                 if (tv == null || tv.getVisibility()!= View.VISIBLE) {
                     bar.setVisibility(View.GONE);
                     percent.setVisibility(View.GONE);
-                    circle.setProgress(10000);
-                    blockInfo.setText(current + "/" + current);
+                    long now = System.currentTimeMillis()/1000;
+                    float elapsed = Math.max(0, now - lastSecs);
+                    boolean late = elapsed > 660;
+                    float prog = elapsed / 600f;
+                    circle.setProgress(prog, late);
+                    circle.setX(16*d);
+                    circle.setY(root.getHeight() - 180*d);
+                    circle.setVisibility(View.VISIBLE);
+                    int next = current + 1;
+                    String txt = String.format(Locale.US, "%d/%d (%.2f%%)", current, next, Math.min(prog,1f)*100f);
+                    blockInfo.setText(txt);
+                    blockInfo.setX(8*d);
+                    blockInfo.setY(circle.getY() + 40*d);
+                    blockInfo.getLayoutParams().width = (int)(120*d);
+                    blockInfo.setVisibility(View.VISIBLE);
+                    handler.postDelayed(() -> root.requestLayout(), 1000);
                     return;
                 }
+                circle.setVisibility(View.GONE);
+                blockInfo.setVisibility(View.GONE);
                 int[] loc = new int[2];
                 tv.getLocationOnScreen(loc);
                 int left = loc[0];
@@ -258,10 +264,6 @@ public final class WalletActivity extends AbstractWalletActivity {
                     lastProg[0] = prog;
                     percent.setText(String.format(Locale.US, "%.2f%%", prog / 100f));
                     bar.setProgress(prog);
-                    circle.setProgress(prog);
-                    int peer = current + Math.max(1, (int)Math.ceil(h * 6.0 / 24.0));
-                    prefs.edit().putInt("peer_height", peer).apply();
-                    blockInfo.setText(current + "/" + peer);
                 }
             }
             private TextView findSync(ViewGroup g) {
@@ -288,13 +290,7 @@ public final class WalletActivity extends AbstractWalletActivity {
                 }
                 return null;
             }
-            private int getLeftOnScreen(View v) {
-                int[] l = new int[2];
-                v.getLocationOnScreen(l);
-                return l[0];
-            }
         });
-        //... phần còn lại giữ nguyên như file gốc...
         final View insetTopView = contentView.findViewWithTag("inset_top");
         if (insetTopView!= null) {
             ViewCompat.setOnApplyWindowInsetsListener(insetTopView, (v, windowInsets) -> {
@@ -517,7 +513,7 @@ public final class WalletActivity extends AbstractWalletActivity {
         super.onPause();
     }
 
-    private AnimatorSet buildEnterAnimation(final View contentView) { /* giữ nguyên */
+    private AnimatorSet buildEnterAnimation(final View contentView) {
         final Drawable background = getWindow().getDecorView().getBackground();
         final int duration = getResources().getInteger(android.R.integer.config_mediumAnimTime);
         final Animator splashFadeOut = AnimatorInflater.loadAnimator(WalletActivity.this, R.animator.fade_out_drawable);
@@ -608,7 +604,7 @@ public final class WalletActivity extends AbstractWalletActivity {
         if (NfcAdapter.ACTION_NDEF_DISCOVERED.equals(action)) {
             final String inputType = intent.getType();
             final NdefMessage ndefMessage = (NdefMessage) intent
-                .getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES)[0];
+               .getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES)[0];
             final byte[] input = Nfc.extractMimePayload(Constants.MIMETYPE_TRANSACTION, ndefMessage);
             new BinaryInputParser(inputType, input) {
                 @Override
