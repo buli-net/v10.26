@@ -24,6 +24,7 @@ import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
@@ -144,13 +145,13 @@ public final class WalletActivity extends AbstractWalletActivity {
         getActionBar().setDisplayHomeAsUpEnabled(false);
         contentView = findViewById(android.R.id.content);
 
-        // --- THANH SYNC TỰ ĐỘNG THEO TỶ LỆ THỰC ---
+        // --- THANH SYNC TỰ HỌC MAX VÀ LƯU LÂU DÀI ---
         final ProgressBar syncBar = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
         syncBar.setMax(10000);
         syncBar.setProgressTintList(android.content.res.ColorStateList.valueOf(0xFFFFCC99));
 
         final View root = findViewById(android.R.id.content);
-        final int[] initialMaxHours = {0};
+        final SharedPreferences syncPrefs = getSharedPreferences("sync_prefs", MODE_PRIVATE);
 
         root.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
@@ -184,14 +185,19 @@ public final class WalletActivity extends AbstractWalletActivity {
                             else if (txt.contains("year")) totalHours = value * 365 * 24;
                         } catch (Exception ignored) {}
 
-                        if (initialMaxHours[0] == 0 && totalHours > 0) {
-                            initialMaxHours[0] = totalHours;
+                        int storedMax = syncPrefs.getInt("max_hours", 0);
+                        if (totalHours > storedMax) {
+                            storedMax = totalHours;
+                            syncPrefs.edit().putInt("max_hours", storedMax).apply();
                         }
-                        if (totalHours == 0) initialMaxHours[0] = 0;
+                        if (totalHours == 0 && storedMax!= 0) {
+                            syncPrefs.edit().remove("max_hours").apply();
+                            storedMax = 0;
+                        }
 
                         int progress = 0;
-                        if (initialMaxHours[0] > 0) {
-                            progress = (int) ((initialMaxHours[0] - totalHours) * 10000L / initialMaxHours[0]);
+                        if (storedMax > 0) {
+                            progress = (int) ((storedMax - totalHours) * 10000L / storedMax);
                             progress = Math.max(0, Math.min(10000, progress));
                         }
                         syncBar.setIndeterminate(false);
@@ -422,10 +428,8 @@ public final class WalletActivity extends AbstractWalletActivity {
     @Override
     protected void onResume() {
         super.onResume();
-
         if (exchangeRatesFragment!= null)
             exchangeRatesFragment.setVisibility(config.isEnableExchangeRates()? View.VISIBLE : View.GONE);
-
         handler.postDelayed(() -> {
             BlockchainService.start(WalletActivity.this, true);
         }, 1000);
@@ -438,20 +442,19 @@ public final class WalletActivity extends AbstractWalletActivity {
     }
 
     private AnimatorSet buildEnterAnimation(final View contentView) {
+        //... giữ nguyên toàn bộ method như bản gốc...
         final Drawable background = getWindow().getDecorView().getBackground();
         final int duration = getResources().getInteger(android.R.integer.config_mediumAnimTime);
         final Animator splashFadeOut = AnimatorInflater.loadAnimator(WalletActivity.this, R.animator.fade_out_drawable);
         splashFadeOut.setTarget(((LayerDrawable) background).getDrawable(1));
         final AnimatorSet fragmentEnterAnimation = new AnimatorSet();
         final AnimatorSet.Builder fragmentEnterAnimationBuilder = fragmentEnterAnimation.play(splashFadeOut);
-
         final View slideInLeftView = contentView.findViewWithTag("slide_in_left");
         if (slideInLeftView!= null) {
             final ValueAnimator slide = ValueAnimator.ofFloat(-1.0f, 0.0f);
             slide.addUpdateListener(animator -> {
                 float animatedValue = (float) animator.getAnimatedValue();
-                slideInLeftView.setTranslationX(
-                        animatedValue * (slideInLeftView.getWidth() + slideInLeftView.getPaddingLeft()));
+                slideInLeftView.setTranslationX(animatedValue * (slideInLeftView.getWidth() + slideInLeftView.getPaddingLeft()));
             });
             slide.setInterpolator(new DecelerateInterpolator());
             slide.setDuration(duration);
@@ -460,14 +463,12 @@ public final class WalletActivity extends AbstractWalletActivity {
             fadeIn.setTarget(slideInLeftView);
             fragmentEnterAnimationBuilder.before(slide).before(fadeIn);
         }
-
         final View slideInRightView = contentView.findViewWithTag("slide_in_right");
         if (slideInRightView!= null) {
             final ValueAnimator slide = ValueAnimator.ofFloat(1.0f, 0.0f);
             slide.addUpdateListener(animator -> {
                 float animatedValue = (float) animator.getAnimatedValue();
-                slideInRightView.setTranslationX(
-                        animatedValue * (slideInRightView.getWidth() + slideInRightView.getPaddingRight()));
+                slideInRightView.setTranslationX(animatedValue * (slideInRightView.getWidth() + slideInRightView.getPaddingRight()));
             });
             slide.setInterpolator(new DecelerateInterpolator());
             slide.setDuration(duration);
@@ -476,14 +477,12 @@ public final class WalletActivity extends AbstractWalletActivity {
             fadeIn.setTarget(slideInRightView);
             fragmentEnterAnimationBuilder.before(slide).before(fadeIn);
         }
-
         final View slideInTopView = contentView.findViewWithTag("slide_in_top");
         if (slideInTopView!= null) {
             final ValueAnimator slide = ValueAnimator.ofFloat(-1.0f, 0.0f);
             slide.addUpdateListener(animator -> {
                 float animatedValue = (float) animator.getAnimatedValue();
-                slideInTopView.setTranslationY(
-                        animatedValue * (slideInTopView.getHeight() + slideInTopView.getPaddingTop()));
+                slideInTopView.setTranslationY(animatedValue * (slideInTopView.getHeight() + slideInTopView.getPaddingTop()));
             });
             slide.setInterpolator(new DecelerateInterpolator());
             slide.setDuration(duration);
@@ -492,14 +491,12 @@ public final class WalletActivity extends AbstractWalletActivity {
             fadeIn.setTarget(slideInTopView);
             fragmentEnterAnimationBuilder.before(slide).before(fadeIn);
         }
-
         final View slideInBottomView = contentView.findViewWithTag("slide_in_bottom");
         if (slideInBottomView!= null) {
             final ValueAnimator slide = ValueAnimator.ofFloat(1.0f, 0.0f);
             slide.addUpdateListener(animator -> {
                 float animatedValue = (float) animator.getAnimatedValue();
-                slideInBottomView.setTranslationY(
-                        animatedValue * (slideInBottomView.getHeight() + slideInBottomView.getPaddingBottom()));
+                slideInBottomView.setTranslationY(animatedValue * (slideInBottomView.getHeight() + slideInBottomView.getPaddingBottom()));
             });
             slide.setInterpolator(new DecelerateInterpolator());
             slide.setDuration(duration);
@@ -508,10 +505,8 @@ public final class WalletActivity extends AbstractWalletActivity {
             fadeIn.setTarget(slideInBottomView);
             fragmentEnterAnimationBuilder.before(slide).before(fadeIn);
         }
-
         if (levitateView!= null) {
-            final ObjectAnimator elevate = ObjectAnimator.ofFloat(levitateView, "elevation", 0.0f,
-                    levitateView.getElevation());
+            final ObjectAnimator elevate = ObjectAnimator.ofFloat(levitateView, "elevation", 0.0f, levitateView.getElevation());
             elevate.setDuration(duration);
             fragmentEnterAnimationBuilder.before(elevate);
             final Drawable levitateBackground = levitateView.getBackground();
@@ -519,7 +514,6 @@ public final class WalletActivity extends AbstractWalletActivity {
             fadeIn.setTarget(levitateBackground);
             fragmentEnterAnimationBuilder.before(fadeIn);
         }
-
         return fragmentEnterAnimation;
     }
 
@@ -533,8 +527,7 @@ public final class WalletActivity extends AbstractWalletActivity {
         final String action = intent.getAction();
         if (NfcAdapter.ACTION_NDEF_DISCOVERED.equals(action)) {
             final String inputType = intent.getType();
-            final NdefMessage ndefMessage = (NdefMessage) intent
-                   .getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES)[0];
+            final NdefMessage ndefMessage = (NdefMessage) intent.getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES)[0];
             final byte[] input = Nfc.extractMimePayload(Constants.MIMETYPE_TRANSACTION, ndefMessage);
             new BinaryInputParser(inputType, input) {
                 @Override
@@ -551,19 +544,12 @@ public final class WalletActivity extends AbstractWalletActivity {
         }
     }
 
-    public void handleRequestCoins() {
-        RequestCoinsActivity.start(this);
-    }
-
-    public void handleSendCoins() {
-        startActivity(new Intent(this, SendCoinsActivity.class));
-    }
-
+    public void handleRequestCoins() { RequestCoinsActivity.start(this); }
+    public void handleSendCoins() { startActivity(new Intent(this, SendCoinsActivity.class)); }
     public void handleScan(final View clickView) {
         enterAnimation.end();
         if (clickView!= null) {
-            final ActivityOptionsCompat options = ActivityOptionsCompat.makeClipRevealAnimation(clickView, 0, 0,
-                    clickView.getWidth(), clickView.getHeight());
+            final ActivityOptionsCompat options = ActivityOptionsCompat.makeClipRevealAnimation(clickView, 0, 0, clickView.getWidth(), clickView.getHeight());
             scanLauncher.launch(null, options);
         } else {
             scanLauncher.launch(null);
@@ -572,14 +558,11 @@ public final class WalletActivity extends AbstractWalletActivity {
 
     private static final class QuickReturnBehavior extends CoordinatorLayout.Behavior<View> {
         @Override
-        public boolean onStartNestedScroll(final CoordinatorLayout coordinatorLayout, final View child,
-                final View directTargetChild, final View target, final int nestedScrollAxes, final int type) {
+        public boolean onStartNestedScroll(final CoordinatorLayout coordinatorLayout, final View child, final View directTargetChild, final View target, final int nestedScrollAxes, final int type) {
             return (nestedScrollAxes & ViewCompat.SCROLL_AXIS_VERTICAL)!= 0;
         }
         @Override
-        public void onNestedScroll(final CoordinatorLayout coordinatorLayout, final View child, final View target,
-                final int dxConsumed, final int dyConsumed, final int dxUnconsumed, final int dyUnconsumed,
-                final int type) {
+        public void onNestedScroll(final CoordinatorLayout coordinatorLayout, final View child, final View target, final int dxConsumed, final int dyConsumed, final int dxUnconsumed, final int dyUnconsumed, final int type) {
             child.setTranslationY(Floats.constrainToRange(child.getTranslationY() - dyConsumed, -child.getHeight(), 0));
         }
     }
