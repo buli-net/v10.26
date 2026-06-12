@@ -28,20 +28,17 @@ public class MiningCircleView extends View {
         int w = getWidth();
         int h = getHeight();
         int size = Math.min(w, h);
-        float stroke = size * 0.14f;
-        rect.set(stroke/2, stroke/2, size - stroke/2, size - stroke/2);
+        rect.set(0, 0, size, size);
 
-        paint.setStyle(Paint.Style.STROKE);
-        paint.setStrokeWidth(stroke);
-        paint.setStrokeCap(Paint.Cap.ROUND);
+        // nền mờ
+        paint.setStyle(Paint.Style.FILL);
+        paint.setColor(0x22000000);
+        canvas.drawCircle(size / 2f, size / 2f, size / 2f, paint);
 
-        paint.setColor(0x22FFFFFF);
-        canvas.drawArc(rect, 0, 360, false, paint);
-
+        // màu theo tiến độ
         int color;
         if (isLate) {
             color = 0xFF9E9E9E;
-            paint.setAlpha(180);
         } else if (progress <= 0.5f) {
             color = ColorUtils.blendARGB(0xFF4CAF50, 0xFFFFC107, progress * 2f);
         } else {
@@ -49,7 +46,11 @@ public class MiningCircleView extends View {
             color = ColorUtils.blendARGB(0xFFFFC107, 0xFFF44336, t);
         }
         paint.setColor(color);
+
+        // VẼ ĐẶC RUỘT - true = pie
         float sweep = 360f * Math.min(progress, 1f);
-        canvas.drawArc(rect, -90, sweep, false, paint);
+        if (sweep > 0) {
+            canvas.drawArc(rect, -90, sweep, true, paint);
+        }
     }
 }
