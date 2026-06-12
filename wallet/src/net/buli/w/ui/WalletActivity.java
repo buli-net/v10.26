@@ -133,9 +133,6 @@ public final class WalletActivity extends AbstractWalletActivity {
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
-        // EdgeToEdge.enable(this, SystemBarStyle.dark(getColor(R.color.bg_action_bar)),
-        //        SystemBarStyle.dark(Color.TRANSPARENT));
-        // Thay thế bằng code tương thích cũ
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             getWindow().setStatusBarColor(getColor(R.color.bg_action_bar));
             getWindow().setNavigationBarColor(Color.TRANSPARENT);
@@ -154,7 +151,7 @@ public final class WalletActivity extends AbstractWalletActivity {
         getActionBar().setDisplayHomeAsUpEnabled(false);
         contentView = findViewById(android.R.id.content);
 
-        // ==================== FIX MINING CIRCLE & SYNC BAR ====================
+        // ==================== MINING CIRCLE & SYNC BAR ====================
         final View root = findViewById(android.R.id.content);
         final SharedPreferences prefs = getSharedPreferences("sync_prefs", MODE_PRIVATE);
         final int[] lastProg = { -1 };
@@ -173,24 +170,13 @@ public final class WalletActivity extends AbstractWalletActivity {
         final float d = getResources().getDisplayMetrics().density;
         final ViewGroup rootContent = findViewById(android.R.id.content);
 
-        // Mining circle view
+        // Mining circle (no text inside)
         final MiningCircleView circle = new MiningCircleView(this);
         circle.setVisibility(View.GONE);
         FrameLayout.LayoutParams circleLp = new FrameLayout.LayoutParams((int)(40*d), (int)(40*d));
         circleLp.gravity = Gravity.CENTER_VERTICAL | Gravity.START;
         circleLp.leftMargin = (int)(16*d);
         rootContent.addView(circle, circleLp);
-
-        final TextView blockInfo = new TextView(this);
-        blockInfo.setTextSize(10);
-        blockInfo.setTextColor(0xFFFFCC99);
-        blockInfo.setGravity(Gravity.CENTER);
-        blockInfo.setSingleLine(true);
-        blockInfo.setVisibility(View.GONE);
-        FrameLayout.LayoutParams infoLp = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        infoLp.gravity = Gravity.START;
-        infoLp.leftMargin = (int)(16*d);
-        rootContent.addView(blockInfo, infoLp);
 
         final Handler updateHandler = new Handler();
         final Runnable updateProgressRunnable = new Runnable() {
@@ -210,8 +196,6 @@ public final class WalletActivity extends AbstractWalletActivity {
                     float progressVal = Math.min(elapsed / 600f, 1f);
                     boolean isLate = elapsed > 660 && progressVal >= 1f;
                     circle.setProgress(progressVal, isLate);
-                    int nextHeight = currentHeight + 1;
-                    blockInfo.setText(String.format(Locale.US, "%d/%d (%.0f%%)", currentHeight, nextHeight, progressVal * 100));
                 }
                 updateHandler.postDelayed(this, 1000);
             }
@@ -223,8 +207,7 @@ public final class WalletActivity extends AbstractWalletActivity {
                 TextView syncTextView = findSync((ViewGroup) root);
                 if (syncTextView != null && syncTextView.getVisibility() == View.VISIBLE) {
                     circle.setVisibility(View.GONE);
-                    blockInfo.setVisibility(View.GONE);
-                    // Handle sync bar (keep original logic)
+                    // Handle sync bar
                     int[] loc = new int[2];
                     syncTextView.getLocationOnScreen(loc);
                     int left = loc[0];
@@ -278,17 +261,12 @@ public final class WalletActivity extends AbstractWalletActivity {
                     return;
                 }
 
-                // Show mining circle
                 circle.setVisibility(View.VISIBLE);
-                blockInfo.setVisibility(View.VISIBLE);
                 updateHandler.removeCallbacks(updateProgressRunnable);
                 updateHandler.post(updateProgressRunnable);
 
-                // Position circle next to balance
                 View balanceView = findViewById(R.id.wallet_balance);
-                if (balanceView == null) {
-                    balanceView = findViewWithText((ViewGroup) root, "mBTC");
-                }
+                if (balanceView == null) balanceView = findViewWithText((ViewGroup) root, "mBTC");
                 View qrView = findQr((ViewGroup) root);
 
                 if (balanceView != null && qrView != null) {
@@ -304,34 +282,7 @@ public final class WalletActivity extends AbstractWalletActivity {
                     circleY = Math.max(8*d, Math.min(circleY, rootContent.getHeight() - circle.getHeight() - 8*d));
                     circle.setY(circleY);
                     circle.setX(16 * d);
-
-                    blockInfo.setX(16 * d);
-                    blockInfo.setY(circle.getY() + circle.getHeight() + 4 * d);
-
-                    // Adjust symmetry with QR
-                    int balanceLeft = balanceLoc[0] - contentLoc[0];
-                    int qrLeft = qrLoc[0] - contentLoc[0];
-                    int circleRight = (int)(circle.getX() + circle.getWidth());
-                    int gapLeft = balanceLeft - circleRight;
-                    int gapRight = qrLeft - (balanceLeft + balanceView.getWidth());
-                    int delta = (int)(gapRight - gapLeft);
-                    if (Math.abs(delta) > 20) {
-                        balanceView.setTranslationX(delta / 2f);
-                    }
                 }
-            }
-
-            private View findViewWithText(ViewGroup group, String text) {
-                for (int i = 0; i < group.getChildCount(); i++) {
-                    View child = group.getChildAt(i);
-                    if (child instanceof TextView && ((TextView) child).getText().toString().contains(text))
-                        return child;
-                    if (child instanceof ViewGroup) {
-                        View found = findViewWithText((ViewGroup) child, text);
-                        if (found != null) return found;
-                    }
-                }
-                return null;
             }
 
             private TextView findSync(ViewGroup g) {
@@ -360,13 +311,26 @@ public final class WalletActivity extends AbstractWalletActivity {
                 return null;
             }
 
+            private View findViewWithText(ViewGroup group, String text) {
+                for (int i = 0; i < group.getChildCount(); i++) {
+                    View child = group.getChildAt(i);
+                    if (child instanceof TextView && ((TextView) child).getText().toString().contains(text))
+                        return child;
+                    if (child instanceof ViewGroup) {
+                        View found = findViewWithText((ViewGroup) child, text);
+                        if (found != null) return found;
+                    }
+                }
+                return null;
+            }
+
             private int getLeftOnScreen(View v) {
                 int[] l = new int[2];
                 v.getLocationOnScreen(l);
                 return l[0];
             }
         });
-        // ==================== END OF FIX ====================
+        // ==================== END ====================
 
         final View insetTopView = contentView.findViewWithTag("inset_top");
         if (insetTopView != null) {
@@ -392,7 +356,6 @@ public final class WalletActivity extends AbstractWalletActivity {
         exchangeRatesFragment = findViewById(R.id.wallet_main_twopanes_exchange_rates);
         levitateView = contentView.findViewWithTag("levitate");
 
-        // Make view tagged with 'levitate' scroll away and quickly return.
         if (levitateView != null) {
             final CoordinatorLayout.LayoutParams layoutParams = new CoordinatorLayout.LayoutParams(
                     levitateView.getLayoutParams().width, levitateView.getLayoutParams().height);
@@ -580,7 +543,6 @@ public final class WalletActivity extends AbstractWalletActivity {
             exchangeRatesFragment.setVisibility(config.isEnableExchangeRates() ? View.VISIBLE : View.GONE);
 
         handler.postDelayed(() -> {
-            // delayed start so that UI has enough time to initialize
             BlockchainService.start(WalletActivity.this, true);
         }, 1000);
     }
@@ -717,8 +679,6 @@ public final class WalletActivity extends AbstractWalletActivity {
     }
 
     public void handleScan(final View clickView) {
-        // The animation must be ended because of several graphical glitching that happens when the
-        // Camera/SurfaceView is used while the animation is running.
         enterAnimation.end();
         if (clickView != null) {
             final ActivityOptionsCompat options = ActivityOptionsCompat.makeClipRevealAnimation(clickView, 0, 0,
