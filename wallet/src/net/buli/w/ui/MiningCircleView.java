@@ -10,7 +10,6 @@ import android.view.View;
 public class MiningCircleView extends View {
     private final Paint bgPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint progressPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-    private final Paint textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private float progress = 0f;
     private boolean isLate = false;
 
@@ -31,9 +30,6 @@ public class MiningCircleView extends View {
         progressPaint.setStyle(Paint.Style.STROKE);
         progressPaint.setStrokeWidth(6f);
         progressPaint.setStrokeCap(Paint.Cap.ROUND);
-        textPaint.setColor(0xFFFFCC99);
-        textPaint.setTextSize(22f);
-        textPaint.setTextAlign(Paint.Align.CENTER);
     }
 
     public void setProgress(float p, boolean late) {
@@ -58,7 +54,6 @@ public class MiningCircleView extends View {
         else color = 0xFFF44336;
         progressPaint.setColor(color);
         canvas.drawArc(oval, -90, 360 * progress, false, progressPaint);
-        String txt = isLate? "…" : String.valueOf((int)(progress * 100));
-        canvas.drawText(txt, w / 2f, h / 2f + 8f, textPaint);
+        // Không vẽ text nữa
     }
 }
