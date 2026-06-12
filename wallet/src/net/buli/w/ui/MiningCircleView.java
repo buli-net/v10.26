@@ -4,53 +4,61 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.RectF;
+import android.util.AttributeSet;
 import android.view.View;
-import androidx.core.graphics.ColorUtils;
 
 public class MiningCircleView extends View {
-    private Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint bgPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint progressPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private float progress = 0f;
     private boolean isLate = false;
-    private RectF rect = new RectF();
 
-    public MiningCircleView(Context ctx) {
-        super(ctx);
+    public MiningCircleView(Context context) {
+        super(context);
+        init();
+    }
+
+    public MiningCircleView(Context context, AttributeSet attrs) {
+        super(context, attrs);
+        init();
+    }
+
+    private void init() {
+        bgPaint.setStyle(Paint.Style.STROKE);
+        bgPaint.setStrokeWidth(6f);
+        bgPaint.setColor(0x33FFFFFF);
+        progressPaint.setStyle(Paint.Style.STROKE);
+        progressPaint.setStrokeWidth(6f);
+        progressPaint.setStrokeCap(Paint.Cap.ROUND);
+        textPaint.setColor(0xFFFFCC99);
+        textPaint.setTextSize(22f);
+        textPaint.setTextAlign(Paint.Align.CENTER);
     }
 
     public void setProgress(float p, boolean late) {
-        this.progress = Math.max(0, Math.min(1.5f, p));
+        this.progress = Math.max(0f, Math.min(1f, p));
         this.isLate = late;
         invalidate();
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
+        super.onDraw(canvas);
         int w = getWidth();
         int h = getHeight();
         int size = Math.min(w, h);
-        rect.set(0, 0, size, size);
-
-        // nền mờ
-        paint.setStyle(Paint.Style.FILL);
-        paint.setColor(0x22000000);
-        canvas.drawCircle(size / 2f, size / 2f, size / 2f, paint);
-
-        // màu theo tiến độ
+        float pad = 8f;
+        RectF oval = new RectF(pad, pad, size - pad, size - pad);
+        canvas.drawArc(oval, 0, 360, false, bgPaint);
         int color;
-        if (isLate) {
-            color = 0xFF9E9E9E;
-        } else if (progress <= 0.5f) {
-            color = ColorUtils.blendARGB(0xFF4CAF50, 0xFFFFC107, progress * 2f);
-        } else {
-            float t = (progress - 0.5f) * 2f;
-            color = ColorUtils.blendARGB(0xFFFFC107, 0xFFF44336, t);
-        }
-        paint.setColor(color);
-
-        // VẼ ĐẶC RUỘT - true = pie
-        float sweep = 360f * Math.min(progress, 1f);
-        if (sweep > 0) {
-            canvas.drawArc(rect, -90, sweep, true, paint);
-        }
+        if (isLate) color = 0xFF888888;
+        else if (progress < 0.33f) color = 0xFF4CAF50;
+        else if (progress < 0.66f) color = 0xFFFFC107;
+        else color = 0xFFF44336;
+        progressPaint.setColor(color);
+        canvas.drawArc(oval, -90, 360 * progress, false, progressPaint);
+        String txt = isLate? "…" : String.valueOf((int)(progress * 100));
+        canvas.drawText(txt, w / 2f, h / 2f + 8f, textPaint);
     }
 }
