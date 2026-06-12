@@ -37,6 +37,9 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.ViewParent;
+import android.view.ViewTreeObserver;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
@@ -140,8 +143,61 @@ public final class WalletActivity extends AbstractWalletActivity {
         setActionBar(findViewById(R.id.wallet_appbar));
         getActionBar().setDisplayHomeAsUpEnabled(false);
         contentView = findViewById(android.R.id.content);
-        final TextView syncText = findViewById(R.id.wallet_balance_progress);
-        final ProgressBar syncBar = findViewById(R.id.wallet_balance_progress_bar);
+
+        // --- 2 THANH BAR: tạo ProgressBar trong app ---
+        final ProgressBar syncBar = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
+        syncBar.setMax(100);
+        syncBar.setProgressTintList(android.content.res.ColorStateList.valueOf(0xFFFFCC99));
+
+        final View root = findViewById(android.R.id.content);
+        root.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                TextView realSync = findSyncTextView((ViewGroup) root);
+                if (realSync!= null && syncBar.getParent() == null) {
+                    ViewParent p = realSync.getParent();
+                    if (p instanceof ViewGroup) {
+                        ViewGroup vg = (ViewGroup) p;
+                        int idx = vg.indexOfChild(realSync);
+                        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                                ViewGroup.LayoutParams.MATCH_PARENT,
+                                (int) (3 * getResources().getDisplayMetrics().density));
+                        lp.topMargin = (int) (4 * getResources().getDisplayMetrics().density);
+                        syncBar.setLayoutParams(lp);
+                        vg.addView(syncBar, idx + 1);
+                    }
+                }
+                if (realSync!= null) {
+                    boolean visible = realSync.getVisibility() == View.VISIBLE;
+                    syncBar.setVisibility(visible? View.VISIBLE : View.GONE);
+                    if (visible) {
+                        String txt = realSync.getText().toString();
+                        int days = 0;
+                        try {
+                            days = Integer.parseInt(txt.replaceAll("[^0-9]", ""));
+                        } catch (Exception ignored) {}
+                        int percent = Math.max(0, 100 - days * 100 / 14);
+                        syncBar.setProgress(percent);
+                    }
+                }
+            }
+
+            private TextView findSyncTextView(ViewGroup g) {
+                for (int i = 0; i < g.getChildCount(); i++) {
+                    View v = g.getChildAt(i);
+                    if (v instanceof TextView) {
+                        String t = ((TextView) v).getText().toString();
+                        if (t.contains("Synchronizing")) return (TextView) v;
+                    }
+                    if (v instanceof ViewGroup) {
+                        TextView t = findSyncTextView((ViewGroup) v);
+                        if (t!= null) return t;
+                    }
+                }
+                return null;
+            }
+        });
+
         final View insetTopView = contentView.findViewWithTag("inset_top");
         if (insetTopView!= null) {
             ViewCompat.setOnApplyWindowInsetsListener(insetTopView, (v, windowInsets) -> {
@@ -225,23 +281,6 @@ public final class WalletActivity extends AbstractWalletActivity {
                         R.string.report_issue_dialog_message_crash, Constants.REPORT_SUBJECT_CRASH, null);
             }
         });
-        if (syncText!= null && syncBar!= null) {
-            syncText.addOnLayoutChangeListener((v, l, t, r, b, ol, ot, or, ob) -> {
-                boolean visible = v.getVisibility() == View.VISIBLE;
-                syncBar.setVisibility(visible? View.VISIBLE : View.GONE);
-                if (visible) {
-                    syncBar.setIndeterminate(false);
-                    syncBar.setMax(100);
-                    String txt = syncText.getText().toString();
-                    int days = 0;
-                    try {
-                        days = Integer.parseInt(txt.replaceAll("[^0-9]", ""));
-                    } catch (Exception ignored) {}
-                    int percent = Math.max(0, 100 - days * 100 / 14);
-                    syncBar.setProgress(percent);
-                }
-            });
-        }
         viewModel.enterAnimation.observe(this, state -> {
             if (state == WalletActivityViewModel.EnterAnimationState.WAITING) {
                 enterAnimation.setCurrentPlayTime(0);
@@ -365,10 +404,8 @@ public final class WalletActivity extends AbstractWalletActivity {
     @Override
     protected void onResume() {
         super.onResume();
-
         if (exchangeRatesFragment!= null)
             exchangeRatesFragment.setVisibility(config.isEnableExchangeRates()? View.VISIBLE : View.GONE);
-
         handler.postDelayed(() -> {
             BlockchainService.start(WalletActivity.this, true);
         }, 1000);
