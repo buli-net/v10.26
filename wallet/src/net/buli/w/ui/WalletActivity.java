@@ -8,11 +8,11 @@
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
 package net.buli.w.ui;
@@ -39,6 +39,8 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 import androidx.activity.EdgeToEdge;
 import androidx.activity.SystemBarStyle;
 import androidx.activity.result.ActivityResultLauncher;
@@ -138,8 +140,12 @@ public final class WalletActivity extends AbstractWalletActivity {
         setActionBar(findViewById(R.id.wallet_appbar));
         getActionBar().setDisplayHomeAsUpEnabled(false);
         contentView = findViewById(android.R.id.content);
+        // --- THANH SYNC: lấy view ---
+        final TextView syncText = findViewById(R.id.wallet_balance_progress);
+        final ProgressBar syncBar = findViewById(R.id.wallet_balance_progress_bar);
+
         final View insetTopView = contentView.findViewWithTag("inset_top");
-        if (insetTopView != null) {
+        if (insetTopView!= null) {
             ViewCompat.setOnApplyWindowInsetsListener(insetTopView, (v, windowInsets) -> {
                 final Insets insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
                 v.setPadding(v.getPaddingLeft(), insets.top, v.getPaddingRight(), v.getPaddingBottom());
@@ -147,7 +153,7 @@ public final class WalletActivity extends AbstractWalletActivity {
             });
         }
         final View insetBottomView = contentView.findViewWithTag("inset_bottom");
-        if (insetBottomView != null) {
+        if (insetBottomView!= null) {
             ViewCompat.setOnApplyWindowInsetsListener(insetBottomView, (v, windowInsets) -> {
                 final Insets insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
                 if (insets.bottom > 0 && v instanceof LinearLayout) {
@@ -163,7 +169,7 @@ public final class WalletActivity extends AbstractWalletActivity {
         levitateView = contentView.findViewWithTag("levitate");
 
         // Make view tagged with 'levitate' scroll away and quickly return.
-        if (levitateView != null) {
+        if (levitateView!= null) {
             final CoordinatorLayout.LayoutParams layoutParams = new CoordinatorLayout.LayoutParams(
                     levitateView.getLayoutParams().width, levitateView.getLayoutParams().height);
             layoutParams.setBehavior(new QuickReturnBehavior());
@@ -222,6 +228,23 @@ public final class WalletActivity extends AbstractWalletActivity {
                         R.string.report_issue_dialog_message_crash, Constants.REPORT_SUBJECT_CRASH, null);
             }
         });
+        // --- THANH SYNC: observe blockchain ---
+        viewModel.blockchainState.observe(this, state -> {
+            if (state == null || syncText == null || syncBar == null) return;
+            final long daysBehind = state.getBestChainDate()!= null
+                   ? (System.currentTimeMillis() - state.getBestChainDate().getTime()) / (24 * 60 * 60 * 1000)
+                    : 0;
+            if (daysBehind > 0) {
+                syncText.setVisibility(View.VISIBLE);
+                syncText.setText(getString(R.string.wallet_balance_progress, daysBehind));
+                syncBar.setVisibility(View.VISIBLE);
+                int percent = (int) Math.max(0, 100 - daysBehind * 100 / 14);
+                syncBar.setProgress(percent);
+            } else {
+                syncText.setVisibility(View.GONE);
+                syncBar.setVisibility(View.GONE);
+            }
+        });
         viewModel.enterAnimation.observe(this, state -> {
             if (state == WalletActivityViewModel.EnterAnimationState.WAITING) {
                 enterAnimation.setCurrentPlayTime(0);
@@ -268,14 +291,14 @@ public final class WalletActivity extends AbstractWalletActivity {
                         || Environment.MEDIA_MOUNTED_READ_ONLY.equals(externalStorageState);
                 menu.findItem(R.id.wallet_options_restore_wallet).setEnabled(enableRestoreWalletOption);
                 final Boolean isEncrypted = viewModel.walletEncrypted.getValue();
-                if (isEncrypted != null) {
+                if (isEncrypted!= null) {
                     final MenuItem encryptKeysOption = menu.findItem(R.id.wallet_options_encrypt_keys);
-                    encryptKeysOption.setTitle(isEncrypted ? R.string.wallet_options_encrypt_keys_change
+                    encryptKeysOption.setTitle(isEncrypted? R.string.wallet_options_encrypt_keys_change
                             : R.string.wallet_options_encrypt_keys_set);
                     encryptKeysOption.setVisible(true);
                 }
                 final Boolean isLegacyFallback = viewModel.walletLegacyFallback.getValue();
-                if (isLegacyFallback != null) {
+                if (isLegacyFallback!= null) {
                     final MenuItem requestLegacyOption = menu.findItem(R.id.wallet_options_request_legacy);
                     requestLegacyOption.setVisible(isLegacyFallback);
                 }
@@ -346,8 +369,8 @@ public final class WalletActivity extends AbstractWalletActivity {
     protected void onResume() {
         super.onResume();
 
-        if (exchangeRatesFragment != null)
-            exchangeRatesFragment.setVisibility(config.isEnableExchangeRates() ? View.VISIBLE : View.GONE);
+        if (exchangeRatesFragment!= null)
+            exchangeRatesFragment.setVisibility(config.isEnableExchangeRates()? View.VISIBLE : View.GONE);
 
         handler.postDelayed(() -> {
             // delayed start so that UI has enough time to initialize
@@ -371,7 +394,7 @@ public final class WalletActivity extends AbstractWalletActivity {
         final AnimatorSet.Builder fragmentEnterAnimationBuilder = fragmentEnterAnimation.play(splashFadeOut);
 
         final View slideInLeftView = contentView.findViewWithTag("slide_in_left");
-        if (slideInLeftView != null) {
+        if (slideInLeftView!= null) {
             final ValueAnimator slide = ValueAnimator.ofFloat(-1.0f, 0.0f);
             slide.addUpdateListener(animator -> {
                 float animatedValue = (float) animator.getAnimatedValue();
@@ -387,7 +410,7 @@ public final class WalletActivity extends AbstractWalletActivity {
         }
 
         final View slideInRightView = contentView.findViewWithTag("slide_in_right");
-        if (slideInRightView != null) {
+        if (slideInRightView!= null) {
             final ValueAnimator slide = ValueAnimator.ofFloat(1.0f, 0.0f);
             slide.addUpdateListener(animator -> {
                 float animatedValue = (float) animator.getAnimatedValue();
@@ -403,7 +426,7 @@ public final class WalletActivity extends AbstractWalletActivity {
         }
 
         final View slideInTopView = contentView.findViewWithTag("slide_in_top");
-        if (slideInTopView != null) {
+        if (slideInTopView!= null) {
             final ValueAnimator slide = ValueAnimator.ofFloat(-1.0f, 0.0f);
             slide.addUpdateListener(animator -> {
                 float animatedValue = (float) animator.getAnimatedValue();
@@ -419,7 +442,7 @@ public final class WalletActivity extends AbstractWalletActivity {
         }
 
         final View slideInBottomView = contentView.findViewWithTag("slide_in_bottom");
-        if (slideInBottomView != null) {
+        if (slideInBottomView!= null) {
             final ValueAnimator slide = ValueAnimator.ofFloat(1.0f, 0.0f);
             slide.addUpdateListener(animator -> {
                 float animatedValue = (float) animator.getAnimatedValue();
@@ -434,7 +457,7 @@ public final class WalletActivity extends AbstractWalletActivity {
             fragmentEnterAnimationBuilder.before(slide).before(fadeIn);
         }
 
-        if (levitateView != null) {
+        if (levitateView!= null) {
             final ObjectAnimator elevate = ObjectAnimator.ofFloat(levitateView, "elevation", 0.0f,
                     levitateView.getElevation());
             elevate.setDuration(duration);
@@ -460,7 +483,7 @@ public final class WalletActivity extends AbstractWalletActivity {
         if (NfcAdapter.ACTION_NDEF_DISCOVERED.equals(action)) {
             final String inputType = intent.getType();
             final NdefMessage ndefMessage = (NdefMessage) intent
-                    .getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES)[0];
+                   .getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES)[0];
             final byte[] input = Nfc.extractMimePayload(Constants.MIMETYPE_TRANSACTION, ndefMessage);
 
             new BinaryInputParser(inputType, input) {
@@ -491,7 +514,7 @@ public final class WalletActivity extends AbstractWalletActivity {
         // The animation must be ended because of several graphical glitching that happens when the
         // Camera/SurfaceView is used while the animation is running.
         enterAnimation.end();
-        if (clickView != null) {
+        if (clickView!= null) {
             final ActivityOptionsCompat options = ActivityOptionsCompat.makeClipRevealAnimation(clickView, 0, 0,
                     clickView.getWidth(), clickView.getHeight());
             scanLauncher.launch(null, options);
@@ -504,7 +527,7 @@ public final class WalletActivity extends AbstractWalletActivity {
         @Override
         public boolean onStartNestedScroll(final CoordinatorLayout coordinatorLayout, final View child,
                 final View directTargetChild, final View target, final int nestedScrollAxes, final int type) {
-            return (nestedScrollAxes & ViewCompat.SCROLL_AXIS_VERTICAL) != 0;
+            return (nestedScrollAxes & ViewCompat.SCROLL_AXIS_VERTICAL)!= 0;
         }
 
         @Override
