@@ -33,7 +33,6 @@ import android.nfc.NfcAdapter;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
-import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -78,6 +77,7 @@ import org.bitcoinj.script.Script;
 import android.content.SharedPreferences;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
+import android.view.Gravity;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
@@ -154,21 +154,19 @@ public final class WalletActivity extends AbstractWalletActivity {
 final View root = findViewById(android.R.id.content);
 final SharedPreferences prefs = getSharedPreferences("sync_prefs", MODE_PRIVATE);
 final int[] lastProg = { -1 };
-final float d = getResources().getDisplayMetrics().density;
 final ProgressBar bar = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
 bar.setMax(10000);
 bar.setProgressTintList(android.content.res.ColorStateList.valueOf(0xFFFFCC99));
 bar.setVisibility(View.GONE);
 ((ViewGroup) getWindow().getDecorView()).addView(bar,
         new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,
-                (int) (3 * d)));
+                (int) (3 * getResources().getDisplayMetrics().density)));
 final TextView percent = new TextView(this);
 percent.setTextSize(12);
 percent.setTextColor(0xFFFFCC99);
 percent.setVisibility(View.GONE);
 ((ViewGroup) getWindow().getDecorView()).addView(percent);
-
-//==== PIE bám QR ====
+final float d = getResources().getDisplayMetrics().density;
 final ViewGroup rootContent = findViewById(android.R.id.content);
 final MiningCircleView circle = new MiningCircleView(this);
 circle.setVisibility(View.GONE);
@@ -189,7 +187,6 @@ infoLp.gravity = Gravity.TOP | Gravity.START;
 infoLp.leftMargin = (int)(2*d);
 infoLp.topMargin = (int)(128*d);
 rootContent.addView(blockInfo, infoLp);
-//====
 
 root.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
     @Override
@@ -210,16 +207,17 @@ root.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlob
             String txt = String.format(Locale.US, "%d/%d (%.2f%%)", current, next, prog*100f);
             blockInfo.setText(txt);
             blockInfo.setVisibility(View.VISIBLE);
-            // bám theo QR
-            View qr = findQr((ViewGroup) root);
-            if (qr!= null) {
-                int[] qrPos = new int[2]; int[] rootPos = new int[2];
-                qr.getLocationOnScreen(qrPos); root.getLocationOnScreen(rootPos);
-                float qrY = qrPos[1] - rootPos[1];
-                circle.setX(12 * d);
-                circle.setY(qrY + (qr.getHeight() - circle.getHeight()) / 2f);
-                blockInfo.setX(2 * d);
-                blockInfo.setY(circle.getY() + circle.getHeight() + 4 * d);
+            View anchor = findViewById(R.id.wallet_balance);
+            if (anchor == null) anchor = findQr((ViewGroup) root);
+            if (anchor!= null) {
+                int[] aPos = new int[2]; int[] rootPos = new int[2];
+                anchor.getLocationOnScreen(aPos); root.getLocationOnScreen(rootPos);
+                float aY = aPos[1] - rootPos[1];
+                float density = getResources().getDisplayMetrics().density;
+                circle.setX(12 * density);
+                circle.setY(aY + (anchor.getHeight() - circle.getHeight()) / 2f);
+                blockInfo.setX(2 * density);
+                blockInfo.setY(circle.getY() + circle.getHeight() + 4 * density);
             }
             handler.postDelayed(() -> root.requestLayout(), 1000);
             return;
@@ -230,32 +228,32 @@ root.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlob
         tv.getLocationOnScreen(loc);
         int left = loc[0];
         int top = loc[1];
-        float dd = getResources().getDisplayMetrics().density;
+        float d = getResources().getDisplayMetrics().density;
 
         percent.setText(String.format(Locale.US, "%.2f%%", lastProg[0] / 100f));
         percent.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
         int percentW = percent.getMeasuredWidth();
-        int gap = (int)(8 * dd);
-        int padEnd = (int)(8 * dd);
+        int gap = (int)(8 * d);
+        int padEnd = (int)(8 * d);
         int textW = (int) tv.getPaint().measureText(tv.getText().toString());
         int wantedWidth = textW + gap + percentW + padEnd;
 
         View qr = findQr((ViewGroup) root);
         int qrLeft = qr!= null? getLeftOnScreen(qr) : root.getWidth();
-        int maxAllowed = Math.max(0, qrLeft - left - (int)(8 * dd));
+        int maxAllowed = Math.max(0, qrLeft - left - (int)(8 * d));
         int barWidth = Math.min(wantedWidth, maxAllowed);
 
         int percentX = left + textW + gap;
         if (percentX + percentW > left + barWidth - padEnd) {
             percentX = left + barWidth - padEnd - percentW;
         }
-        percentX = Math.max(percentX, left + (int)(4 * dd));
+        percentX = Math.max(percentX, left + (int)(4 * d));
 
         percent.setX(percentX);
         percent.setY(top);
         percent.setVisibility(View.VISIBLE);
         bar.setX(left);
-        bar.setY(top + tv.getHeight() + (int)(4 * dd));
+        bar.setY(top + tv.getHeight() + (int)(4 * d));
         bar.getLayoutParams().width = barWidth;
         bar.setVisibility(View.VISIBLE);
 
