@@ -145,7 +145,7 @@ public final class WalletActivity extends AbstractWalletActivity {
         setActionBar(findViewById(R.id.wallet_appbar));
         getActionBar().setDisplayHomeAsUpEnabled(false);
         contentView = findViewById(android.R.id.content);
-        // --- SYNC BAR + % KHONG DAM QR ---
+        // --- SYNC BAR + % AUTO CANH KHONG DAM QR ---
         final View root = findViewById(android.R.id.content);
         final SharedPreferences prefs = getSharedPreferences("sync_prefs", MODE_PRIVATE);
         final int[] lastProg = { -1 };
@@ -180,7 +180,8 @@ public final class WalletActivity extends AbstractWalletActivity {
                 percent.setX(left + tv.getWidth() + (int) (12 * d));
                 percent.setY(top);
                 percent.setVisibility(View.VISIBLE);
-                int barWidth = Math.max(0, qrLeft - left - (int) (16 * d));
+                int rightGap = left; // AUTO: khoảng cách phải = khoảng cách trái
+                int barWidth = Math.max(0, qrLeft - left - rightGap);
                 bar.setX(left);
                 bar.setY(top + tv.getHeight() + (int) (4 * d));
                 bar.getLayoutParams().width = barWidth;
@@ -259,7 +260,6 @@ public final class WalletActivity extends AbstractWalletActivity {
         exchangeRatesFragment = findViewById(R.id.wallet_main_twopanes_exchange_rates);
         levitateView = contentView.findViewWithTag("levitate");
 
-        // Make view tagged with 'levitate' scroll away and quickly return.
         if (levitateView!= null) {
             final CoordinatorLayout.LayoutParams layoutParams = new CoordinatorLayout.LayoutParams(
                     levitateView.getLayoutParams().width, levitateView.getLayoutParams().height);
@@ -447,7 +447,6 @@ public final class WalletActivity extends AbstractWalletActivity {
             exchangeRatesFragment.setVisibility(config.isEnableExchangeRates()? View.VISIBLE : View.GONE);
 
         handler.postDelayed(() -> {
-            // delayed start so that UI has enough time to initialize
             BlockchainService.start(WalletActivity.this, true);
         }, 1000);
     }
@@ -585,8 +584,6 @@ public final class WalletActivity extends AbstractWalletActivity {
     }
 
     public void handleScan(final View clickView) {
-        // The animation must be ended because of several graphical glitching that happens when the
-        // Camera/SurfaceView is used while the animation is running.
         enterAnimation.end();
         if (clickView!= null) {
             final ActivityOptionsCompat options = ActivityOptionsCompat.makeClipRevealAnimation(clickView, 0, 0,
