@@ -54,6 +54,6 @@ public class MiningCircleView extends View {
         else color = 0xFFF44336;
         progressPaint.setColor(color);
         canvas.drawArc(oval, -90, 360 * progress, false, progressPaint);
-        // Không vẽ text nữa
+        // No text drawn inside circle
     }
 }
