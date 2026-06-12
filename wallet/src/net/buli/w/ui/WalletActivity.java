@@ -146,95 +146,82 @@ public final class WalletActivity extends AbstractWalletActivity {
         getActionBar().setDisplayHomeAsUpEnabled(false);
         contentView = findViewById(android.R.id.content);
 
-        // --- THANH SYNC + % CÙNG DÒNG (CHÈN THÊM, KHÔNG SỬA GỐC) ---
+        // --- SYNC BAR FIX - KHÔNG CHỚP, % CÙNG DÒNG ---
         final ProgressBar syncBar = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
         syncBar.setMax(10000);
         syncBar.setProgressTintList(android.content.res.ColorStateList.valueOf(0xFFFFCC99));
-
+        final TextView syncPercent = new TextView(this);
+        syncPercent.setTextSize(12);
+        syncPercent.setTextColor(0xFFFFCC99);
+        syncPercent.setPadding((int)(8*getResources().getDisplayMetrics().density),0,0,0);
         final View root = findViewById(android.R.id.content);
         final SharedPreferences syncPrefs = getSharedPreferences("sync_prefs", MODE_PRIVATE);
+        final int[] lastProgress = {-1};
 
         root.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
             public void onGlobalLayout() {
                 TextView realSync = findSyncTextView((ViewGroup) root);
                 if (realSync!= null && syncBar.getParent() == null) {
-                    ViewParent p = realSync.getParent();
-                    if (p instanceof ViewGroup) {
-                        ViewGroup vg = (ViewGroup) p;
-                        int idx = vg.indexOfChild(realSync);
-                        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                                ViewGroup.LayoutParams.MATCH_PARENT,
-                                (int) (3 * getResources().getDisplayMetrics().density));
-                        lp.topMargin = (int) (4 * getResources().getDisplayMetrics().density);
-                        syncBar.setLayoutParams(lp);
-                        vg.addView(syncBar, idx + 1);
-                        if (realSync.getTag() == null) {
-                            realSync.setTag(realSync.getText().toString());
-                        }
+                    ViewGroup vg = (ViewGroup) realSync.getParent();
+                    int idx = vg.indexOfChild(realSync);
+                    LinearLayout.LayoutParams lpBar = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (int)(3*getResources().getDisplayMetrics().density));
+                    lpBar.topMargin = (int)(4*getResources().getDisplayMetrics().density);
+                    syncBar.setLayoutParams(lpBar);
+                    vg.addView(syncBar, idx+1);
+                    if (vg instanceof LinearLayout && ((LinearLayout)vg).getOrientation()==LinearLayout.VERTICAL) {
+                        vg.removeView(realSync);
+                        LinearLayout wrapper = new LinearLayout(WalletActivity.this);
+                        wrapper.setOrientation(LinearLayout.HORIZONTAL);
+                        wrapper.addView(realSync, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+                        wrapper.addView(syncPercent, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+                        vg.addView(wrapper, idx);
                     }
                 }
                 if (realSync!= null) {
                     boolean visible = realSync.getVisibility() == View.VISIBLE;
                     syncBar.setVisibility(visible? View.VISIBLE : View.GONE);
+                    syncPercent.setVisibility(visible? View.VISIBLE : View.GONE);
                     if (visible) {
-                        String baseText = (String) realSync.getTag();
-                        if (baseText == null) {
-                            baseText = realSync.getText().toString().replaceAll(" •.*", "");
-                            realSync.setTag(baseText);
-                        }
-                        String txt = baseText.toLowerCase();
+                        String txt = realSync.getText().toString().toLowerCase();
                         int totalHours = 0;
                         try {
-                            int value = Integer.parseInt(txt.replaceAll("[^0-9]", ""));
-                            if (txt.contains("hour")) totalHours = value;
-                            else if (txt.contains("day")) totalHours = value * 24;
-                            else if (txt.contains("week")) totalHours = value * 7 * 24;
-                            else if (txt.contains("month")) totalHours = value * 30 * 24;
-                            else if (txt.contains("year")) totalHours = value * 365 * 24;
+                            int v = Integer.parseInt(txt.replaceAll("[^0-9]",""));
+                            if (txt.contains("hour")) totalHours = v;
+                            else if (txt.contains("day")) totalHours = v*24;
+                            else if (txt.contains("week")) totalHours = v*7*24;
+                            else if (txt.contains("month")) totalHours = v*30*24;
+                            else if (txt.contains("year")) totalHours = v*365*24;
                         } catch (Exception ignored) {}
-
-                        int storedMax = syncPrefs.getInt("max_hours", 0);
-                        if (totalHours > storedMax) {
-                            storedMax = totalHours;
-                            syncPrefs.edit().putInt("max_hours", storedMax).apply();
+                        int max = syncPrefs.getInt("max_hours",0);
+                        if (totalHours > max) { max = totalHours; syncPrefs.edit().putInt("max_hours",max).apply(); }
+                        if (totalHours==0 && max!=0) { syncPrefs.edit().remove("max_hours").apply(); max=0; }
+                        int prog = 0;
+                        if (max>0) prog = (int)((max-totalHours)*10000L/max);
+                        prog = Math.max(0, Math.min(10000, prog));
+                        syncBar.setProgress(prog);
+                        if (prog!= lastProgress[0]) {
+                            lastProgress[0] = prog;
+                            syncPercent.setText(String.format(Locale.US, "%.2f%%", prog/100f));
                         }
-                        if (totalHours == 0 && storedMax!= 0) {
-                            syncPrefs.edit().remove("max_hours").apply();
-                            storedMax = 0;
-                            realSync.setText(baseText);
-                            return;
-                        }
-
-                        int progress = 0;
-                        if (storedMax > 0) {
-                            progress = (int) ((storedMax - totalHours) * 10000L / storedMax);
-                            progress = Math.max(0, Math.min(10000, progress));
-                        }
-                        syncBar.setIndeterminate(false);
-                        syncBar.setProgress(progress);
-                        String percentText = String.format(Locale.US, "%.2f%%", progress / 100f);
-                        realSync.setText(baseText + " • " + percentText);
                     }
                 }
             }
-
             private TextView findSyncTextView(ViewGroup g) {
-                for (int i = 0; i < g.getChildCount(); i++) {
+                for (int i=0;i<g.getChildCount();i++) {
                     View v = g.getChildAt(i);
                     if (v instanceof TextView) {
-                        String t = ((TextView) v).getText().toString();
-                        if (t.contains("Synchronizing")) return (TextView) v;
+                        String t = ((TextView)v).getText().toString();
+                        if (t.contains("Synchronizing")) return (TextView)v;
                     }
                     if (v instanceof ViewGroup) {
-                        TextView t = findSyncTextView((ViewGroup) v);
+                        TextView t = findSyncTextView((ViewGroup)v);
                         if (t!= null) return t;
                     }
                 }
                 return null;
             }
         });
-        // --- HẾT PHẦN CHÈN ---
 
         final View insetTopView = contentView.findViewWithTag("inset_top");
         if (insetTopView!= null) {
