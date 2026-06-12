@@ -178,12 +178,17 @@ public final class WalletActivity extends AbstractWalletActivity {
                 int top = loc[1];
                 float d = getResources().getDisplayMetrics().density;
 
-                // AUTO THEO MÀN HÌNH - KHÔNG CỨNG SỐ
-                int available = qrLeft - left;
-                int gap = Math.max((int)(6 * d), available / 12);
-                int barWidth = Math.max(0, available - gap);
-                int percentX = left + tv.getWidth() + (int)(6 * d);
-                percentX = Math.min(percentX, left + barWidth - (int)(40 * d));
+                // FIX: neo theo UI, bar = chữ + 68dp, chặn trước QR, % không đè chữ
+                int extraForPercent = (int)(68 * d);
+                int wantedWidth = tv.getWidth() + extraForPercent;
+                int maxAllowed = Math.max(0, qrLeft - left - (int)(8 * d));
+                int barWidth = Math.min(wantedWidth, maxAllowed);
+                int percentX = left + tv.getWidth() + (int)(8 * d);
+                int minSpaceForPercent = (int)(50 * d);
+                if (percentX + minSpaceForPercent > left + barWidth) {
+                    percentX = left + barWidth - minSpaceForPercent;
+                }
+                percentX = Math.max(percentX, left + (int)(4 * d));
                 percent.setX(percentX);
                 percent.setY(top);
                 percent.setVisibility(View.VISIBLE);
@@ -562,7 +567,7 @@ public final class WalletActivity extends AbstractWalletActivity {
         if (NfcAdapter.ACTION_NDEF_DISCOVERED.equals(action)) {
             final String inputType = intent.getType();
             final NdefMessage ndefMessage = (NdefMessage) intent
-                   .getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES)[0];
+                  .getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES)[0];
             final byte[] input = Nfc.extractMimePayload(Constants.MIMETYPE_TRANSACTION, ndefMessage);
 
             new BinaryInputParser(inputType, input) {
