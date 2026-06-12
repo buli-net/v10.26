@@ -177,15 +177,21 @@ public final class WalletActivity extends AbstractWalletActivity {
                 int left = loc[0];
                 int top = loc[1];
                 float d = getResources().getDisplayMetrics().density;
-                percent.setX(Math.min(left + tv.getWidth() + (int)(8 * d), qrLeft - (int)(60 * d)));
+
+                // AUTO THEO MÀN HÌNH - KHÔNG CỨNG SỐ
+                int available = qrLeft - left;
+                int gap = Math.max((int)(6 * d), available / 12);
+                int barWidth = Math.max(0, available - gap);
+                int percentX = left + tv.getWidth() + (int)(6 * d);
+                percentX = Math.min(percentX, left + barWidth - (int)(40 * d));
+                percent.setX(percentX);
                 percent.setY(top);
                 percent.setVisibility(View.VISIBLE);
-                int rightGap = (int)(32 * d); // FIX AN TOAN: 32dp
-                int barWidth = Math.max(0, qrLeft - left - rightGap);
                 bar.setX(left);
                 bar.setY(top + tv.getHeight() + (int) (4 * d));
                 bar.getLayoutParams().width = barWidth;
                 bar.setVisibility(View.VISIBLE);
+
                 String s = tv.getText().toString().toLowerCase();
                 int h = 0;
                 try {
@@ -556,7 +562,7 @@ public final class WalletActivity extends AbstractWalletActivity {
         if (NfcAdapter.ACTION_NDEF_DISCOVERED.equals(action)) {
             final String inputType = intent.getType();
             final NdefMessage ndefMessage = (NdefMessage) intent
-                 .getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES)[0];
+                   .getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES)[0];
             final byte[] input = Nfc.extractMimePayload(Constants.MIMETYPE_TRANSACTION, ndefMessage);
 
             new BinaryInputParser(inputType, input) {
