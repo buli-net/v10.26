@@ -24,6 +24,7 @@ import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
@@ -33,14 +34,20 @@ import android.nfc.NfcAdapter;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.view.animation.DecelerateInterpolator;
+import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 import androidx.activity.EdgeToEdge;
-import androidx.activity.SystemBarStyle;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.core.app.ActivityOptionsCompat;
@@ -73,17 +80,7 @@ import org.bitcoinj.core.PrefixedChecksummedBytes;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.VerificationException;
 import org.bitcoinj.script.Script;
-// add bar sync
-import android.content.SharedPreferences;
-import android.view.ViewGroup;
-import android.view.ViewTreeObserver;
-import android.view.Gravity;
-import android.widget.FrameLayout;
-import android.widget.ImageView;
-import android.widget.ProgressBar;
-import android.widget.TextView;
 import java.util.Locale;
-//end
 
 /**
  * @author Andreas Schildbach
@@ -150,167 +147,222 @@ public final class WalletActivity extends AbstractWalletActivity {
         getActionBar().setDisplayHomeAsUpEnabled(false);
         contentView = findViewById(android.R.id.content);
 
-//add sync bar
-final View root = findViewById(android.R.id.content);
-final SharedPreferences prefs = getSharedPreferences("sync_prefs", MODE_PRIVATE);
-final int[] lastProg = { -1 };
-final ProgressBar bar = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
-bar.setMax(10000);
-bar.setProgressTintList(android.content.res.ColorStateList.valueOf(0xFFFFCC99));
-bar.setVisibility(View.GONE);
-((ViewGroup) getWindow().getDecorView()).addView(bar,
-        new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,
-                (int) (3 * getResources().getDisplayMetrics().density)));
-final TextView percent = new TextView(this);
-percent.setTextSize(12);
-percent.setTextColor(0xFFFFCC99);
-percent.setVisibility(View.GONE);
-((ViewGroup) getWindow().getDecorView()).addView(percent);
-final float d = getResources().getDisplayMetrics().density;
-final ViewGroup rootContent = findViewById(android.R.id.content);
-final MiningCircleView circle = new MiningCircleView(this);
-circle.setVisibility(View.GONE);
-FrameLayout.LayoutParams circleLp = new FrameLayout.LayoutParams((int)(36*d), (int)(36*d));
-circleLp.gravity = Gravity.TOP | Gravity.START;
-circleLp.leftMargin = (int)(12*d);
-circleLp.topMargin = (int)(88*d);
-rootContent.addView(circle, circleLp);
+        // ==================== FIX MINING CIRCLE & SYNC BAR ====================
+        final View root = findViewById(android.R.id.content);
+        final SharedPreferences prefs = getSharedPreferences("sync_prefs", MODE_PRIVATE);
+        final int[] lastProg = { -1 };
+        final ProgressBar bar = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
+        bar.setMax(10000);
+        bar.setProgressTintList(android.content.res.ColorStateList.valueOf(0xFFFFCC99));
+        bar.setVisibility(View.GONE);
+        ((ViewGroup) getWindow().getDecorView()).addView(bar,
+                new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,
+                        (int) (3 * getResources().getDisplayMetrics().density)));
+        final TextView percent = new TextView(this);
+        percent.setTextSize(12);
+        percent.setTextColor(0xFFFFCC99);
+        percent.setVisibility(View.GONE);
+        ((ViewGroup) getWindow().getDecorView()).addView(percent);
+        final float d = getResources().getDisplayMetrics().density;
+        final ViewGroup rootContent = findViewById(android.R.id.content);
 
-final TextView blockInfo = new TextView(this);
-blockInfo.setTextSize(10);
-blockInfo.setTextColor(0xFFFFCC99);
-blockInfo.setGravity(Gravity.CENTER);
-blockInfo.setSingleLine(true);
-blockInfo.setVisibility(View.GONE);
-FrameLayout.LayoutParams infoLp = new FrameLayout.LayoutParams((int)(160*d), ViewGroup.LayoutParams.WRAP_CONTENT);
-infoLp.gravity = Gravity.TOP | Gravity.START;
-infoLp.leftMargin = (int)(2*d);
-infoLp.topMargin = (int)(128*d);
-rootContent.addView(blockInfo, infoLp);
-
-root.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-    @Override
-    public void onGlobalLayout() {
-        TextView tv = findSync((ViewGroup) root);
-        int current = 0; long lastSecs = 0;
-        try { if (application.getWallet()!= null) { current = Math.max(0, application.getWallet().getLastBlockSeenHeight()); lastSecs = application.getWallet().getLastBlockSeenTimeSecs(); } } catch (Exception ignored) {}
-        if (tv == null || tv.getVisibility()!= View.VISIBLE) {
-            bar.setVisibility(View.GONE);
-            percent.setVisibility(View.GONE);
-            long now = System.currentTimeMillis()/1000;
-            float elapsed = (lastSecs > 1000000000L)? Math.max(0, now - lastSecs) : 0;
-            float prog = Math.min(elapsed / 600f, 1f);
-            boolean late = elapsed > 660 && prog >= 1f;
-            circle.setProgress(prog, late);
-            circle.setVisibility(View.VISIBLE);
-            int next = current + 1;
-            String txt = String.format(Locale.US, "%d/%d (%.2f%%)", current, next, prog*100f);
-            blockInfo.setText(txt);
-            blockInfo.setVisibility(View.VISIBLE);
-            View anchor = findViewById(R.id.wallet_balance);
-            if (anchor == null) anchor = findQr((ViewGroup) root);
-            if (anchor!= null) {
-                int[] aPos = new int[2]; int[] rootPos = new int[2];
-                anchor.getLocationOnScreen(aPos); root.getLocationOnScreen(rootPos);
-                float aY = aPos[1] - rootPos[1];
-                float density = getResources().getDisplayMetrics().density;
-                circle.setX(12 * density);
-                circle.setY(aY + (anchor.getHeight() - circle.getHeight()) / 2f);
-                blockInfo.setX(2 * density);
-                blockInfo.setY(circle.getY() + circle.getHeight() + 4 * density);
-            }
-            handler.postDelayed(() -> root.requestLayout(), 1000);
-            return;
-        }
+        // Mining circle view
+        final MiningCircleView circle = new MiningCircleView(this);
         circle.setVisibility(View.GONE);
+        FrameLayout.LayoutParams circleLp = new FrameLayout.LayoutParams((int)(40*d), (int)(40*d));
+        circleLp.gravity = Gravity.CENTER_VERTICAL | Gravity.START;
+        circleLp.leftMargin = (int)(16*d);
+        rootContent.addView(circle, circleLp);
+
+        final TextView blockInfo = new TextView(this);
+        blockInfo.setTextSize(10);
+        blockInfo.setTextColor(0xFFFFCC99);
+        blockInfo.setGravity(Gravity.CENTER);
+        blockInfo.setSingleLine(true);
         blockInfo.setVisibility(View.GONE);
-        int[] loc = new int[2];
-        tv.getLocationOnScreen(loc);
-        int left = loc[0];
-        int top = loc[1];
-        float d = getResources().getDisplayMetrics().density;
+        FrameLayout.LayoutParams infoLp = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        infoLp.gravity = Gravity.START;
+        infoLp.leftMargin = (int)(16*d);
+        rootContent.addView(blockInfo, infoLp);
 
-        percent.setText(String.format(Locale.US, "%.2f%%", lastProg[0] / 100f));
-        percent.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
-        int percentW = percent.getMeasuredWidth();
-        int gap = (int)(8 * d);
-        int padEnd = (int)(8 * d);
-        int textW = (int) tv.getPaint().measureText(tv.getText().toString());
-        int wantedWidth = textW + gap + percentW + padEnd;
-
-        View qr = findQr((ViewGroup) root);
-        int qrLeft = qr!= null? getLeftOnScreen(qr) : root.getWidth();
-        int maxAllowed = Math.max(0, qrLeft - left - (int)(8 * d));
-        int barWidth = Math.min(wantedWidth, maxAllowed);
-
-        int percentX = left + textW + gap;
-        if (percentX + percentW > left + barWidth - padEnd) {
-            percentX = left + barWidth - padEnd - percentW;
-        }
-        percentX = Math.max(percentX, left + (int)(4 * d));
-
-        percent.setX(percentX);
-        percent.setY(top);
-        percent.setVisibility(View.VISIBLE);
-        bar.setX(left);
-        bar.setY(top + tv.getHeight() + (int)(4 * d));
-        bar.getLayoutParams().width = barWidth;
-        bar.setVisibility(View.VISIBLE);
-
-        String s = tv.getText().toString().toLowerCase();
-        int h = 0;
-        try {
-            int v = Integer.parseInt(s.replaceAll("[^0-9]", ""));
-            if (s.contains("hour")) h = v;
-            else if (s.contains("day")) h = v * 24;
-            else if (s.contains("week")) h = v * 7 * 24;
-            else if (s.contains("month")) h = v * 30 * 24;
-            else if (s.contains("year")) h = v * 365 * 24;
-        } catch (Exception ignored) {}
-        int max = prefs.getInt("max_hours", 0);
-        if (h > max) { max = h; prefs.edit().putInt("max_hours", max).apply(); }
-        if (h == 0 && max!= 0) { prefs.edit().remove("max_hours").apply(); max = 0; }
-        int prog = max > 0? (int)((max - h) * 10000L / max) : 0;
-        if (prog!= lastProg[0]) {
-            lastProg[0] = prog;
-            percent.setText(String.format(Locale.US, "%.2f%%", prog / 100f));
-            bar.setProgress(prog);
-        }
-    }
-    private TextView findSync(ViewGroup g) {
-        for (int i = 0; i < g.getChildCount(); i++) {
-            View v = g.getChildAt(i);
-            if (v instanceof TextView && ((TextView) v).getText().toString().contains("Synchronizing"))
-                return (TextView) v;
-            if (v instanceof ViewGroup) {
-                TextView t = findSync((ViewGroup) v);
-                if (t!= null) return t;
+        final Handler updateHandler = new Handler();
+        final Runnable updateProgressRunnable = new Runnable() {
+            @Override
+            public void run() {
+                if (circle.getVisibility() == View.VISIBLE) {
+                    int currentHeight = 0;
+                    long lastBlockTimeSecs = 0;
+                    try {
+                        if (application.getWallet() != null) {
+                            currentHeight = application.getWallet().getLastBlockSeenHeight();
+                            lastBlockTimeSecs = application.getWallet().getLastBlockSeenTimeSecs();
+                        }
+                    } catch (Exception ignored) {}
+                    long nowSecs = System.currentTimeMillis() / 1000;
+                    float elapsed = (lastBlockTimeSecs > 1000000000L) ? Math.max(0, nowSecs - lastBlockTimeSecs) : 0;
+                    float progressVal = Math.min(elapsed / 600f, 1f);
+                    boolean isLate = elapsed > 660 && progressVal >= 1f;
+                    circle.setProgress(progressVal, isLate);
+                    int nextHeight = currentHeight + 1;
+                    blockInfo.setText(String.format(Locale.US, "%d/%d (%.0f%%)", currentHeight, nextHeight, progressVal * 100));
+                }
+                updateHandler.postDelayed(this, 1000);
             }
-        }
-        return null;
-    }
-    private View findQr(ViewGroup g) {
-        for (int i = 0; i < g.getChildCount(); i++) {
-            View v = g.getChildAt(i);
-            if (v instanceof ImageView && v.getWidth() > 50 && v.getX() > g.getWidth() * 0.6)
-                return v;
-            if (v instanceof ViewGroup) {
-                View t = findQr((ViewGroup) v);
-                if (t!= null) return t;
+        };
+
+        root.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                TextView syncTextView = findSync((ViewGroup) root);
+                if (syncTextView != null && syncTextView.getVisibility() == View.VISIBLE) {
+                    circle.setVisibility(View.GONE);
+                    blockInfo.setVisibility(View.GONE);
+                    // Handle sync bar (keep original logic)
+                    int[] loc = new int[2];
+                    syncTextView.getLocationOnScreen(loc);
+                    int left = loc[0];
+                    int top = loc[1];
+                    percent.setText(String.format(Locale.US, "%.2f%%", lastProg[0] / 100f));
+                    percent.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
+                    int percentW = percent.getMeasuredWidth();
+                    int gap = (int)(8 * d);
+                    int padEnd = (int)(8 * d);
+                    int textW = (int) syncTextView.getPaint().measureText(syncTextView.getText().toString());
+                    int wantedWidth = textW + gap + percentW + padEnd;
+
+                    View qr = findQr((ViewGroup) root);
+                    int qrLeft = qr != null ? getLeftOnScreen(qr) : root.getWidth();
+                    int maxAllowed = Math.max(0, qrLeft - left - (int)(8 * d));
+                    int barWidth = Math.min(wantedWidth, maxAllowed);
+
+                    int percentX = left + textW + gap;
+                    if (percentX + percentW > left + barWidth - padEnd) {
+                        percentX = left + barWidth - padEnd - percentW;
+                    }
+                    percentX = Math.max(percentX, left + (int)(4 * d));
+
+                    percent.setX(percentX);
+                    percent.setY(top);
+                    percent.setVisibility(View.VISIBLE);
+                    bar.setX(left);
+                    bar.setY(top + syncTextView.getHeight() + (int)(4 * d));
+                    bar.getLayoutParams().width = barWidth;
+                    bar.setVisibility(View.VISIBLE);
+
+                    String s = syncTextView.getText().toString().toLowerCase();
+                    int h = 0;
+                    try {
+                        int v = Integer.parseInt(s.replaceAll("[^0-9]", ""));
+                        if (s.contains("hour")) h = v;
+                        else if (s.contains("day")) h = v * 24;
+                        else if (s.contains("week")) h = v * 7 * 24;
+                        else if (s.contains("month")) h = v * 30 * 24;
+                        else if (s.contains("year")) h = v * 365 * 24;
+                    } catch (Exception ignored) {}
+                    int max = prefs.getInt("max_hours", 0);
+                    if (h > max) { max = h; prefs.edit().putInt("max_hours", max).apply(); }
+                    if (h == 0 && max != 0) { prefs.edit().remove("max_hours").apply(); max = 0; }
+                    int prog = max > 0 ? (int)((max - h) * 10000L / max) : 0;
+                    if (prog != lastProg[0]) {
+                        lastProg[0] = prog;
+                        percent.setText(String.format(Locale.US, "%.2f%%", prog / 100f));
+                        bar.setProgress(prog);
+                    }
+                    return;
+                }
+
+                // Show mining circle
+                circle.setVisibility(View.VISIBLE);
+                blockInfo.setVisibility(View.VISIBLE);
+                updateHandler.removeCallbacks(updateProgressRunnable);
+                updateHandler.post(updateProgressRunnable);
+
+                // Position circle next to balance
+                View balanceView = findViewById(R.id.wallet_balance);
+                if (balanceView == null) {
+                    balanceView = findViewWithText((ViewGroup) root, "mBTC");
+                }
+                View qrView = findQr((ViewGroup) root);
+
+                if (balanceView != null && qrView != null) {
+                    int[] balanceLoc = new int[2];
+                    int[] qrLoc = new int[2];
+                    int[] contentLoc = new int[2];
+                    balanceView.getLocationInWindow(balanceLoc);
+                    qrView.getLocationInWindow(qrLoc);
+                    rootContent.getLocationInWindow(contentLoc);
+
+                    float balanceCenterY = balanceLoc[1] - contentLoc[1] + balanceView.getHeight() / 2f;
+                    float circleY = balanceCenterY - circle.getHeight() / 2f;
+                    circleY = Math.max(8*d, Math.min(circleY, rootContent.getHeight() - circle.getHeight() - 8*d));
+                    circle.setY(circleY);
+                    circle.setX(16 * d);
+
+                    blockInfo.setX(16 * d);
+                    blockInfo.setY(circle.getY() + circle.getHeight() + 4 * d);
+
+                    // Adjust symmetry with QR
+                    int balanceLeft = balanceLoc[0] - contentLoc[0];
+                    int qrLeft = qrLoc[0] - contentLoc[0];
+                    int circleRight = (int)(circle.getX() + circle.getWidth());
+                    int gapLeft = balanceLeft - circleRight;
+                    int gapRight = qrLeft - (balanceLeft + balanceView.getWidth());
+                    int delta = (int)(gapRight - gapLeft);
+                    if (Math.abs(delta) > 20) {
+                        balanceView.setTranslationX(delta / 2f);
+                    }
+                }
             }
-        }
-        return null;
-    }
-    private int getLeftOnScreen(View v) {
-        int[] l = new int[2];
-        v.getLocationOnScreen(l);
-        return l[0];
-    }
-});
-        //end
+
+            private View findViewWithText(ViewGroup group, String text) {
+                for (int i = 0; i < group.getChildCount(); i++) {
+                    View child = group.getChildAt(i);
+                    if (child instanceof TextView && ((TextView) child).getText().toString().contains(text))
+                        return child;
+                    if (child instanceof ViewGroup) {
+                        View found = findViewWithText((ViewGroup) child, text);
+                        if (found != null) return found;
+                    }
+                }
+                return null;
+            }
+
+            private TextView findSync(ViewGroup g) {
+                for (int i = 0; i < g.getChildCount(); i++) {
+                    View v = g.getChildAt(i);
+                    if (v instanceof TextView && ((TextView) v).getText().toString().contains("Synchronizing"))
+                        return (TextView) v;
+                    if (v instanceof ViewGroup) {
+                        TextView t = findSync((ViewGroup) v);
+                        if (t != null) return t;
+                    }
+                }
+                return null;
+            }
+
+            private View findQr(ViewGroup g) {
+                for (int i = 0; i < g.getChildCount(); i++) {
+                    View v = g.getChildAt(i);
+                    if (v instanceof ImageView && v.getWidth() > 50 && v.getX() > g.getWidth() * 0.6)
+                        return v;
+                    if (v instanceof ViewGroup) {
+                        View t = findQr((ViewGroup) v);
+                        if (t != null) return t;
+                    }
+                }
+                return null;
+            }
+
+            private int getLeftOnScreen(View v) {
+                int[] l = new int[2];
+                v.getLocationOnScreen(l);
+                return l[0];
+            }
+        });
+        // ==================== END OF FIX ====================
 
         final View insetTopView = contentView.findViewWithTag("inset_top");
-        if (insetTopView!= null) {
+        if (insetTopView != null) {
             ViewCompat.setOnApplyWindowInsetsListener(insetTopView, (v, windowInsets) -> {
                 final Insets insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
                 v.setPadding(v.getPaddingLeft(), insets.top, v.getPaddingRight(), v.getPaddingBottom());
@@ -318,7 +370,7 @@ root.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlob
             });
         }
         final View insetBottomView = contentView.findViewWithTag("inset_bottom");
-        if (insetBottomView!= null) {
+        if (insetBottomView != null) {
             ViewCompat.setOnApplyWindowInsetsListener(insetBottomView, (v, windowInsets) -> {
                 final Insets insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
                 if (insets.bottom > 0 && v instanceof LinearLayout) {
@@ -334,7 +386,7 @@ root.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlob
         levitateView = contentView.findViewWithTag("levitate");
 
         // Make view tagged with 'levitate' scroll away and quickly return.
-        if (levitateView!= null) {
+        if (levitateView != null) {
             final CoordinatorLayout.LayoutParams layoutParams = new CoordinatorLayout.LayoutParams(
                     levitateView.getLayoutParams().width, levitateView.getLayoutParams().height);
             layoutParams.setBehavior(new QuickReturnBehavior());
@@ -439,14 +491,14 @@ root.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlob
                         || Environment.MEDIA_MOUNTED_READ_ONLY.equals(externalStorageState);
                 menu.findItem(R.id.wallet_options_restore_wallet).setEnabled(enableRestoreWalletOption);
                 final Boolean isEncrypted = viewModel.walletEncrypted.getValue();
-                if (isEncrypted!= null) {
+                if (isEncrypted != null) {
                     final MenuItem encryptKeysOption = menu.findItem(R.id.wallet_options_encrypt_keys);
-                    encryptKeysOption.setTitle(isEncrypted? R.string.wallet_options_encrypt_keys_change
+                    encryptKeysOption.setTitle(isEncrypted ? R.string.wallet_options_encrypt_keys_change
                             : R.string.wallet_options_encrypt_keys_set);
                     encryptKeysOption.setVisible(true);
                 }
                 final Boolean isLegacyFallback = viewModel.walletLegacyFallback.getValue();
-                if (isLegacyFallback!= null) {
+                if (isLegacyFallback != null) {
                     final MenuItem requestLegacyOption = menu.findItem(R.id.wallet_options_request_legacy);
                     requestLegacyOption.setVisible(isLegacyFallback);
                 }
@@ -517,8 +569,8 @@ root.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlob
     protected void onResume() {
         super.onResume();
 
-        if (exchangeRatesFragment!= null)
-            exchangeRatesFragment.setVisibility(config.isEnableExchangeRates()? View.VISIBLE : View.GONE);
+        if (exchangeRatesFragment != null)
+            exchangeRatesFragment.setVisibility(config.isEnableExchangeRates() ? View.VISIBLE : View.GONE);
 
         handler.postDelayed(() -> {
             // delayed start so that UI has enough time to initialize
@@ -529,7 +581,6 @@ root.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlob
     @Override
     protected void onPause() {
         handler.removeCallbacksAndMessages(null);
-
         super.onPause();
     }
 
@@ -542,7 +593,7 @@ root.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlob
         final AnimatorSet.Builder fragmentEnterAnimationBuilder = fragmentEnterAnimation.play(splashFadeOut);
 
         final View slideInLeftView = contentView.findViewWithTag("slide_in_left");
-        if (slideInLeftView!= null) {
+        if (slideInLeftView != null) {
             final ValueAnimator slide = ValueAnimator.ofFloat(-1.0f, 0.0f);
             slide.addUpdateListener(animator -> {
                 float animatedValue = (float) animator.getAnimatedValue();
@@ -558,7 +609,7 @@ root.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlob
         }
 
         final View slideInRightView = contentView.findViewWithTag("slide_in_right");
-        if (slideInRightView!= null) {
+        if (slideInRightView != null) {
             final ValueAnimator slide = ValueAnimator.ofFloat(1.0f, 0.0f);
             slide.addUpdateListener(animator -> {
                 float animatedValue = (float) animator.getAnimatedValue();
@@ -574,7 +625,7 @@ root.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlob
         }
 
         final View slideInTopView = contentView.findViewWithTag("slide_in_top");
-        if (slideInTopView!= null) {
+        if (slideInTopView != null) {
             final ValueAnimator slide = ValueAnimator.ofFloat(-1.0f, 0.0f);
             slide.addUpdateListener(animator -> {
                 float animatedValue = (float) animator.getAnimatedValue();
@@ -590,7 +641,7 @@ root.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlob
         }
 
         final View slideInBottomView = contentView.findViewWithTag("slide_in_bottom");
-        if (slideInBottomView!= null) {
+        if (slideInBottomView != null) {
             final ValueAnimator slide = ValueAnimator.ofFloat(1.0f, 0.0f);
             slide.addUpdateListener(animator -> {
                 float animatedValue = (float) animator.getAnimatedValue();
@@ -605,7 +656,7 @@ root.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlob
             fragmentEnterAnimationBuilder.before(slide).before(fadeIn);
         }
 
-        if (levitateView!= null) {
+        if (levitateView != null) {
             final ObjectAnimator elevate = ObjectAnimator.ofFloat(levitateView, "elevation", 0.0f,
                     levitateView.getElevation());
             elevate.setDuration(duration);
@@ -631,7 +682,7 @@ root.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlob
         if (NfcAdapter.ACTION_NDEF_DISCOVERED.equals(action)) {
             final String inputType = intent.getType();
             final NdefMessage ndefMessage = (NdefMessage) intent
-                   .getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES)[0];
+                    .getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES)[0];
             final byte[] input = Nfc.extractMimePayload(Constants.MIMETYPE_TRANSACTION, ndefMessage);
 
             new BinaryInputParser(inputType, input) {
@@ -662,7 +713,7 @@ root.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlob
         // The animation must be ended because of several graphical glitching that happens when the
         // Camera/SurfaceView is used while the animation is running.
         enterAnimation.end();
-        if (clickView!= null) {
+        if (clickView != null) {
             final ActivityOptionsCompat options = ActivityOptionsCompat.makeClipRevealAnimation(clickView, 0, 0,
                     clickView.getWidth(), clickView.getHeight());
             scanLauncher.launch(null, options);
@@ -674,14 +725,14 @@ root.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlob
     private static final class QuickReturnBehavior extends CoordinatorLayout.Behavior<View> {
         @Override
         public boolean onStartNestedScroll(final CoordinatorLayout coordinatorLayout, final View child,
-                final View directTargetChild, final View target, final int nestedScrollAxes, final int type) {
-            return (nestedScrollAxes & ViewCompat.SCROLL_AXIS_VERTICAL)!= 0;
+                                           final View directTargetChild, final View target, final int nestedScrollAxes, final int type) {
+            return (nestedScrollAxes & ViewCompat.SCROLL_AXIS_VERTICAL) != 0;
         }
 
         @Override
         public void onNestedScroll(final CoordinatorLayout coordinatorLayout, final View child, final View target,
-                final int dxConsumed, final int dyConsumed, final int dxUnconsumed, final int dyUnconsumed,
-                final int type) {
+                                   final int dxConsumed, final int dyConsumed, final int dxUnconsumed, final int dyUnconsumed,
+                                   final int type) {
             child.setTranslationY(Floats.constrainToRange(child.getTranslationY() - dyConsumed, -child.getHeight(), 0));
         }
     }
