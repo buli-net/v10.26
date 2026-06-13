@@ -23,11 +23,12 @@ dependencies {
     implementation 'androidx.sqlite:sqlite:2.4.0'
     implementation "androidx.room:room-runtime:2.6.1"
     annotationProcessor "androidx.room:room-compiler:2.6.1"
-    implementation 'org.bitcoinj:bitcoinj-core:0.16.5'   // Giữ nguyên, không nâng cấp
+    implementation 'org.bitcoinj:bitcoinj-core:0.16.5'
     implementation 'com.google.guava:guava:33.4.0-android'
     implementation 'com.google.zxing:core:3.5.3'
-    // Giữ nguyên okhttp 3.14.9 (vì nâng lên 4.x có thể ảnh hưởng đến code nếu dùng API deprecated)
+    //noinspection GradleDependency
     implementation 'com.squareup.okhttp3:okhttp:3.14.9'
+    //noinspection GradleDependency
     implementation 'com.squareup.okhttp3:logging-interceptor:3.14.9'
     implementation 'com.squareup.moshi:moshi:1.11.0'
     implementation 'org.slf4j:slf4j-api:2.0.9'
@@ -45,12 +46,6 @@ android {
 
     defaultConfig {
         applicationId 'net.buli'
-        // *** THÊM targetSdk và minSdk (giữ nguyên minSdk cũ của app nếu có) ***
-        // Nếu app trước đây không khai báo, mặc định sẽ lấy từ manifest. Thêm vào đây để rõ ràng.
-        minSdkVersion 21          // Giữ nguyên API 21 (Android 5.0) – không nâng lên 26 để tránh lỗi tương thích
-        targetSdkVersion 34       // Bắt buộc để Google Play Protect đánh giá tích cực hơn
-        versionCode 1
-        versionName "1.0"
     }
 
     buildTypes {
@@ -59,15 +54,9 @@ android {
             shrinkResources true
             crunchPngs false
             proguardFile 'proguard.cfg'
-            // *** BỔ SUNG: thêm các rule proguard mặc định để làm rối code mạnh hơn ***
-            proguardFile getDefaultProguardFile('proguard-android-optimize.txt')
         }
         debug {
             debuggable true
-            // *** Đối với bản debug, vẫn bật minify để test nhưng giữ debuggable ***
-            minifyEnabled true
-            proguardFile 'proguard.cfg'
-            proguardFile getDefaultProguardFile('proguard-android-optimize.txt')
         }
     }
 
@@ -115,7 +104,7 @@ android {
         exclude 'META-INF/*.kotlin_module'
         exclude 'META-INF/kotlin-project-structure-metadata.json'
         exclude 'META-INF/proguard/**'
-        exclude 'META-INF/services/**'
+        exclude 'META-INF/services/**' // ineffective, for some reason
         exclude 'META-INF/**/coroutines.pro'
         exclude 'META-INF/androidx/annotation/annotation/LICENSE.txt'
         exclude 'DebugProbesKt.bin'
@@ -129,12 +118,6 @@ android {
         exclude 'org/bitcoinj/crypto/mnemonic/wordlist/english.txt'
         exclude 'org/bitcoinj/crypto/cacerts'
         exclude 'org.bitcoin.*.checkpoints.txt'
-        // *** BỔ SUNG: loại thêm một số file metadata dư thừa ***
-        exclude 'META-INF/DEPENDENCIES'
-        exclude 'META-INF/NOTICE'
-        exclude 'META-INF/LICENSE'
-        exclude 'META-INF/LICENSE.txt'
-        exclude 'META-INF/NOTICE.txt'
     }
 }
 
