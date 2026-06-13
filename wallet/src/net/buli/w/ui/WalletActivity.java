@@ -177,13 +177,19 @@ root.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlob
 int syncTextColor = tv.getCurrentTextColor();
 percent.setTextColor(syncTextColor);
 //end
-// --- LẤY MÀU BTC TỪ TIÊU ĐỀ "Bitcoin" ---
-int btcColor = syncTextColor; // fallback
-ViewGroup decor = (ViewGroup) getWindow().getDecorView();
-TextView title = findTextViewWithText(decor, "Bitcoin");
-if (title != null) {
-    btcColor = title.getCurrentTextColor();
+
+// thay đoạn tìm "Bitcoin" bằng:
+int btcColor = syncTextColor;   // <-- khai báo luôn ở đây
+if (tv != null) {
+    btcColor = tv.getCurrentTextColor(); // thực ra = syncTextColor
 }
+// --- LẤY MÀU BTC TỪ TIÊU ĐỀ "Bitcoin" ---
+//int btcColor = syncTextColor; // fallback
+//ViewGroup decor = (ViewGroup) getWindow().getDecorView();
+//TextView title = findTextViewWithText(decor, "Bitcoin");
+//if (title != null) {
+  //  btcColor = title.getCurrentTextColor();
+//}
 bar.setProgressTintList(android.content.res.ColorStateList.valueOf(btcColor));
 bar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(btcColor & 0x33FFFFFF));
 //end
