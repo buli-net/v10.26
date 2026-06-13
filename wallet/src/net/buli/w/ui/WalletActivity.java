@@ -172,16 +172,21 @@ root.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlob
             percent.setVisibility(View.GONE);
             return;
         }
-                    // lấy màu động
-int syncTextColor = tv.getCurrentTextColor();   // màu của chữ "Synchronizing..."
+                
+// lấy màu động
+int syncTextColor = tv.getCurrentTextColor();
 percent.setTextColor(syncTextColor);
-
-View balance = findViewById(R.id.wallet_balance);
-if (balance instanceof TextView) {
-    int btcColor = ((TextView) balance).getCurrentTextColor(); // màu số dư BTC
-    bar.setProgressTintList(android.content.res.ColorStateList.valueOf(btcColor));
-    bar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(btcColor & 0x33FFFFFF));
+//end
+// --- LẤY MÀU BTC TỪ TIÊU ĐỀ "Bitcoin" ---
+int btcColor = syncTextColor; // fallback
+ViewGroup decor = (ViewGroup) getWindow().getDecorView();
+TextView title = findTextViewWithText(decor, "Bitcoin");
+if (title != null) {
+    btcColor = title.getCurrentTextColor();
 }
+bar.setProgressTintList(android.content.res.ColorStateList.valueOf(btcColor));
+bar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(btcColor & 0x33FFFFFF));
+//end
         int[] loc = new int[2];
         tv.getLocationOnScreen(loc);
         int left = loc[0];
@@ -208,7 +213,16 @@ if (balance instanceof TextView) {
         percentX = Math.max(percentX, left + (int)(4 * d));
 
         percent.setX(percentX);
-        percent.setY(top);
+        // canh % theo baseline của chữ sync
+        int tvBaseline = tv.getBaseline();
+        int pBaseline = percent.getBaseline();
+        if (tvBaseline > 0 && pBaseline > 0) {
+        percent.setY(top + tvBaseline - pBaseline);
+        } else {
+      // fallback nếu baseline chưa có
+        percent.setY(top + tv.getHeight() - percent.getMeasuredHeight());
+        }
+        //end
         percent.setVisibility(View.VISIBLE);
         bar.setX(left);
         bar.setY(top + tv.getHeight() + (int)(4 * d));
@@ -235,6 +249,7 @@ if (balance instanceof TextView) {
             bar.setProgress(prog);
         }
     }
+    // tìm chữ bitcoin trên màn hình, lấy màu mẫu để tô màu cho thanh bar sync
     private TextView findSync(ViewGroup g) {
         for (int i = 0; i < g.getChildCount(); i++) {
             View v = g.getChildAt(i);
@@ -247,6 +262,21 @@ if (balance instanceof TextView) {
         }
         return null;
     }
+
+//end//
+private TextView findTextViewWithText(ViewGroup g, String txt) {
+    for (int i = 0; i < g.getChildCount(); i++) {
+        View v = g.getChildAt(i);
+        if (v instanceof TextView && ((TextView) v).getText().toString().contains(txt))
+            return (TextView) v;
+        if (v instanceof ViewGroup) {
+            TextView t = findTextViewWithText((ViewGroup) v, txt);
+            if (t != null) return t;
+        }
+    }
+    return null;
+}
+    
     private View findQr(ViewGroup g) {
         for (int i = 0; i < g.getChildCount(); i++) {
             View v = g.getChildAt(i);
@@ -265,7 +295,7 @@ if (balance instanceof TextView) {
         return l[0];
     }
 });
-        //end
+        //end add sync bar
 
         
         final View insetTopView = contentView.findViewWithTag("inset_top");
