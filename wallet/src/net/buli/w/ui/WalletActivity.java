@@ -154,17 +154,12 @@ final SharedPreferences prefs = getSharedPreferences("sync_prefs", MODE_PRIVATE)
 final int[] lastProg = { -1 };
 final ProgressBar bar = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
 bar.setMax(10000);
-boolean isNight = (getResources().getConfiguration().uiMode & android.content.res.Configuration.UI_MODE_NIGHT_MASK) == android.content.res.Configuration.UI_MODE_NIGHT_YES;
-int syncColor = isNight ? 0xFFFFCC99 : 0xFFB26A00;
-bar.setProgressTintList(android.content.res.ColorStateList.valueOf(syncColor));
-bar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(isNight ? 0x33FFFFFF : 0x33000000));
 bar.setVisibility(View.GONE);
 ((ViewGroup) getWindow().getDecorView()).addView(bar,
         new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,
                 (int) (3 * getResources().getDisplayMetrics().density)));
 final TextView percent = new TextView(this);
 percent.setTextSize(12);
-percent.setTextColor(syncColor);
 percent.setVisibility(View.GONE);
 ((ViewGroup) getWindow().getDecorView()).addView(percent);
 
@@ -177,6 +172,16 @@ root.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlob
             percent.setVisibility(View.GONE);
             return;
         }
+                    // lấy màu động
+int syncTextColor = tv.getCurrentTextColor();   // màu của chữ "Synchronizing..."
+percent.setTextColor(syncTextColor);
+
+View balance = findViewById(R.id.wallet_balance);
+if (balance instanceof TextView) {
+    int btcColor = ((TextView) balance).getCurrentTextColor(); // màu số dư BTC
+    bar.setProgressTintList(android.content.res.ColorStateList.valueOf(btcColor));
+    bar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(btcColor & 0x33FFFFFF));
+}
         int[] loc = new int[2];
         tv.getLocationOnScreen(loc);
         int left = loc[0];
