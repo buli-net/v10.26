@@ -495,6 +495,10 @@ bar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(btc
         final FragmentManager fragmentManager = getSupportFragmentManager();
         MaybeMaintenanceFragment.add(fragmentManager);
         AlertDialogsFragment.add(fragmentManager);
+
+        getSharedPreferences("notif", 0).registerOnSharedPreferenceChangeListener(
+            (sp, key) -> runOnUiThread(this::invalidateOptionsMenu)
+        );
     }
 
     // --- HELPER METHODS (đã đưa ra ngoài listener) ---
@@ -663,7 +667,7 @@ bar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(btc
         if (NfcAdapter.ACTION_NDEF_DISCOVERED.equals(action)) {
             final String inputType = intent.getType();
             final NdefMessage ndefMessage = (NdefMessage) intent
-                .getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES)[0];
+               .getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES)[0];
             final byte[] input = Nfc.extractMimePayload(Constants.MIMETYPE_TRANSACTION, ndefMessage);
 
             new BinaryInputParser(inputType, input) {
