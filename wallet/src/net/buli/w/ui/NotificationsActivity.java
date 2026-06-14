@@ -4,7 +4,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.widget.LinearLayout; 
 import android.widget.ScrollView; 
-import import android.widget.TextView;
+import android.widget.TextView;
 import android.widget.Toast;
 import android.graphics.Color; 
 import android.view.Gravity;
