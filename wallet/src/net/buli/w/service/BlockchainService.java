@@ -23,7 +23,7 @@ import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.ComponentCallbacks2;
 import android.content.Context;
-import android.content.Intent;
+import import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.ServiceInfo;
@@ -338,11 +338,29 @@ try {
         public void onPeerConnected(final Peer peer, final int peerCount) {
             postDelayedStopSelf(Constants.SERVICE_STOP_DELAY_AFTER_EVENT);
             changed(peerCount);
+            try {
+                org.json.JSONObject o = new org.json.JSONObject();
+                o.put("time", System.currentTimeMillis());
+                o.put("title", "Peer connected");
+                o.put("text", peer.getAddress().toString() + " ("+peerCount+" peers)");
+                o.put("extra", "Version: "+peer.getPeerVersionMessage().subVer);
+                o.put("read", false);
+                getSharedPreferences("notif",0).edit().putString("n_"+System.currentTimeMillis(), o.toString()).apply();
+            } catch(Exception e){}
         }
 
         @Override
         public void onPeerDisconnected(final Peer peer, final int peerCount) {
             changed(peerCount);
+            try {
+                org.json.JSONObject o = new org.json.JSONObject();
+                o.put("time", System.currentTimeMillis());
+                o.put("title", "Peer disconnected");
+                o.put("text", peer.getAddress().toString() + " ("+peerCount+" peers)");
+                o.put("extra", "");
+                o.put("read", false);
+                getSharedPreferences("notif",0).edit().putString("n_"+System.currentTimeMillis(), o.toString()).apply();
+            } catch(Exception e){}
         }
 
         private void changed(final int numPeers) {
@@ -667,6 +685,16 @@ try {
                 final boolean isReplayedTx = confidenceType == ConfidenceType.BUILDING && replaying;
                 if (!isReplayedTx)
                     notifyCoinsReceived(address, amount, tx.getTxId());
+            } else if (amount.isNegative()) {
+                try {
+                    org.json.JSONObject o = new org.json.JSONObject();
+                    o.put("time", System.currentTimeMillis());
+                    o.put("title", "BTC sent");
+                    o.put("text", amount.negate().toFriendlyString());
+                    o.put("extra", "TX: "+tx.getTxId().toString());
+                    o.put("read", false);
+                    getSharedPreferences("notif",0).edit().putString("n_"+System.currentTimeMillis(), o.toString()).apply();
+                } catch(Exception e){}
             }
         });
         impediments = new ImpedimentsLiveData(application);
