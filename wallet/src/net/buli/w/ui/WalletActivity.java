@@ -100,6 +100,7 @@ public final class WalletActivity extends AbstractWalletActivity {
 
     private AbstractWalletActivityViewModel walletActivityViewModel;
     private WalletActivityViewModel viewModel;
+    private SharedPreferences.OnSharedPreferenceChangeListener notifListener;
 
     private final ActivityResultLauncher<Void> scanLauncher =
             registerForActivityResult(new ScanActivity.Scan(), input -> {
@@ -496,9 +497,8 @@ bar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(btc
         MaybeMaintenanceFragment.add(fragmentManager);
         AlertDialogsFragment.add(fragmentManager);
 
-        getSharedPreferences("notif", 0).registerOnSharedPreferenceChangeListener(
-            (sp, key) -> runOnUiThread(this::invalidateOptionsMenu)
-        );
+        notifListener = (sp, key) -> runOnUiThread(this::invalidateOptionsMenu);
+        getSharedPreferences("notif", 0).registerOnSharedPreferenceChangeListener(notifListener);
     }
 
     // --- HELPER METHODS (đã đưa ra ngoài listener) ---
