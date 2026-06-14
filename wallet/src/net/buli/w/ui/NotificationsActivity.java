@@ -48,7 +48,6 @@ public class NotificationsActivity extends Activity {
         root.setBackgroundColor(isDark ? 0xFF121212 : 0xFFFFFFFF);
         root.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
 
-        // Tabs
         tabBar = new LinearLayout(this);
         tabBar.setOrientation(LinearLayout.HORIZONTAL);
         String[] tabs = {"All", "Received", "Sent", "Peer", "Sync"};
@@ -161,8 +160,8 @@ public class NotificationsActivity extends Activity {
                             prefs.edit().putString(obj.getString("_key"), obj.toString()).apply();
                             tv.setTextColor(readColor);
                         }
-                        showDetail(obj, finalType);
                     } catch (Exception ignored) {}
+                    showDetail(obj, finalType);
                 });
                 listContainer.addView(tv);
             } catch (Exception ignored) {}
@@ -198,32 +197,36 @@ public class NotificationsActivity extends Activity {
 
     private void showDetail(JSONObject o, String type) {
         try {
-            JSONObject extra = new JSONObject(o.optString("extra", "{}"));
+            String extraRaw = o.optString("extra", "");
+            JSONObject extra;
+            try { extra = new JSONObject(extraRaw); } 
+            catch (Exception e) { extra = new JSONObject(); extra.put("raw", extraRaw); }
+            
             StringBuilder sb = new StringBuilder();
             String time = dateFormat.format(new Date(o.optLong("time")));
 
             if ("received".equals(type)) {
                 sb.append("Type: Received\n");
                 sb.append("Amount: ").append(o.optString("text")).append("\n");
-                sb.append("From: ").append(extra.optString("address", "N/A")).append("\n");
-                sb.append("TxID: ").append(extra.optString("txid", "N/A")).append("\n");
+                sb.append("From: ").append(extra.optString("address", extra.optString("raw","N/A"))).append("\n");
+                if (extra.has("txid")) sb.append("TxID: ").append(extra.optString("txid")).append("\n");
                 sb.append("Time: ").append(time);
             } else if ("sent".equals(type)) {
                 sb.append("Type: Sent\n");
                 sb.append("Amount: ").append(o.optString("text")).append("\n");
-                sb.append("To: ").append(extra.optString("to", "N/A")).append("\n");
-                sb.append("TxID: ").append(extra.optString("txid", "N/A")).append("\n");
-                sb.append("Fee: ").append(extra.optString("fee", "0")).append(" BTC\n");
+                sb.append("To: ").append(extra.optString("to", extra.optString("raw","N/A"))).append("\n");
+                if (extra.has("txid")) sb.append("TxID: ").append(extra.optString("txid")).append("\n");
+                if (extra.has("fee")) sb.append("Fee: ").append(extra.optString("fee")).append(" BTC\n");
                 sb.append("Time: ").append(time);
             } else if ("peer".equals(type)) {
                 sb.append("Type: Peer\n");
                 sb.append("Address: ").append(o.optString("text")).append("\n");
-                sb.append("Height: ").append(extra.optString("height", "")).append("\n");
+                sb.append(extraRaw).append("\n");
                 sb.append("Time: ").append(time);
             } else {
                 sb.append("Type: Sync\n");
                 sb.append(o.optString("text")).append("\n");
-                sb.append(o.optString("extra")).append("\n");
+                sb.append(extraRaw).append("\n");
                 sb.append("Time: ").append(time);
             }
 
@@ -246,6 +249,8 @@ public class NotificationsActivity extends Activity {
                         startActivity(Intent.createChooser(i, "Share"));
                     })
                     .show();
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_LONG).show();
+        }
     }
 }
