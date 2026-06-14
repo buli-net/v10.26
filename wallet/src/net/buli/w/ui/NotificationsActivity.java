@@ -10,6 +10,8 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.ViewGroup;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
@@ -50,7 +52,7 @@ public class NotificationsActivity extends Activity {
 
         tabBar = new LinearLayout(this);
         tabBar.setOrientation(LinearLayout.HORIZONTAL);
-        String[] tabs = {"All", "Received", "Sent", "Peer", "Sync"};
+        String[] tabs = {"All", "Received", "Sent", "Peer", "Sync", "Mempool"};
         for (String t : tabs) {
             Button btn = new Button(this);
             btn.setText(t);
@@ -92,6 +94,52 @@ public class NotificationsActivity extends Activity {
     private void loadList() {
         listContainer.removeAllViews();
         int readColor = isDark ? 0xFFAAAAAA : 0xFF666666;
+
+        if (currentFilter.equals("mempool")) {
+            addMempoolTitle("Mempool Live");
+            WebView wv1 = new WebView(this);
+            wv1.getSettings().setJavaScriptEnabled(true);
+            wv1.getSettings().setDomStorageEnabled(true);
+            wv1.setBackgroundColor(Color.TRANSPARENT);
+            wv1.setWebViewClient(new WebViewClient() {
+                @Override public void onPageFinished(WebView v, String u) {
+                    v.evaluateJavascript("document.body.style.background='#121212';try{document.querySelector('header').remove();}catch(e){}try{document.querySelector('footer').remove();}catch(e){}", null);
+                }
+            });
+            wv1.loadUrl("https://mempool.space/mempool");
+            listContainer.addView(wv1, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 800));
+
+            addMempoolTitle("Next Blocks");
+            WebView wv2 = new WebView(this);
+            wv2.getSettings().setJavaScriptEnabled(true);
+            wv2.setBackgroundColor(Color.TRANSPARENT);
+            wv2.setWebViewClient(new WebViewClient() {
+                @Override public void onPageFinished(WebView v, String u) {
+                    v.evaluateJavascript("document.body.style.background='#000';try{document.querySelector('header').style.display='none';}catch(e){}try{document.querySelector('footer').style.display='none';}catch(e){}let m=document.querySelector('app-blocks');if(m){document.body.innerHTML='';document.body.appendChild(m);}", null);
+                }
+            });
+            wv2.loadUrl("https://mempool.space/");
+            listContainer.addView(wv2, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 600));
+
+            addMempoolTitle("Next Block Details");
+            WebView wv3 = new WebView(this);
+            wv3.getSettings().setJavaScriptEnabled(true);
+            wv3.setBackgroundColor(Color.TRANSPARENT);
+            wv3.setWebViewClient(new WebViewClient() {
+                @Override public void onPageFinished(WebView v, String u) {
+                    v.evaluateJavascript("document.body.style.background='#121212';try{document.querySelector('header').style.display='none';}catch(e){}try{document.querySelector('footer').style.display='none';}catch(e){}setTimeout(()=>{let b=document.querySelector('app-block-widget');if(b){document.body.innerHTML='';document.body.appendChild(b);}},1500);", null);
+                }
+            });
+            wv3.loadUrl("https://mempool.space/");
+            listContainer.addView(wv3, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 700));
+
+            Button refresh = new Button(this);
+            refresh.setText("Refresh");
+            refresh.setAllCaps(false);
+            refresh.setOnClickListener(v -> loadList());
+            listContainer.addView(refresh);
+            return;
+        }
 
         LinearLayout topBar = new LinearLayout(this);
         topBar.setOrientation(LinearLayout.HORIZONTAL);
@@ -214,6 +262,15 @@ public class NotificationsActivity extends Activity {
             empty.setTextColor(readColor);
             listContainer.addView(empty);
         }
+    }
+
+    private void addMempoolTitle(String label) {
+        TextView tv = new TextView(this);
+        tv.setText("● " + label);
+        tv.setTextSize(16);
+        tv.setPadding(32, 32, 32, 12);
+        tv.setTextColor(isDark ? 0xFFFFFFFF : 0xFF000000);
+        listContainer.addView(tv);
     }
 
     private boolean matchesFilter(JSONObject o) {
