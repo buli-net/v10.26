@@ -93,8 +93,11 @@ public class NotificationsActivity extends Activity {
         listContainer.removeAllViews();
         int readColor = isDark ? 0xFFAAAAAA : 0xFF666666;
 
+        LinearLayout topBar = new LinearLayout(this);
+        topBar.setOrientation(LinearLayout.HORIZONTAL);
+
         Button markAll = new Button(this);
-        markAll.setText("Mark all as read (" + currentFilter + ")");
+        markAll.setText("Mark all as read");
         markAll.setAllCaps(false);
         markAll.setOnClickListener(v -> {
             int count = 0;
@@ -114,7 +117,35 @@ public class NotificationsActivity extends Activity {
             Toast.makeText(this, "Marked " + count + " as read", Toast.LENGTH_SHORT).show();
             loadList();
         });
-        listContainer.addView(markAll);
+
+        Button deleteAll = new Button(this);
+        deleteAll.setText("Delete all");
+        deleteAll.setAllCaps(false);
+        deleteAll.setOnClickListener(v -> {
+            new AlertDialog.Builder(this)
+                .setTitle("Delete all?")
+                .setMessage("Delete all " + currentFilter + " notifications?")
+                .setPositiveButton("Delete", (d,w) -> {
+                    SharedPreferences.Editor ed = prefs.edit();
+                    int del = 0;
+                    for (String k : new ArrayList<>(prefs.getAll().keySet())) {
+                        if (!k.startsWith("n_")) continue;
+                        try {
+                            JSONObject o = new JSONObject(prefs.getString(k, ""));
+                            if (matchesFilter(o)) { ed.remove(k); del++; }
+                        } catch (Exception ignored) {}
+                    }
+                    ed.apply();
+                    Toast.makeText(this, "Deleted " + del, Toast.LENGTH_SHORT).show();
+                    loadList();
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
+        });
+
+        topBar.addView(markAll, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+        topBar.addView(deleteAll, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+        listContainer.addView(topBar);
 
         List<JSONObject> items = new ArrayList<>();
         List<String> keys = new ArrayList<>(prefs.getAll().keySet());
@@ -171,10 +202,7 @@ public class NotificationsActivity extends Activity {
             Button more = new Button(this);
             more.setText("Load more (" + (items.size() - end) + ")");
             more.setAllCaps(false);
-            more.setOnClickListener(v -> {
-                currentPage++;
-                loadList();
-            });
+            more.setOnClickListener(v -> { currentPage++; loadList(); });
             listContainer.addView(more);
         }
 
@@ -221,12 +249,16 @@ public class NotificationsActivity extends Activity {
             } else if ("peer".equals(type)) {
                 sb.append("Type: Peer\n");
                 sb.append("Address: ").append(o.optString("text")).append("\n");
-                sb.append(extraRaw).append("\n");
+                if (extra.has("height")) sb.append("Height: ").append(extra.optString("height")).append("\n");
+                if (extra.has("peers")) sb.append("Peers: ").append(extra.optString("peers")).append("\n");
+                sb.append(extra.optString("raw","")).append("\n");
                 sb.append("Time: ").append(time);
             } else {
                 sb.append("Type: Sync\n");
                 sb.append(o.optString("text")).append("\n");
-                sb.append(extraRaw).append("\n");
+                if (extra.has("progress")) sb.append("Progress: ").append(extra.optString("progress")).append("%\n");
+                if (extra.has("blocks")) sb.append("Blocks: ").append(extra.optString("blocks")).append("\n");
+                sb.append(extra.optString("raw","")).append("\n");
                 sb.append("Time: ").append(time);
             }
 
