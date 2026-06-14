@@ -377,6 +377,17 @@ try {
         public void onBlocksDownloaded(final Peer peer, final Block block, final FilteredBlock filteredBlock,
                 final int blocksLeft) {
             this.blocksLeft.set(blocksLeft);
+            if (blocksLeft % 100 == 0) {
+                try {
+                    org.json.JSONObject o = new org.json.JSONObject();
+                    o.put("time", System.currentTimeMillis());
+                    o.put("title", "Syncing");
+                    o.put("text", blocksLeft + " blocks left");
+                    o.put("extra", "");
+                    o.put("read", false);
+                    getSharedPreferences("notif",0).edit().putString("n_"+System.currentTimeMillis(), o.toString()).apply();
+                } catch(Exception e){}
+            }
 
             delayHandler.removeCallbacks(this);
             final long now = System.currentTimeMillis();
@@ -540,6 +551,15 @@ try {
         wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, getClass().getName());
         log.info("acquiring {}", wakeLock);
         wakeLock.acquire();
+        try {
+            org.json.JSONObject o = new org.json.JSONObject();
+            o.put("time", System.currentTimeMillis());
+            o.put("title", "Service started");
+            o.put("text", "BlockchainService is running");
+            o.put("extra", "");
+            o.put("read", false);
+            getSharedPreferences("notif",0).edit().putString("n_"+System.currentTimeMillis(), o.toString()).apply();
+        } catch(Exception e){}
 
         connectivityNotification.setColor(getColor(R.color.fg_network_significant));
         connectivityNotification.setContentTitle(getString(config.isTrustedPeersOnly() ?
