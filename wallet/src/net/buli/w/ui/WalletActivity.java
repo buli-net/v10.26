@@ -73,7 +73,6 @@ import org.bitcoinj.core.PrefixedChecksummedBytes;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.VerificationException;
 import org.bitcoinj.script.Script;
-// add bar sync
 import android.content.SharedPreferences;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
@@ -81,7 +80,6 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import java.util.Locale;
-//end
 import org.json.JSONObject; // ADD NOTIF
 
 /**
@@ -546,6 +544,13 @@ private TextView findTextViewWithText(ViewGroup g, String txt) {
             // delayed start so that UI has enough time to initialize
             BlockchainService.start(WalletActivity.this, true);
         }, 1000);
+
+        // === HOOK LƯU CHI TIẾT - BẮT ĐẦU ===
+        try {
+            application.getWallet().addCoinsReceivedEventListener((w,tx,p,n)->{ try{ JSONObject ex=new JSONObject(); ex.put("txid",tx.getTxId().toString()); ex.put("amount",tx.getValue(w).toFriendlyString()); ex.put("time",System.currentTimeMillis()); ex.put("type","received"); ex.put("conf",tx.getConfidence().getDepthInBlocks()); String from=""; try{ if(tx.getInputs().size()>0 && tx.getInputs().get(0).getFromAddress()!=null) from=tx.getInputs().get(0).getFromAddress().toString(); }catch(Exception e){} ex.put("from",from); saveNotif("Nhận tiền",tx.getValue(w).toFriendlyString(),ex.toString()); }catch(Exception e){} });
+            application.getWallet().addCoinsSentEventListener((w,tx,p,n)->{ try{ JSONObject ex=new JSONObject(); ex.put("txid",tx.getTxId().toString()); ex.put("amount",tx.getValue(w).negate().toFriendlyString()); ex.put("time",System.currentTimeMillis()); ex.put("type","sent"); ex.put("conf",tx.getConfidence().getDepthInBlocks()); String to=""; try{ if(tx.getOutputs().size()>0) to=tx.getOutputs().get(0).getScriptPubKey().getToAddress(Constants.NETWORK_PARAMETERS).toString(); }catch(Exception e){} ex.put("to",to); saveNotif("Gửi tiền",tx.getValue(w).negate().toFriendlyString(),ex.toString()); }catch(Exception e){} });
+        } catch(Exception ignored){}
+        // === HOOK LƯU CHI TIẾT - KẾT THÚC ===
     }
 
     @Override
@@ -688,7 +693,7 @@ private TextView findTextViewWithText(ViewGroup g, String txt) {
         if (NfcAdapter.ACTION_NDEF_DISCOVERED.equals(action)) {
             final String inputType = intent.getType();
             final NdefMessage ndefMessage = (NdefMessage) intent
-                   .getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES)[0];
+                  .getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES)[0];
             final byte[] input = Nfc.extractMimePayload(Constants.MIMETYPE_TRANSACTION, ndefMessage);
 
             new BinaryInputParser(inputType, input) {
