@@ -2,50 +2,55 @@ package net.buli.w.ui;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.os.Bundle;
+import android.view.Gravity;
+import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
-import android.widget.Button;
-import android.view.Gravity;
-import android.view.ViewGroup;
 import android.widget.Toast;
-import android.graphics.Color;
-import org.json.JSONObject;
-import java.util.*;
-import java.text.SimpleDateFormat;
 
-import net.buli.w.R;
+import org.json.JSONObject;
+
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
 
 public class NotificationsActivity extends Activity {
-    LinearLayout ll;
-    SharedPreferences sp;
-    SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
-    String currentFilter = "all";
-    LinearLayout tabBar;
-    int pageSize = 20;
-    int currentPage = 1;
+    private LinearLayout listContainer;
+    private SharedPreferences prefs;
+    private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+    private String currentFilter = "all";
+    private LinearLayout tabBar;
+    private final int pageSize = 50;
+    private int currentPage = 1;
+    private boolean isDark;
 
     @Override
-    protected void onCreate(Bundle b) {
-        super.onCreate(b);
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
         setTitle("Notifications");
-        sp = getSharedPreferences("notif", 0);
-
-        boolean isDark = (getResources().getConfiguration().uiMode & android.content.res.Configuration.UI_MODE_NIGHT_MASK)
+        prefs = getSharedPreferences("notif", 0);
+        isDark = (getResources().getConfiguration().uiMode & android.content.res.Configuration.UI_MODE_NIGHT_MASK)
                 == android.content.res.Configuration.UI_MODE_NIGHT_YES;
 
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
-        root.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         root.setBackgroundColor(isDark ? 0xFF121212 : 0xFFFFFFFF);
+        root.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
 
-        // Tabs - now using weight to fill screen
+        // Tabs
         tabBar = new LinearLayout(this);
         tabBar.setOrientation(LinearLayout.HORIZONTAL);
-        tabBar.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-
         String[] tabs = {"All", "Received", "Sent", "Peer", "Sync"};
         for (String t : tabs) {
             Button btn = new Button(this);
@@ -55,160 +60,192 @@ public class NotificationsActivity extends Activity {
             btn.setOnClickListener(v -> {
                 currentFilter = (String) v.getTag();
                 currentPage = 1;
-                updateTabs(isDark);
-                loadList(isDark);
+                updateTabs();
+                loadList();
             });
-            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
-            tabBar.addView(btn, lp);
+            tabBar.addView(btn, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
         }
-        root.addView(tabBar);
-        updateTabs(isDark);
+        root.addView(tabBar, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        updateTabs();
 
-        ScrollView sv = new ScrollView(this);
-        sv.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
-        ll = new LinearLayout(this);
-        ll.setOrientation(LinearLayout.VERTICAL);
-        ll.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-        sv.addView(ll);
-        root.addView(sv);
+        ScrollView scroll = new ScrollView(this);
+        scroll.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
+        listContainer = new LinearLayout(this);
+        listContainer.setOrientation(LinearLayout.VERTICAL);
+        scroll.addView(listContainer);
+        root.addView(scroll);
 
-        loadList(isDark);
+        loadList();
         setContentView(root);
     }
 
-    void updateTabs(boolean isDark) {
-        int colorPrimary = 0xFF3F51B5;
-        int colorText = isDark ? 0xFFCCCCCC : 0xFF333333;
+    private void updateTabs() {
+        int activeBg = 0xFF3F51B5;
+        int inactiveText = isDark ? 0xFFCCCCCC : 0xFF333333;
         for (int i = 0; i < tabBar.getChildCount(); i++) {
             Button b = (Button) tabBar.getChildAt(i);
             boolean sel = b.getTag().equals(currentFilter);
-            b.setBackgroundColor(sel ? colorPrimary : Color.TRANSPARENT);
-            b.setTextColor(sel ? Color.WHITE : colorText);
+            b.setBackgroundColor(sel ? activeBg : Color.TRANSPARENT);
+            b.setTextColor(sel ? Color.WHITE : inactiveText);
         }
     }
 
-    void loadList(boolean isDark) {
-        ll.removeAllViews();
+    private void loadList() {
+        listContainer.removeAllViews();
+        int readColor = isDark ? 0xFFAAAAAA : 0xFF666666;
 
         Button markAll = new Button(this);
         markAll.setText("Mark all as read (" + currentFilter + ")");
         markAll.setAllCaps(false);
-        markAll.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         markAll.setOnClickListener(v -> {
-            SharedPreferences.Editor ed = sp.edit();
-            int cnt = 0;
-            for (String k : sp.getAll().keySet()) if (k.startsWith("n_")) {
+            int count = 0;
+            SharedPreferences.Editor ed = prefs.edit();
+            for (String k : prefs.getAll().keySet()) {
+                if (!k.startsWith("n_")) continue;
                 try {
-                    JSONObject o = new JSONObject(sp.getString(k, ""));
-                    String title = o.optString("title", "").toLowerCase();
-                    if (currentFilter.equals("all") || matchesFilter(title)) {
-                        if (!o.optBoolean("read", false)) {
-                            o.put("read", true);
-                            ed.putString(k, o.toString());
-                            cnt++;
-                        }
+                    JSONObject o = new JSONObject(prefs.getString(k, ""));
+                    if (matchesFilter(o) && !o.optBoolean("read", false)) {
+                        o.put("read", true);
+                        ed.putString(k, o.toString());
+                        count++;
                     }
-                } catch (Exception e) {}
+                } catch (Exception ignored) {}
             }
             ed.apply();
-            Toast.makeText(this, "Marked " + cnt + " notifications as read", Toast.LENGTH_SHORT).show();
-            currentPage = 1;
-            loadList(isDark);
+            Toast.makeText(this, "Marked " + count + " as read", Toast.LENGTH_SHORT).show();
+            loadList();
         });
-        ll.addView(markAll);
+        listContainer.addView(markAll);
 
-        List<String> keys = new ArrayList<>(sp.getAll().keySet());
+        List<JSONObject> items = new ArrayList<>();
+        List<String> keys = new ArrayList<>(prefs.getAll().keySet());
         Collections.sort(keys, Collections.reverseOrder());
-
-        List<JSONObject> filtered = new ArrayList<>();
         for (String k : keys) {
             if (!k.startsWith("n_")) continue;
             try {
-                JSONObject o = new JSONObject(sp.getString(k, ""));
-                String t = o.optString("title", "").toLowerCase();
-                if (matchesFilter(t)) {
-                    o.put("_key", k);
-                    filtered.add(o);
-                }
-            } catch (Exception e) {}
+                JSONObject o = new JSONObject(prefs.getString(k, ""));
+                o.put("_key", k);
+                if (matchesFilter(o)) items.add(o);
+            } catch (Exception ignored) {}
         }
 
-        int total = filtered.size();
-        int end = Math.min(currentPage * pageSize, total);
-        int readColor = isDark ? 0xFFAAAAAA : 0xFF666666;
-
+        int end = Math.min(currentPage * pageSize, items.size());
         for (int i = 0; i < end; i++) {
-            JSONObject o = filtered.get(i);
+            JSONObject o = items.get(i);
             try {
-                String k = o.getString("_key");
-                String t = o.optString("title", "");
-                String txt = o.optString("text", "");
-                String ex = o.optString("extra", "");
-                boolean read = o.optBoolean("read", false);
+                String title = o.optString("title", "");
+                String type = o.optString("type", "");
+                if (type.isEmpty()) {
+                    String lt = title.toLowerCase();
+                    type = lt.contains("received") ? "received" : lt.contains("sent") ? "sent" : lt.contains("peer") ? "peer" : "sync";
+                }
+                boolean isRead = o.optBoolean("read", false);
                 long time = o.optLong("time", System.currentTimeMillis());
 
                 TextView tv = new TextView(this);
                 tv.setTextSize(16);
                 tv.setPadding(32, 28, 32, 28);
-                tv.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-                int c = t.toLowerCase().contains("received") ? (isDark ? 0xFF81C784 : 0xFF2E7D32) :
-                        t.toLowerCase().contains("sent") ? (isDark ? 0xFFE57373 : 0xFFC62828) :
-                        t.toLowerCase().contains("peer") ? (isDark ? 0xFF64B5F6 : 0xFF1565C0) :
-                        (isDark ? 0xFFFFD54F : 0xFFF9A825);
-                tv.setText("● " + t + "\n" + fmt.format(new Date(time)));
-                tv.setTextColor(read ? readColor : c);
-                tv.setBackgroundColor(Color.TRANSPARENT);
+                tv.setText("● " + title + "\n" + dateFormat.format(new Date(time)));
+                int color = title.toLowerCase().contains("received") ? (isDark ? 0xFF81C784 : 0xFF2E7D32)
+                        : title.toLowerCase().contains("sent") ? (isDark ? 0xFFE57373 : 0xFFC62828)
+                        : title.toLowerCase().contains("peer") ? (isDark ? 0xFF64B5F6 : 0xFF1565C0)
+                        : (isDark ? 0xFFFFD54F : 0xFFF9A825);
+                tv.setTextColor(isRead ? readColor : color);
 
-                final String key = k;
                 final JSONObject obj = o;
-                final String detail = txt + (ex.isEmpty() ? "" : "\n\n" + ex);
+                final String finalType = type;
                 tv.setOnClickListener(v -> {
                     try {
-                        if (!obj.getBoolean("read")) {
+                        if (!obj.optBoolean("read", false)) {
                             obj.put("read", true);
-                            sp.edit().putString(key, obj.toString()).apply();
+                            prefs.edit().putString(obj.getString("_key"), obj.toString()).apply();
                             tv.setTextColor(readColor);
                         }
-                        new AlertDialog.Builder(NotificationsActivity.this).setTitle(obj.getString("title"))
-                                .setMessage("Time: " + fmt.format(new Date(obj.getLong("time"))) + "\n\n" + detail)
-                                .setPositiveButton("Close", null)
-                                .setNeutralButton("Copy", (d, w) -> {
-                                    android.content.ClipboardManager cm = (android.content.ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
-                                    cm.setPrimaryClip(android.content.ClipData.newPlainText("notif", detail));
-                                    Toast.makeText(NotificationsActivity.this, "Copied", Toast.LENGTH_SHORT).show();
-                                }).show();
-                    } catch (Exception e) {}
+                        showDetail(obj, finalType);
+                    } catch (Exception ignored) {}
                 });
-                ll.addView(tv);
-            } catch (Exception e) {}
+                listContainer.addView(tv);
+            } catch (Exception ignored) {}
         }
 
-        if (end < total) {
+        if (end < items.size()) {
             Button more = new Button(this);
-            more.setText("Load more (" + (total - end) + " remaining)");
+            more.setText("Load more (" + (items.size() - end) + ")");
             more.setAllCaps(false);
-            more.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
             more.setOnClickListener(v -> {
                 currentPage++;
-                loadList(isDark);
+                loadList();
             });
-            ll.addView(more);
+            listContainer.addView(more);
         }
 
-        if (total == 0) {
-            TextView tv = new TextView(this);
-            tv.setText("No notifications (" + currentFilter + ")");
-            tv.setGravity(Gravity.CENTER);
-            tv.setTextSize(18);
-            tv.setPadding(0, 300, 0, 0);
-            tv.setTextColor(readColor);
-            tv.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-            ll.addView(tv);
+        if (items.isEmpty()) {
+            TextView empty = new TextView(this);
+            empty.setText("No notifications");
+            empty.setGravity(Gravity.CENTER);
+            empty.setPadding(0, 300, 0, 0);
+            empty.setTextColor(readColor);
+            listContainer.addView(empty);
         }
     }
 
-    boolean matchesFilter(String title) {
+    private boolean matchesFilter(JSONObject o) {
         if (currentFilter.equals("all")) return true;
-        return title.contains(currentFilter);
+        String t = o.optString("title", "").toLowerCase();
+        String type = o.optString("type", "").toLowerCase();
+        return t.contains(currentFilter) || type.contains(currentFilter);
+    }
+
+    private void showDetail(JSONObject o, String type) {
+        try {
+            JSONObject extra = new JSONObject(o.optString("extra", "{}"));
+            StringBuilder sb = new StringBuilder();
+            String time = dateFormat.format(new Date(o.optLong("time")));
+
+            if ("received".equals(type)) {
+                sb.append("Type: Received\n");
+                sb.append("Amount: ").append(o.optString("text")).append("\n");
+                sb.append("From: ").append(extra.optString("address", "N/A")).append("\n");
+                sb.append("TxID: ").append(extra.optString("txid", "N/A")).append("\n");
+                sb.append("Time: ").append(time);
+            } else if ("sent".equals(type)) {
+                sb.append("Type: Sent\n");
+                sb.append("Amount: ").append(o.optString("text")).append("\n");
+                sb.append("To: ").append(extra.optString("to", "N/A")).append("\n");
+                sb.append("TxID: ").append(extra.optString("txid", "N/A")).append("\n");
+                sb.append("Fee: ").append(extra.optString("fee", "0")).append(" BTC\n");
+                sb.append("Time: ").append(time);
+            } else if ("peer".equals(type)) {
+                sb.append("Type: Peer\n");
+                sb.append("Address: ").append(o.optString("text")).append("\n");
+                sb.append("Height: ").append(extra.optString("height", "")).append("\n");
+                sb.append("Time: ").append(time);
+            } else {
+                sb.append("Type: Sync\n");
+                sb.append(o.optString("text")).append("\n");
+                sb.append(o.optString("extra")).append("\n");
+                sb.append("Time: ").append(time);
+            }
+
+            String detail = sb.toString();
+            String txid = extra.optString("txid", "");
+
+            new AlertDialog.Builder(this)
+                    .setTitle(o.optString("title"))
+                    .setMessage(detail)
+                    .setPositiveButton("Close", null)
+                    .setNeutralButton("Copy", (d, w) -> {
+                        ClipboardManager cm = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+                        cm.setPrimaryClip(ClipData.newPlainText("notif", txid.isEmpty() ? detail : txid));
+                        Toast.makeText(this, txid.isEmpty() ? "Copied" : "TxID copied", Toast.LENGTH_SHORT).show();
+                    })
+                    .setNegativeButton("Share", (d, w) -> {
+                        Intent i = new Intent(Intent.ACTION_SEND);
+                        i.setType("text/plain");
+                        i.putExtra(Intent.EXTRA_TEXT, detail);
+                        startActivity(Intent.createChooser(i, "Share"));
+                    })
+                    .show();
+        } catch (Exception ignored) {}
     }
 }
