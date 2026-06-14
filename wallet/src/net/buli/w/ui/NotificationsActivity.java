@@ -1,5 +1,4 @@
 package net.buli.w.ui;
-import android.app.Activity; 
 import android.app.AlertDialog;
 import android.content.SharedPreferences; 
 import android.os.Bundle;
@@ -12,11 +11,13 @@ import android.widget.Toast;
 import android.graphics.Color; 
 import android.view.Gravity;
 import android.view.ViewGroup; 
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import org.json.JSONObject;
 import java.util.*;
 import java.text.SimpleDateFormat;
 
-public class NotificationsActivity extends Activity {
+public class NotificationsActivity extends AppCompatActivity {
  LinearLayout ll; 
  SharedPreferences sp;
  SimpleDateFormat fmt = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault());
@@ -29,6 +30,7 @@ public class NotificationsActivity extends Activity {
 
   LinearLayout root = new LinearLayout(this);
   root.setOrientation(LinearLayout.VERTICAL);
+  root.setBackgroundColor(ContextCompat.getColor(this, android.R.color.background_light));
 
   // ---- TAB BAR ----
   HorizontalScrollView hsv = new HorizontalScrollView(this);
@@ -64,11 +66,13 @@ public class NotificationsActivity extends Activity {
  }
 
  void updateTabs(){
+    int colorPrimary = ContextCompat.getColor(this, R.color.colorAccent);
+    int colorText = ContextCompat.getColor(this, android.R.color.secondary_text_light);
     for(int i=0;i<tabBar.getChildCount();i++){
         Button b = (Button)tabBar.getChildAt(i);
         boolean sel = b.getTag().equals(currentFilter);
-        b.setBackgroundColor(sel?0xFF1565C0:0x00000000);
-        b.setTextColor(sel?Color.WHITE:0xFFAAAAAA);
+        b.setBackgroundColor(sel ? colorPrimary : Color.TRANSPARENT);
+        b.setTextColor(sel ? Color.WHITE : colorText);
     }
  }
 
@@ -86,7 +90,6 @@ public class NotificationsActivity extends Activity {
       try{ 
         JSONObject o=new JSONObject(sp.getString(k,""));
         String title=o.optString("title","").toLowerCase();
-        // ALL = đánh dấu hết, các tab khác = lọc
         if(currentFilter.equals("all") || matchesFilter(title)){
             if(!o.optBoolean("read",false)){
                 o.put("read",true); 
@@ -122,14 +125,19 @@ public class NotificationsActivity extends Activity {
     tv.setTextSize(16); 
     tv.setPadding(32,28,32,28);
 
-    int c = t.toLowerCase().contains("received")? Color.parseColor("#2E7D32"):
-            t.toLowerCase().contains("sent")? Color.parseColor("#C62828"):
-            t.toLowerCase().contains("peer")? Color.parseColor("#1565C0"):
-            Color.parseColor("#F9A825");
+    int c = t.toLowerCase().contains("received")? ContextCompat.getColor(this, R.color.green_700):
+            t.toLowerCase().contains("sent")? ContextCompat.getColor(this, R.color.red_700):
+            t.toLowerCase().contains("peer")? ContextCompat.getColor(this, R.color.blue_700):
+            ContextCompat.getColor(this, R.color.amber_700);
 
     tv.setText("● "+t+"\n"+fmt.format(new Date(time))); 
-    tv.setTextColor(read?0xFF888888:c); 
-    if(!read) tv.setBackgroundColor(0x22000000);
+    tv.setTextColor(read ? ContextCompat.getColor(this, android.R.color.darker_gray) : c); 
+    
+    if(!read) {
+        tv.setBackgroundResource(android.R.drawable.list_selector_background);
+    } else {
+        tv.setBackground(null);
+    }
 
     final String key=k; 
     final JSONObject obj=o;
@@ -140,8 +148,8 @@ public class NotificationsActivity extends Activity {
       if(!obj.getBoolean("read")){
         obj.put("read",true);
         sp.edit().putString(key,obj.toString()).apply();
-        tv.setTextColor(0xFF888888);
-        v.setBackgroundColor(0);
+        tv.setTextColor(ContextCompat.getColor(NotificationsActivity.this, android.R.color.darker_gray));
+        v.setBackground(null);
       }
       new AlertDialog.Builder(NotificationsActivity.this)
         .setTitle(obj.getString("title"))
@@ -168,6 +176,7 @@ public class NotificationsActivity extends Activity {
    tv.setGravity(Gravity.CENTER);
    tv.setTextSize(18);
    tv.setPadding(0,300,0,0);
+   tv.setTextColor(ContextCompat.getColor(this, android.R.color.secondary_text_light));
    ll.addView(tv);
   }
  }
