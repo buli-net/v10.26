@@ -545,12 +545,11 @@ private TextView findTextViewWithText(ViewGroup g, String txt) {
             BlockchainService.start(WalletActivity.this, true);
         }, 1000);
 
-        // === HOOK LƯU CHI TIẾT - BẮT ĐẦU ===
+        // === HOOK LƯU CHI TIẾT - ĐÃ FIX ===
         try {
-            application.getWallet().addCoinsReceivedEventListener((w,tx,p,n)->{ try{ JSONObject ex=new JSONObject(); ex.put("txid",tx.getTxId().toString()); ex.put("amount",tx.getValue(w).toFriendlyString()); ex.put("time",System.currentTimeMillis()); ex.put("type","received"); ex.put("conf",tx.getConfidence().getDepthInBlocks()); String from=""; try{ if(tx.getInputs().size()>0 && tx.getInputs().get(0).getFromAddress()!=null) from=tx.getInputs().get(0).getFromAddress().toString(); }catch(Exception e){} ex.put("from",from); saveNotif("Nhận tiền",tx.getValue(w).toFriendlyString(),ex.toString()); }catch(Exception e){} });
-            application.getWallet().addCoinsSentEventListener((w,tx,p,n)->{ try{ JSONObject ex=new JSONObject(); ex.put("txid",tx.getTxId().toString()); ex.put("amount",tx.getValue(w).negate().toFriendlyString()); ex.put("time",System.currentTimeMillis()); ex.put("type","sent"); ex.put("conf",tx.getConfidence().getDepthInBlocks()); String to=""; try{ if(tx.getOutputs().size()>0) to=tx.getOutputs().get(0).getScriptPubKey().getToAddress(Constants.NETWORK_PARAMETERS).toString(); }catch(Exception e){} ex.put("to",to); saveNotif("Gửi tiền",tx.getValue(w).negate().toFriendlyString(),ex.toString()); }catch(Exception e){} });
+            application.getWallet().addCoinsReceivedEventListener((w,tx,p,n)->{ try{ JSONObject ex=new JSONObject(); ex.put("txid",tx.getTxId().toString()); ex.put("amount",tx.getValue(w).toFriendlyString()); ex.put("time",System.currentTimeMillis()); ex.put("type","received"); ex.put("conf",tx.getConfidence().getDepthInBlocks()); String from=""; try{ if(tx.getOutputs().size()>0) from = tx.getOutput(0).getScriptPubKey().getToAddress(Constants.NETWORK_PARAMETERS).toString(); }catch(Exception e){} ex.put("from",from); saveNotif("Nhận tiền",tx.getValue(w).toFriendlyString(),ex.toString()); }catch(Exception e){} });
+            application.getWallet().addCoinsSentEventListener((w,tx,p,n)->{ try{ JSONObject ex=new JSONObject(); ex.put("txid",tx.getTxId().toString()); ex.put("amount",tx.getValue(w).negate().toFriendlyString()); ex.put("time",System.currentTimeMillis()); ex.put("type","sent"); ex.put("conf",tx.getConfidence().getDepthInBlocks()); String to=""; try{ if(tx.getOutputs().size()>0) to=tx.getOutput(0).getScriptPubKey().getToAddress(Constants.NETWORK_PARAMETERS).toString(); }catch(Exception e){} ex.put("to",to); saveNotif("Gửi tiền",tx.getValue(w).negate().toFriendlyString(),ex.toString()); }catch(Exception e){} });
         } catch(Exception ignored){}
-        // === HOOK LƯU CHI TIẾT - KẾT THÚC ===
     }
 
     @Override
