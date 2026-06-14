@@ -14,7 +14,7 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
-import import android.widget.Toast;
+import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
