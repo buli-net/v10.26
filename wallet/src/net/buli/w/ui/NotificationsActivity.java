@@ -8,11 +8,10 @@ import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Button;
-import android.widget.HorizontalScrollView;
-import android.widget.Toast;
-import android.graphics.Color;
 import android.view.Gravity;
 import android.view.ViewGroup;
+import android.widget.Toast;
+import android.graphics.Color;
 import org.json.JSONObject;
 import java.util.*;
 import java.text.SimpleDateFormat;
@@ -31,6 +30,7 @@ public class NotificationsActivity extends Activity {
     @Override
     protected void onCreate(Bundle b) {
         super.onCreate(b);
+        setTitle("Notifications");
         sp = getSharedPreferences("notif", 0);
 
         boolean isDark = (getResources().getConfiguration().uiMode & android.content.res.Configuration.UI_MODE_NIGHT_MASK)
@@ -38,14 +38,13 @@ public class NotificationsActivity extends Activity {
 
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
+        root.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         root.setBackgroundColor(isDark ? 0xFF121212 : 0xFFFFFFFF);
 
-        HorizontalScrollView hsv = new HorizontalScrollView(this);
-        hsv.setHorizontalScrollBarEnabled(false);
+        // Tabs - now using weight to fill screen
         tabBar = new LinearLayout(this);
         tabBar.setOrientation(LinearLayout.HORIZONTAL);
-        hsv.addView(tabBar);
-        root.addView(hsv, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        tabBar.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
 
         String[] tabs = {"All", "Received", "Sent", "Peer", "Sync"};
         for (String t : tabs) {
@@ -59,15 +58,19 @@ public class NotificationsActivity extends Activity {
                 updateTabs(isDark);
                 loadList(isDark);
             });
-            tabBar.addView(btn);
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
+            tabBar.addView(btn, lp);
         }
+        root.addView(tabBar);
         updateTabs(isDark);
 
         ScrollView sv = new ScrollView(this);
+        sv.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
         ll = new LinearLayout(this);
         ll.setOrientation(LinearLayout.VERTICAL);
+        ll.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         sv.addView(ll);
-        root.addView(sv, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1));
+        root.addView(sv);
 
         loadList(isDark);
         setContentView(root);
@@ -90,6 +93,7 @@ public class NotificationsActivity extends Activity {
         Button markAll = new Button(this);
         markAll.setText("Mark all as read (" + currentFilter + ")");
         markAll.setAllCaps(false);
+        markAll.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         markAll.setOnClickListener(v -> {
             SharedPreferences.Editor ed = sp.edit();
             int cnt = 0;
@@ -146,14 +150,14 @@ public class NotificationsActivity extends Activity {
                 TextView tv = new TextView(this);
                 tv.setTextSize(16);
                 tv.setPadding(32, 28, 32, 28);
+                tv.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
                 int c = t.toLowerCase().contains("received") ? (isDark ? 0xFF81C784 : 0xFF2E7D32) :
                         t.toLowerCase().contains("sent") ? (isDark ? 0xFFE57373 : 0xFFC62828) :
                         t.toLowerCase().contains("peer") ? (isDark ? 0xFF64B5F6 : 0xFF1565C0) :
                         (isDark ? 0xFFFFD54F : 0xFFF9A825);
                 tv.setText("● " + t + "\n" + fmt.format(new Date(time)));
                 tv.setTextColor(read ? readColor : c);
-                if (!read) tv.setBackgroundResource(android.R.drawable.list_selector_background);
-                else tv.setBackgroundColor(Color.TRANSPARENT);
+                tv.setBackgroundColor(Color.TRANSPARENT);
 
                 final String key = k;
                 final JSONObject obj = o;
@@ -164,7 +168,6 @@ public class NotificationsActivity extends Activity {
                             obj.put("read", true);
                             sp.edit().putString(key, obj.toString()).apply();
                             tv.setTextColor(readColor);
-                            v.setBackgroundColor(Color.TRANSPARENT);
                         }
                         new AlertDialog.Builder(NotificationsActivity.this).setTitle(obj.getString("title"))
                                 .setMessage("Time: " + fmt.format(new Date(obj.getLong("time"))) + "\n\n" + detail)
@@ -184,6 +187,7 @@ public class NotificationsActivity extends Activity {
             Button more = new Button(this);
             more.setText("Load more (" + (total - end) + " remaining)");
             more.setAllCaps(false);
+            more.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
             more.setOnClickListener(v -> {
                 currentPage++;
                 loadList(isDark);
@@ -198,16 +202,13 @@ public class NotificationsActivity extends Activity {
             tv.setTextSize(18);
             tv.setPadding(0, 300, 0, 0);
             tv.setTextColor(readColor);
+            tv.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
             ll.addView(tv);
         }
     }
 
     boolean matchesFilter(String title) {
         if (currentFilter.equals("all")) return true;
-        if (currentFilter.equals("received")) return title.contains("received");
-        if (currentFilter.equals("sent")) return title.contains("sent");
-        if (currentFilter.equals("peer")) return title.contains("peer");
-        if (currentFilter.equals("sync")) return title.contains("sync");
-        return true;
+        return title.contains(currentFilter);
     }
 }
