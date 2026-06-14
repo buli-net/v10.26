@@ -61,7 +61,10 @@
             android:launchMode="singleTask"
             android:theme="@style/My.Theme.WithSplash" />
 
-        <activity android:name="net.buli.w.ui.NotificationsActivity" android:exported="false" />
+        <activity 
+    android:name=".ui.NotificationsActivity"
+    android:label="Notifications"
+    android:parentActivityName=".ui.WalletActivity" />
 
         <activity-alias
             android:name="net.buli.w.WalletActivity"
