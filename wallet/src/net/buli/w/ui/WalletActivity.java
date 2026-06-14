@@ -528,6 +528,8 @@ private TextView findTextViewWithText(ViewGroup g, String txt) {
         if (exchangeRatesFragment!= null)
             exchangeRatesFragment.setVisibility(config.isEnableExchangeRates()? View.VISIBLE : View.GONE);
 
+        invalidateOptionsMenu();
+
         handler.postDelayed(() -> {
             // delayed start so that UI has enough time to initialize
             BlockchainService.start(WalletActivity.this, true);
@@ -639,7 +641,7 @@ private TextView findTextViewWithText(ViewGroup g, String txt) {
         if (NfcAdapter.ACTION_NDEF_DISCOVERED.equals(action)) {
             final String inputType = intent.getType();
             final NdefMessage ndefMessage = (NdefMessage) intent
-                   .getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES)[0];
+                  .getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES)[0];
             final byte[] input = Nfc.extractMimePayload(Constants.MIMETYPE_TRANSACTION, ndefMessage);
 
             new BinaryInputParser(inputType, input) {
