@@ -10,14 +10,13 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.ViewGroup;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
-import android.widget.Toast;
+import import android.widget.Toast;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.text.SimpleDateFormat;
@@ -26,6 +25,8 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Scanner;
+import java.net.URL;
 
 public class NotificationsActivity extends Activity {
     private LinearLayout listContainer;
@@ -96,48 +97,67 @@ public class NotificationsActivity extends Activity {
         int readColor = isDark ? 0xFFAAAAAA : 0xFF666666;
 
         if (currentFilter.equals("mempool")) {
-            addMempoolTitle("Mempool Live");
-            WebView wv1 = new WebView(this);
-            wv1.getSettings().setJavaScriptEnabled(true);
-            wv1.getSettings().setDomStorageEnabled(true);
-            wv1.setBackgroundColor(Color.TRANSPARENT);
-            wv1.setWebViewClient(new WebViewClient() {
-                @Override public void onPageFinished(WebView v, String u) {
-                    v.evaluateJavascript("document.body.style.background='#121212';try{document.querySelector('header').remove();}catch(e){}try{document.querySelector('footer').remove();}catch(e){}", null);
-                }
-            });
-            wv1.loadUrl("https://mempool.space/mempool");
-            listContainer.addView(wv1, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 800));
+            addMempoolTitle("Đang tải mempool.space...");
+            new Thread(() -> {
+                try {
+                    String fees = new Scanner(new URL("https://mempool.space/api/v1/fees/recommended").openStream()).useDelimiter("\\A").next();
+                    String mempool = new Scanner(new URL("https://mempool.space/api/mempool").openStream()).useDelimiter("\\A").next();
+                    String blocks = new Scanner(new URL("https://mempool.space/api/v1/blocks").openStream()).useDelimiter("\\A").next();
+                    String ln = new Scanner(new URL("https://mempool.space/api/v1/lightning/statistics/latest").openStream()).useDelimiter("\\A").next();
+                    String acc = new Scanner(new URL("https://mempool.space/api/v1/accelerator/stats").openStream()).useDelimiter("\\A").next();
 
-            addMempoolTitle("Next Blocks");
-            WebView wv2 = new WebView(this);
-            wv2.getSettings().setJavaScriptEnabled(true);
-            wv2.setBackgroundColor(Color.TRANSPARENT);
-            wv2.setWebViewClient(new WebViewClient() {
-                @Override public void onPageFinished(WebView v, String u) {
-                    v.evaluateJavascript("document.body.style.background='#000';try{document.querySelector('header').style.display='none';}catch(e){}try{document.querySelector('footer').style.display='none';}catch(e){}let m=document.querySelector('app-blocks');if(m){document.body.innerHTML='';document.body.appendChild(m);}", null);
-                }
-            });
-            wv2.loadUrl("https://mempool.space/");
-            listContainer.addView(wv2, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 600));
+                    JSONObject f = new JSONObject(fees);
+                    JSONObject m = new JSONObject(mempool);
+                    JSONArray b = new JSONArray(blocks);
+                    JSONObject l = new JSONObject(ln);
+                    JSONObject a = new JSONObject(acc);
 
-            addMempoolTitle("Next Block Details");
-            WebView wv3 = new WebView(this);
-            wv3.getSettings().setJavaScriptEnabled(true);
-            wv3.setBackgroundColor(Color.TRANSPARENT);
-            wv3.setWebViewClient(new WebViewClient() {
-                @Override public void onPageFinished(WebView v, String u) {
-                    v.evaluateJavascript("document.body.style.background='#121212';try{document.querySelector('header').style.display='none';}catch(e){}try{document.querySelector('footer').style.display='none';}catch(e){}setTimeout(()=>{let b=document.querySelector('app-block-widget');if(b){document.body.innerHTML='';document.body.appendChild(b);}},1500);", null);
-                }
-            });
-            wv3.loadUrl("https://mempool.space/");
-            listContainer.addView(wv3, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 700));
+                    runOnUiThread(() -> {
+                        listContainer.removeAllViews();
+                        addMempoolTitle("Fees");
+                        addMempoolRow("Fastest", f.optInt("fastestFee") + " sat/vB");
+                        addMempoolRow("Half hour", f.optInt("halfHourFee") + " sat/vB");
+                        addMempoolRow("Hour", f.optInt("hourFee") + " sat/vB");
+                        addMempoolRow("Minimum", f.optInt("minimumFee") + " sat/vB");
+                        addMempoolRow("Economy", f.optInt("economyFee") + " sat/vB");
 
-            Button refresh = new Button(this);
-            refresh.setText("Refresh");
-            refresh.setAllCaps(false);
-            refresh.setOnClickListener(v -> loadList());
-            listContainer.addView(refresh);
+                        addMempoolTitle("Mempool");
+                        addMempoolRow("Tx count", String.format("%,d", m.optInt("count")));
+                        addMempoolRow("vSize", String.format("%.2f MB", m.optInt("vsize") / 1e6));
+                        addMempoolRow("Total fee", String.format("%.3f BTC", m.optLong("total_fee") / 1e8));
+
+                        addMempoolTitle("Blocks");
+                        for (int i = 0; i < Math.min(5, b.length()); i++) {
+                            JSONObject blk = b.optJSONObject(i);
+                            addMempoolRow(""+blk.optInt("height"), blk.optInt("tx_count")+" tx • "+String.format("%.2f MB", blk.optDouble("size")/1e6));
+                        }
+
+                        addMempoolTitle("Lightning");
+                        JSONObject latest = l.optJSONObject("latest");
+                        if (latest != null) {
+                            addMempoolRow("Capacity", String.format("%.2f BTC", latest.optLong("total_capacity")/1e8));
+                            addMempoolRow("Nodes", String.format("%,d", latest.optInt("node_count")));
+                            addMempoolRow("Channels", String.format("%,d", latest.optInt("channel_count")));
+                        }
+
+                        addMempoolTitle("Accelerator");
+                        addMempoolRow("Pending", String.valueOf(a.optInt("pending")));
+                        addMempoolRow("Accelerated 24h", String.valueOf(a.optInt("accelerated_count")));
+                        addMempoolRow("Total bid", String.format("%.4f BTC", a.optLong("total_bid_boost")/1e8));
+
+                        Button refresh = new Button(this);
+                        refresh.setText("Refresh");
+                        refresh.setAllCaps(false);
+                        refresh.setOnClickListener(v -> loadList());
+                        listContainer.addView(refresh);
+                    });
+                } catch (Exception e) {
+                    runOnUiThread(() -> {
+                        listContainer.removeAllViews();
+                        addMempoolRow("Lỗi", e.getMessage());
+                    });
+                }
+            }).start();
             return;
         }
 
@@ -264,12 +284,20 @@ public class NotificationsActivity extends Activity {
         }
     }
 
-    private void addMempoolTitle(String label) {
+    private void addMempoolTitle(String t) {
         TextView tv = new TextView(this);
-        tv.setText("● " + label);
+        tv.setText("● " + t);
         tv.setTextSize(16);
-        tv.setPadding(32, 32, 32, 12);
+        tv.setPadding(32, 32, 32, 8);
         tv.setTextColor(isDark ? 0xFFFFFFFF : 0xFF000000);
+        listContainer.addView(tv);
+    }
+    private void addMempoolRow(String k, String v) {
+        TextView tv = new TextView(this);
+        tv.setText(k + ": " + v);
+        tv.setTextSize(14);
+        tv.setPadding(48, 8, 32, 8);
+        tv.setTextColor(isDark ? 0xFFCCCCCC : 0xFF333333);
         listContainer.addView(tv);
     }
 
