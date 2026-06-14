@@ -256,6 +256,19 @@ public class BlockchainService extends LifecycleService {
         }
         summaryNotification.setContentIntent(PendingIntent.getActivity(this, 0,
                 new Intent(this, WalletActivity.class), PendingIntent.FLAG_IMMUTABLE));
+      // add bell 1/2
+
+        try {
+    org.json.JSONObject o = new org.json.JSONObject();
+    o.put("time", System.currentTimeMillis());
+    o.put("title", getString(R.string.notification_coins_received_msg, btcFormat.format(notificationAccumulatedAmount)) + msgSuffix);
+    o.put("text", !notificationAddresses.isEmpty() ? text.toString() : "");
+    o.put("extra", "Balance: " + wallet.getValue().getBalance().toFriendlyString());
+    o.put("read", false);
+    getSharedPreferences("notif",0).edit().putString("n_"+System.currentTimeMillis(), o.toString()).apply();
+} catch(Exception e){}
+        //end
+        
         nm.notify(Constants.NOTIFICATION_ID_COINS_RECEIVED, summaryNotification.build());
 
         // child notification
@@ -280,6 +293,21 @@ public class BlockchainService extends LifecycleService {
         childNotification.setContentIntent(PendingIntent.getActivity(this, 0,
                 new Intent(this, WalletActivity.class), PendingIntent.FLAG_IMMUTABLE));
         childNotification.setSound(Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.coins_received));
+
+        //add bell 2
+
+        try {
+    org.json.JSONObject o = new org.json.JSONObject();
+    o.put("time", System.currentTimeMillis());
+    o.put("title", msg);
+    o.put("text", address != null ? (addressLabel != null ? addressLabel : addressStr) : "");
+    o.put("extra", address != null ? address.toString() : "");
+    o.put("read", false);
+    getSharedPreferences("notif",0).edit().putString("n_"+System.currentTimeMillis(), o.toString()).apply();
+} catch(Exception e){}
+        //end
+        
+        
         nm.notify(transactionHash.toString(), Constants.NOTIFICATION_ID_COINS_RECEIVED, childNotification.build());
     }
 
