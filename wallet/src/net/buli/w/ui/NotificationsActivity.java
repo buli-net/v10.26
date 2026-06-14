@@ -19,6 +19,7 @@ import android.widget.Toast;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -26,7 +27,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Scanner;
-import java.net.URL;
 
 public class NotificationsActivity extends Activity {
     private LinearLayout listContainer;
@@ -99,64 +99,68 @@ public class NotificationsActivity extends Activity {
         if (currentFilter.equals("mempool")) {
             addMempoolTitle("Đang tải mempool.space...");
             new Thread(() -> {
+                JSONObject f = null, m = null, l = null;
+                JSONArray b = null;
                 try {
-                    String fees = new Scanner(new URL("https://mempool.space/api/v1/fees/recommended").openStream()).useDelimiter("\\A").next();
-                    String mempool = new Scanner(new URL("https://mempool.space/api/mempool").openStream()).useDelimiter("\\A").next();
-                    String blocks = new Scanner(new URL("https://mempool.space/api/v1/blocks").openStream()).useDelimiter("\\A").next();
-                    String ln = new Scanner(new URL("https://mempool.space/api/v1/lightning/statistics/latest").openStream()).useDelimiter("\\A").next();
-                    String acc = new Scanner(new URL("https://mempool.space/api/v1/accelerator/stats").openStream()).useDelimiter("\\A").next();
+                    f = new JSONObject(new Scanner(new URL("https://mempool.space/api/v1/fees/recommended").openStream()).useDelimiter("\\A").next());
+                } catch (Exception ignored) {}
+                try {
+                    m = new JSONObject(new Scanner(new URL("https://mempool.space/api/mempool").openStream()).useDelimiter("\\A").next());
+                } catch (Exception ignored) {}
+                try {
+                    b = new JSONArray(new Scanner(new URL("https://mempool.space/api/v1/blocks").openStream()).useDelimiter("\\A").next());
+                } catch (Exception ignored) {}
+                try {
+                    l = new JSONObject(new Scanner(new URL("https://mempool.space/api/v1/lightning/statistics/latest").openStream()).useDelimiter("\\A").next());
+                } catch (Exception ignored) {}
 
-                    JSONObject f = new JSONObject(fees);
-                    JSONObject m = new JSONObject(mempool);
-                    JSONArray b = new JSONArray(blocks);
-                    JSONObject l = new JSONObject(ln);
-                    JSONObject a = new JSONObject(acc);
+                JSONObject ff = f;
+                JSONObject mm = m;
+                JSONArray bb = b;
+                JSONObject ll = l;
 
-                    runOnUiThread(() -> {
-                        listContainer.removeAllViews();
+                runOnUiThread(() -> {
+                    listContainer.removeAllViews();
+
+                    if (ff != null) {
                         addMempoolTitle("Fees");
-                        addMempoolRow("Fastest", f.optInt("fastestFee") + " sat/vB");
-                        addMempoolRow("Half hour", f.optInt("halfHourFee") + " sat/vB");
-                        addMempoolRow("Hour", f.optInt("hourFee") + " sat/vB");
-                        addMempoolRow("Minimum", f.optInt("minimumFee") + " sat/vB");
-                        addMempoolRow("Economy", f.optInt("economyFee") + " sat/vB");
+                        addMempoolRow("Fastest", ff.optInt("fastestFee") + " sat/vB");
+                        addMempoolRow("Half hour", ff.optInt("halfHourFee") + " sat/vB");
+                        addMempoolRow("Hour", ff.optInt("hourFee") + " sat/vB");
+                        addMempoolRow("Minimum", ff.optInt("minimumFee") + " sat/vB");
+                        addMempoolRow("Economy", ff.optInt("economyFee") + " sat/vB");
+                    }
 
+                    if (mm != null) {
                         addMempoolTitle("Mempool");
-                        addMempoolRow("Tx count", String.format("%,d", m.optInt("count")));
-                        addMempoolRow("vSize", String.format("%.2f MB", m.optInt("vsize") / 1e6));
-                        addMempoolRow("Total fee", String.format("%.3f BTC", m.optLong("total_fee") / 1e8));
+                        addMempoolRow("Transactions", String.format("%,d", mm.optInt("count")));
+                        addMempoolRow("vSize", String.format("%.2f MB", mm.optInt("vsize") / 1e6));
+                        addMempoolRow("Total fee", String.format("%.3f BTC", mm.optLong("total_fee") / 1e8));
+                    }
 
-                        addMempoolTitle("Blocks");
-                        for (int i = 0; i < Math.min(5, b.length()); i++) {
-                            JSONObject blk = b.optJSONObject(i);
-                            addMempoolRow(""+blk.optInt("height"), blk.optInt("tx_count")+" tx • "+String.format("%.2f MB", blk.optDouble("size")/1e6));
+                    if (bb != null) {
+                        addMempoolTitle("Last Blocks");
+                        for (int i = 0; i < Math.min(5, bb.length()); i++) {
+                            JSONObject blk = bb.optJSONObject(i);
+                            addMempoolRow("Block " + blk.optInt("height"),
+                                    blk.optInt("tx_count") + " tx • " + String.format("%.2f MB", blk.optDouble("size") / 1e6));
                         }
+                    }
 
+                    if (ll != null && ll.has("latest")) {
+                        JSONObject latest = ll.optJSONObject("latest");
                         addMempoolTitle("Lightning");
-                        JSONObject latest = l.optJSONObject("latest");
-                        if (latest != null) {
-                            addMempoolRow("Capacity", String.format("%.2f BTC", latest.optLong("total_capacity")/1e8));
-                            addMempoolRow("Nodes", String.format("%,d", latest.optInt("node_count")));
-                            addMempoolRow("Channels", String.format("%,d", latest.optInt("channel_count")));
-                        }
+                        addMempoolRow("Capacity", String.format("%.2f BTC", latest.optLong("total_capacity") / 1e8));
+                        addMempoolRow("Nodes", String.format("%,d", latest.optInt("node_count")));
+                        addMempoolRow("Channels", String.format("%,d", latest.optInt("channel_count")));
+                    }
 
-                        addMempoolTitle("Accelerator");
-                        addMempoolRow("Pending", String.valueOf(a.optInt("pending")));
-                        addMempoolRow("Accelerated 24h", String.valueOf(a.optInt("accelerated_count")));
-                        addMempoolRow("Total bid", String.format("%.4f BTC", a.optLong("total_bid_boost")/1e8));
-
-                        Button refresh = new Button(this);
-                        refresh.setText("Refresh");
-                        refresh.setAllCaps(false);
-                        refresh.setOnClickListener(v -> loadList());
-                        listContainer.addView(refresh);
-                    });
-                } catch (Exception e) {
-                    runOnUiThread(() -> {
-                        listContainer.removeAllViews();
-                        addMempoolRow("Lỗi", e.getMessage());
-                    });
-                }
+                    Button refresh = new Button(this);
+                    refresh.setText("Refresh");
+                    refresh.setAllCaps(false);
+                    refresh.setOnClickListener(v -> loadList());
+                    listContainer.addView(refresh);
+                });
             }).start();
             return;
         }
@@ -292,6 +296,7 @@ public class NotificationsActivity extends Activity {
         tv.setTextColor(isDark ? 0xFFFFFFFF : 0xFF000000);
         listContainer.addView(tv);
     }
+
     private void addMempoolRow(String k, String v) {
         TextView tv = new TextView(this);
         tv.setText(k + ": " + v);
