@@ -8,11 +8,11 @@
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
 package net.buli.w.ui;
@@ -147,7 +147,7 @@ public final class WalletActivity extends AbstractWalletActivity {
         setActionBar(findViewById(R.id.wallet_appbar));
         getActionBar().setDisplayHomeAsUpEnabled(false);
         contentView = findViewById(android.R.id.content);
-        
+
 //add sync bar
 final View root = findViewById(android.R.id.content);
 final SharedPreferences prefs = getSharedPreferences("sync_prefs", MODE_PRIVATE);
@@ -172,23 +172,23 @@ root.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlob
             percent.setVisibility(View.GONE);
             return;
         }
-                
+
 // lấy màu động
 int syncTextColor = tv.getCurrentTextColor();
 percent.setTextColor(syncTextColor);
 //end
 
 // thay đoạn tìm "Bitcoin" bằng:
-int btcColor = syncTextColor;   // <-- khai báo luôn ở đây
-if (tv != null) {
+int btcColor = syncTextColor; // <-- khai báo luôn ở đây
+if (tv!= null) {
     btcColor = tv.getCurrentTextColor(); // thực ra = syncTextColor
 }
 // --- LẤY MÀU BTC TỪ TIÊU ĐỀ "Bitcoin" ---
 //int btcColor = syncTextColor; // fallback
 //ViewGroup decor = (ViewGroup) getWindow().getDecorView();
 //TextView title = findTextViewWithText(decor, "Bitcoin");
-//if (title != null) {
-  //  btcColor = title.getCurrentTextColor();
+//if (title!= null) {
+  // btcColor = title.getCurrentTextColor();
 //}
 bar.setProgressTintList(android.content.res.ColorStateList.valueOf(btcColor));
 bar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(btcColor & 0x33FFFFFF));
@@ -277,12 +277,12 @@ private TextView findTextViewWithText(ViewGroup g, String txt) {
             return (TextView) v;
         if (v instanceof ViewGroup) {
             TextView t = findTextViewWithText((ViewGroup) v, txt);
-            if (t != null) return t;
+            if (t!= null) return t;
         }
     }
     return null;
 }
-    
+
     private View findQr(ViewGroup g) {
         for (int i = 0; i < g.getChildCount(); i++) {
             View v = g.getChildAt(i);
@@ -303,9 +303,8 @@ private TextView findTextViewWithText(ViewGroup g, String txt) {
 });
         //end add sync bar
 
-        
         final View insetTopView = contentView.findViewWithTag("inset_top");
-        if (insetTopView != null) {
+        if (insetTopView!= null) {
             ViewCompat.setOnApplyWindowInsetsListener(insetTopView, (v, windowInsets) -> {
                 final Insets insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
                 v.setPadding(v.getPaddingLeft(), insets.top, v.getPaddingRight(), v.getPaddingBottom());
@@ -313,7 +312,7 @@ private TextView findTextViewWithText(ViewGroup g, String txt) {
             });
         }
         final View insetBottomView = contentView.findViewWithTag("inset_bottom");
-        if (insetBottomView != null) {
+        if (insetBottomView!= null) {
             ViewCompat.setOnApplyWindowInsetsListener(insetBottomView, (v, windowInsets) -> {
                 final Insets insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
                 if (insets.bottom > 0 && v instanceof LinearLayout) {
@@ -329,7 +328,7 @@ private TextView findTextViewWithText(ViewGroup g, String txt) {
         levitateView = contentView.findViewWithTag("levitate");
 
         // Make view tagged with 'levitate' scroll away and quickly return.
-        if (levitateView != null) {
+        if (levitateView!= null) {
             final CoordinatorLayout.LayoutParams layoutParams = new CoordinatorLayout.LayoutParams(
                     levitateView.getLayoutParams().width, levitateView.getLayoutParams().height);
             layoutParams.setBehavior(new QuickReturnBehavior());
@@ -434,17 +433,28 @@ private TextView findTextViewWithText(ViewGroup g, String txt) {
                         || Environment.MEDIA_MOUNTED_READ_ONLY.equals(externalStorageState);
                 menu.findItem(R.id.wallet_options_restore_wallet).setEnabled(enableRestoreWalletOption);
                 final Boolean isEncrypted = viewModel.walletEncrypted.getValue();
-                if (isEncrypted != null) {
+                if (isEncrypted!= null) {
                     final MenuItem encryptKeysOption = menu.findItem(R.id.wallet_options_encrypt_keys);
-                    encryptKeysOption.setTitle(isEncrypted ? R.string.wallet_options_encrypt_keys_change
+                    encryptKeysOption.setTitle(isEncrypted? R.string.wallet_options_encrypt_keys_change
                             : R.string.wallet_options_encrypt_keys_set);
                     encryptKeysOption.setVisible(true);
                 }
                 final Boolean isLegacyFallback = viewModel.walletLegacyFallback.getValue();
-                if (isLegacyFallback != null) {
+                if (isLegacyFallback!= null) {
                     final MenuItem requestLegacyOption = menu.findItem(R.id.wallet_options_request_legacy);
                     requestLegacyOption.setVisible(isLegacyFallback);
                 }
+                // BELL ICON - START
+                MenuItem bell = menu.findItem(9999);
+                if (bell == null) bell = menu.add(0, 9999, 0, "Notifications");
+                bell.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
+                SharedPreferences sp = getSharedPreferences("notif",0);
+                boolean hasUnread = false;
+                for (String k : sp.getAll().keySet()) if (k.startsWith("n_")) {
+                    try { if (!new org.json.JSONObject((String)sp.getAll().get(k)).getBoolean("read")) { hasUnread=true; break; } } catch(Exception e){}
+                }
+                bell.setIcon(hasUnread? R.drawable.ic_notifications_24 : R.drawable.ic_notifications_none_24);
+                // BELL ICON - END
             }
 
             @Override
@@ -495,6 +505,9 @@ private TextView findTextViewWithText(ViewGroup g, String txt) {
                 } else if (itemId == R.id.wallet_options_report_issue) {
                     viewModel.showReportIssueDialog.setValue(Event.simple());
                     return true;
+                } else if (itemId == 9999) {
+                    startActivity(new Intent(WalletActivity.this, net.buli.w.ui.NotificationsActivity.class));
+                    return true;
                 } else if (itemId == R.id.wallet_options_help) {
                     viewModel.showHelpDialog.setValue(new Event<>(R.string.help_wallet));
                     return true;
@@ -512,8 +525,8 @@ private TextView findTextViewWithText(ViewGroup g, String txt) {
     protected void onResume() {
         super.onResume();
 
-        if (exchangeRatesFragment != null)
-            exchangeRatesFragment.setVisibility(config.isEnableExchangeRates() ? View.VISIBLE : View.GONE);
+        if (exchangeRatesFragment!= null)
+            exchangeRatesFragment.setVisibility(config.isEnableExchangeRates()? View.VISIBLE : View.GONE);
 
         handler.postDelayed(() -> {
             // delayed start so that UI has enough time to initialize
@@ -537,7 +550,7 @@ private TextView findTextViewWithText(ViewGroup g, String txt) {
         final AnimatorSet.Builder fragmentEnterAnimationBuilder = fragmentEnterAnimation.play(splashFadeOut);
 
         final View slideInLeftView = contentView.findViewWithTag("slide_in_left");
-        if (slideInLeftView != null) {
+        if (slideInLeftView!= null) {
             final ValueAnimator slide = ValueAnimator.ofFloat(-1.0f, 0.0f);
             slide.addUpdateListener(animator -> {
                 float animatedValue = (float) animator.getAnimatedValue();
@@ -553,7 +566,7 @@ private TextView findTextViewWithText(ViewGroup g, String txt) {
         }
 
         final View slideInRightView = contentView.findViewWithTag("slide_in_right");
-        if (slideInRightView != null) {
+        if (slideInRightView!= null) {
             final ValueAnimator slide = ValueAnimator.ofFloat(1.0f, 0.0f);
             slide.addUpdateListener(animator -> {
                 float animatedValue = (float) animator.getAnimatedValue();
@@ -569,7 +582,7 @@ private TextView findTextViewWithText(ViewGroup g, String txt) {
         }
 
         final View slideInTopView = contentView.findViewWithTag("slide_in_top");
-        if (slideInTopView != null) {
+        if (slideInTopView!= null) {
             final ValueAnimator slide = ValueAnimator.ofFloat(-1.0f, 0.0f);
             slide.addUpdateListener(animator -> {
                 float animatedValue = (float) animator.getAnimatedValue();
@@ -585,7 +598,7 @@ private TextView findTextViewWithText(ViewGroup g, String txt) {
         }
 
         final View slideInBottomView = contentView.findViewWithTag("slide_in_bottom");
-        if (slideInBottomView != null) {
+        if (slideInBottomView!= null) {
             final ValueAnimator slide = ValueAnimator.ofFloat(1.0f, 0.0f);
             slide.addUpdateListener(animator -> {
                 float animatedValue = (float) animator.getAnimatedValue();
@@ -600,7 +613,7 @@ private TextView findTextViewWithText(ViewGroup g, String txt) {
             fragmentEnterAnimationBuilder.before(slide).before(fadeIn);
         }
 
-        if (levitateView != null) {
+        if (levitateView!= null) {
             final ObjectAnimator elevate = ObjectAnimator.ofFloat(levitateView, "elevation", 0.0f,
                     levitateView.getElevation());
             elevate.setDuration(duration);
@@ -626,7 +639,7 @@ private TextView findTextViewWithText(ViewGroup g, String txt) {
         if (NfcAdapter.ACTION_NDEF_DISCOVERED.equals(action)) {
             final String inputType = intent.getType();
             final NdefMessage ndefMessage = (NdefMessage) intent
-                    .getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES)[0];
+                   .getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES)[0];
             final byte[] input = Nfc.extractMimePayload(Constants.MIMETYPE_TRANSACTION, ndefMessage);
 
             new BinaryInputParser(inputType, input) {
@@ -657,7 +670,7 @@ private TextView findTextViewWithText(ViewGroup g, String txt) {
         // The animation must be ended because of several graphical glitching that happens when the
         // Camera/SurfaceView is used while the animation is running.
         enterAnimation.end();
-        if (clickView != null) {
+        if (clickView!= null) {
             final ActivityOptionsCompat options = ActivityOptionsCompat.makeClipRevealAnimation(clickView, 0, 0,
                     clickView.getWidth(), clickView.getHeight());
             scanLauncher.launch(null, options);
@@ -670,7 +683,7 @@ private TextView findTextViewWithText(ViewGroup g, String txt) {
         @Override
         public boolean onStartNestedScroll(final CoordinatorLayout coordinatorLayout, final View child,
                 final View directTargetChild, final View target, final int nestedScrollAxes, final int type) {
-            return (nestedScrollAxes & ViewCompat.SCROLL_AXIS_VERTICAL) != 0;
+            return (nestedScrollAxes & ViewCompat.SCROLL_AXIS_VERTICAL)!= 0;
         }
 
         @Override
