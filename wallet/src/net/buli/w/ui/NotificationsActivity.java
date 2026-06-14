@@ -16,6 +16,7 @@ import android.view.ViewGroup;
 import org.json.JSONObject;
 import java.util.*;
 import java.text.SimpleDateFormat;
+import net.buli.w.R;
 
 public class NotificationsActivity extends Activity {
     LinearLayout ll;
