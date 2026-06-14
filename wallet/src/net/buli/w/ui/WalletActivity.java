@@ -256,50 +256,6 @@ bar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(btc
             bar.setProgress(prog);
         }
     }
-    // tìm chữ bitcoin trên màn hình, lấy màu mẫu để tô màu cho thanh bar sync
-    private TextView findSync(ViewGroup g) {
-        for (int i = 0; i < g.getChildCount(); i++) {
-            View v = g.getChildAt(i);
-            if (v instanceof TextView && ((TextView) v).getText().toString().contains("Synchronizing"))
-                return (TextView) v;
-            if (v instanceof ViewGroup) {
-                TextView t = findSync((ViewGroup) v);
-                if (t!= null) return t;
-            }
-        }
-        return null;
-    }
-
-//end//
-private TextView findTextViewWithText(ViewGroup g, String txt) {
-    for (int i = 0; i < g.getChildCount(); i++) {
-        View v = g.getChildAt(i);
-        if (v instanceof TextView && ((TextView) v).getText().toString().contains(txt))
-            return (TextView) v;
-        if (v instanceof ViewGroup) {
-            TextView t = findTextViewWithText((ViewGroup) v, txt);
-            if (t!= null) return t;
-        }
-    return null;
-}
-
-    private View findQr(ViewGroup g) {
-        for (int i = 0; i < g.getChildCount(); i++) {
-            View v = g.getChildAt(i);
-            if (v instanceof ImageView && v.getWidth() > 50 && v.getX() > g.getWidth() * 0.6)
-                return v;
-            if (v instanceof ViewGroup) {
-                View t = findQr((ViewGroup) v);
-                if (t!= null) return t;
-            }
-        }
-        return null;
-    }
-    private int getLeftOnScreen(View v) {
-        int[] l = new int[2];
-        v.getLocationOnScreen(l);
-        return l[0];
-    }
 });
         //end add sync bar
 
@@ -541,6 +497,52 @@ private TextView findTextViewWithText(ViewGroup g, String txt) {
         AlertDialogsFragment.add(fragmentManager);
     }
 
+    // --- HELPER METHODS (đã đưa ra ngoài listener) ---
+    private TextView findSync(ViewGroup g) {
+        for (int i = 0; i < g.getChildCount(); i++) {
+            View v = g.getChildAt(i);
+            if (v instanceof TextView && ((TextView) v).getText().toString().contains("Synchronizing"))
+                return (TextView) v;
+            if (v instanceof ViewGroup) {
+                TextView t = findSync((ViewGroup) v);
+                if (t!= null) return t;
+            }
+        }
+        return null;
+    }
+
+    private TextView findTextViewWithText(ViewGroup g, String txt) {
+        for (int i = 0; i < g.getChildCount(); i++) {
+            View v = g.getChildAt(i);
+            if (v instanceof TextView && ((TextView) v).getText().toString().contains(txt))
+                return (TextView) v;
+            if (v instanceof ViewGroup) {
+                TextView t = findTextViewWithText((ViewGroup) v, txt);
+                if (t!= null) return t;
+            }
+        }
+        return null;
+    }
+
+    private View findQr(ViewGroup g) {
+        for (int i = 0; i < g.getChildCount(); i++) {
+            View v = g.getChildAt(i);
+            if (v instanceof ImageView && v.getWidth() > 50 && v.getX() > g.getWidth() * 0.6)
+                return v;
+            if (v instanceof ViewGroup) {
+                View t = findQr((ViewGroup) v);
+                if (t!= null) return t;
+            }
+        }
+        return null;
+    }
+
+    private int getLeftOnScreen(View v) {
+        int[] l = new int[2];
+        v.getLocationOnScreen(l);
+        return l[0];
+    }
+
     @Override
     protected void onResume() {
         super.onResume();
@@ -661,7 +663,7 @@ private TextView findTextViewWithText(ViewGroup g, String txt) {
         if (NfcAdapter.ACTION_NDEF_DISCOVERED.equals(action)) {
             final String inputType = intent.getType();
             final NdefMessage ndefMessage = (NdefMessage) intent
-                 .getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES)[0];
+                .getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES)[0];
             final byte[] input = Nfc.extractMimePayload(Constants.MIMETYPE_TRANSACTION, ndefMessage);
 
             new BinaryInputParser(inputType, input) {
