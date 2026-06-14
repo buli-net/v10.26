@@ -172,32 +172,10 @@ public class NotificationsActivity extends Activity {
                 boolean isRead = o.optBoolean("read", false);
                 long time = o.optLong("time", System.currentTimeMillis());
 
-                // === SỬA CHỖ NÀY: HIỂN THỊ TÓM TẮT TRONG LIST ===
-                String displayTitle = title;
-                String displaySubtitle = dateFormat.format(new Date(time));
-                try {
-                    String extraRaw = o.optString("extra", "");
-                    JSONObject extra = extraRaw.startsWith("{") ? new JSONObject(extraRaw) : new JSONObject();
-                    
-                    if ("sync".equals(type)) {
-                        String pct = extra.optString("percent", "");
-                        int blocks = extra.optInt("blocksLeft", 0);
-                        String speed = extra.optString("speed", "");
-                        displayTitle = "Syncing" + (pct.isEmpty() ? "" : " • " + pct + "%");
-                        displaySubtitle = (blocks>0? blocks + " blocks left" : o.optString("text","")) + (speed.isEmpty()?"":" • "+speed);
-                    } else if ("peer".equals(type)) {
-                        String ip = extra.optString("ip", o.optString("text",""));
-                        String country = extra.optString("country", "");
-                        String ping = extra.optString("ping", "");
-                        displayTitle = (title.toLowerCase().contains("connected") ? "Peer ✓" : "Peer ✗") + (country.isEmpty()?"":" • "+country);
-                        displaySubtitle = ip + (ping.isEmpty()?"":" • "+ping);
-                    }
-                } catch (Exception ignored) {}
-
                 TextView tv = new TextView(this);
                 tv.setTextSize(16);
                 tv.setPadding(32, 28, 32, 28);
-                tv.setText("● " + displayTitle + "\n" + displaySubtitle);
+                tv.setText("● " + title + "\n" + dateFormat.format(new Date(time)));
                 int color = title.toLowerCase().contains("received") ? (isDark ? 0xFF81C784 : 0xFF2E7D32)
                         : title.toLowerCase().contains("sent") ? (isDark ? 0xFFE57373 : 0xFFC62828)
                         : title.toLowerCase().contains("peer") ? (isDark ? 0xFF64B5F6 : 0xFF1565C0)
@@ -269,24 +247,18 @@ public class NotificationsActivity extends Activity {
                 if (extra.has("fee")) sb.append("Fee: ").append(extra.optString("fee")).append(" BTC\n");
                 sb.append("Time: ").append(time);
             } else if ("peer".equals(type)) {
-                // === FULL CHI TIẾT PEER ===
                 sb.append("Type: Peer\n");
-                sb.append("Address: ").append(extra.optString("ip", o.optString("text"))).append("\n");
-                sb.append("Country: ").append(extra.optString("country","Unknown")).append("\n");
-                sb.append("Ping: ").append(extra.optString("ping","N/A")).append("\n");
-                sb.append("Version: ").append(extra.optString("version","N/A")).append("\n");
-                sb.append("Height: ").append(extra.optString("height","N/A")).append("\n");
-                sb.append("Peers: ").append(extra.optString("peers", o.optString("text"))).append("\n");
+                sb.append("Address: ").append(o.optString("text")).append("\n");
+                if (extra.has("height")) sb.append("Height: ").append(extra.optString("height")).append("\n");
+                if (extra.has("peers")) sb.append("Peers: ").append(extra.optString("peers")).append("\n");
+                sb.append(extra.optString("raw","")).append("\n");
                 sb.append("Time: ").append(time);
             } else {
-                // === FULL CHI TIẾT SYNC ===
                 sb.append("Type: Sync\n");
-                sb.append("Status: ").append(o.optString("text")).append("\n");
-                sb.append("Blocks left: ").append(extra.optString("blocksLeft", extra.optString("blocks","N/A"))).append("\n");
-                sb.append("Progress: ").append(extra.optString("percent","?")).append("%\n");
-                sb.append("Speed: ").append(extra.optString("speed","N/A")).append("\n");
-                sb.append("ETA: ").append(extra.optString("eta","N/A")).append("\n");
-                sb.append("Started: ").append(extra.optString("started","N/A")).append("\n");
+                sb.append(o.optString("text")).append("\n");
+                if (extra.has("progress")) sb.append("Progress: ").append(extra.optString("progress")).append("%\n");
+                if (extra.has("blocks")) sb.append("Blocks: ").append(extra.optString("blocks")).append("\n");
+                sb.append(extra.optString("raw","")).append("\n");
                 sb.append("Time: ").append(time);
             }
 
