@@ -81,8 +81,8 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import java.util.Locale;
-import org.json.JSONObject;
 //end
+import org.json.JSONObject; // ADD NOTIF
 
 /**
  * @author Andreas Schildbach
@@ -100,7 +100,6 @@ public final class WalletActivity extends AbstractWalletActivity {
 
     private AbstractWalletActivityViewModel walletActivityViewModel;
     private WalletActivityViewModel viewModel;
-    private SharedPreferences.OnSharedPreferenceChangeListener notifListener;
 
     private final ActivityResultLauncher<Void> scanLauncher =
             registerForActivityResult(new ScanActivity.Scan(), input -> {
@@ -134,6 +133,11 @@ public final class WalletActivity extends AbstractWalletActivity {
                 }.parse();
             });
 
+    // ADD NOTIF - START
+    private MenuItem bellMenuItem;
+    private SharedPreferences.OnSharedPreferenceChangeListener notifListener;
+    // ADD NOTIF - END
+
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
         EdgeToEdge.enable(this, SystemBarStyle.dark(getColor(R.color.bg_action_bar)),
@@ -151,6 +155,7 @@ public final class WalletActivity extends AbstractWalletActivity {
         contentView = findViewById(android.R.id.content);
 
 //add sync bar
+
 final View root = findViewById(android.R.id.content);
 final SharedPreferences prefs = getSharedPreferences("sync_prefs", MODE_PRIVATE);
 final int[] lastProg = { -1 };
@@ -175,15 +180,26 @@ root.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlob
             return;
         }
 
+// lấy màu động
 int syncTextColor = tv.getCurrentTextColor();
 percent.setTextColor(syncTextColor);
 
-int btcColor = syncTextColor;
+// thay đoạn tìm "Bitcoin" bằng:
+int btcColor = syncTextColor; // <-- khai báo luôn ở đây
 if (tv!= null) {
-    btcColor = tv.getCurrentTextColor();
+    btcColor = tv.getCurrentTextColor(); // thực ra = syncTextColor
 }
+
+// --- LẤY MÀU BTC TỪ TIÊU ĐỀ "Bitcoin" ---
+/*int btcColor = syncTextColor; // fallback
+ViewGroup decor = (ViewGroup) getWindow().getDecorView();
+TextView title = findTextViewWithText(decor, "Bitcoin");
+if (title!= null) {
+    btcColor = title.getCurrentTextColor();
+}*/
 bar.setProgressTintList(android.content.res.ColorStateList.valueOf(btcColor));
 bar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(btcColor & 0x33FFFFFF));
+//end
         int[] loc = new int[2];
         tv.getLocationOnScreen(loc);
         int left = loc[0];
@@ -210,13 +226,16 @@ bar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(btc
         percentX = Math.max(percentX, left + (int)(4 * d));
 
         percent.setX(percentX);
+        // canh % theo baseline của chữ sync
         int tvBaseline = tv.getBaseline();
         int pBaseline = percent.getBaseline();
         if (tvBaseline > 0 && pBaseline > 0) {
         percent.setY(top + tvBaseline - pBaseline);
         } else {
+      // fallback nếu baseline chưa có
         percent.setY(top + tv.getHeight() - percent.getMeasuredHeight());
         }
+        //end
         percent.setVisibility(View.VISIBLE);
         bar.setX(left);
         bar.setY(top + tv.getHeight() + (int)(4 * d));
@@ -242,6 +261,52 @@ bar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(btc
             percent.setText(String.format(Locale.US, "%.2f%%", prog / 100f));
             bar.setProgress(prog);
         }
+    }
+
+    // tìm chữ bitcoin trên màn hình, lấy màu mẫu để tô màu cho thanh bar sync
+    private TextView findSync(ViewGroup g) {
+        for (int i = 0; i < g.getChildCount(); i++) {
+            View v = g.getChildAt(i);
+            if (v instanceof TextView && ((TextView) v).getText().toString().contains("Synchronizing"))
+                return (TextView) v;
+            if (v instanceof ViewGroup) {
+                TextView t = findSync((ViewGroup) v);
+                if (t!= null) return t;
+            }
+        }
+        return null;
+    }
+
+//end//
+private TextView findTextViewWithText(ViewGroup g, String txt) {
+    for (int i = 0; i < g.getChildCount(); i++) {
+        View v = g.getChildAt(i);
+        if (v instanceof TextView && ((TextView) v).getText().toString().contains(txt))
+            return (TextView) v;
+        if (v instanceof ViewGroup) {
+            TextView t = findTextViewWithText((ViewGroup) v, txt);
+            if (t!= null) return t;
+        }
+    }
+    return null;
+}
+
+    private View findQr(ViewGroup g) {
+        for (int i = 0; i < g.getChildCount(); i++) {
+            View v = g.getChildAt(i);
+            if (v instanceof ImageView && v.getWidth() > 50 && v.getX() > g.getWidth() * 0.6)
+                return v;
+            if (v instanceof ViewGroup) {
+                View t = findQr((ViewGroup) v);
+                if (t!= null) return t;
+            }
+        }
+        return null;
+    }
+    private int getLeftOnScreen(View v) {
+        int[] l = new int[2];
+        v.getLocationOnScreen(l);
+        return l[0];
     }
 });
         //end add sync bar
@@ -270,6 +335,7 @@ bar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(btc
         exchangeRatesFragment = findViewById(R.id.wallet_main_twopanes_exchange_rates);
         levitateView = contentView.findViewWithTag("levitate");
 
+        // Make view tagged with 'levitate' scroll away and quickly return.
         if (levitateView!= null) {
             final CoordinatorLayout.LayoutParams layoutParams = new CoordinatorLayout.LayoutParams(
                     levitateView.getLayoutParams().width, levitateView.getLayoutParams().height);
@@ -361,10 +427,17 @@ bar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(btc
             @Override
             public void onCreateMenu(final Menu menu, final MenuInflater inflater) {
                 inflater.inflate(R.menu.wallet_options, menu);
+                // ADD NOTIF - START
+                bellMenuItem = menu.add(Menu.NONE, 1001, Menu.NONE, "Notifications");
+                bellMenuItem.setIcon(R.drawable.ic_notifications_none_24);
+                bellMenuItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
+                updateBellIcon();
+                // ADD NOTIF - END
             }
 
             @Override
             public void onPrepareMenu(final Menu menu) {
+                updateBellIcon(); // ADD NOTIF
                 final Resources res = getResources();
                 final boolean showExchangeRatesOption = config.isEnableExchangeRates()
                         && res.getBoolean(R.bool.show_exchange_rates_option);
@@ -386,25 +459,17 @@ bar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(btc
                     final MenuItem requestLegacyOption = menu.findItem(R.id.wallet_options_request_legacy);
                     requestLegacyOption.setVisible(isLegacyFallback);
                 }
-                // BELL ICON - START (chỉ đặc/rỗng, không đổi màu)
-                MenuItem bell = menu.findItem(9999);
-                if (bell == null) bell = menu.add(0, 9999, 0, "Notifications");
-                bell.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
-                SharedPreferences sp = getSharedPreferences("notif",0);
-                boolean hasUnread = false;
-                for (String k : sp.getAll().keySet()) if (k.startsWith("n_")) {
-                    try {
-                        JSONObject o = new JSONObject((String)sp.getAll().get(k));
-                        if (!o.optBoolean("read",false)) { hasUnread = true; break; }
-                    } catch(Exception e){}
-                }
-                bell.setIcon(hasUnread? R.drawable.ic_notifications_24 : R.drawable.ic_notifications_none_24);
-                // BELL ICON - END
             }
 
             @Override
             public boolean onMenuItemSelected(final MenuItem item) {
                 int itemId = item.getItemId();
+                // ADD NOTIF - START
+                if (itemId == 1001) {
+                    startActivity(new Intent(WalletActivity.this, net.buli.w.ui.NotificationsActivity.class));
+                    return true;
+                }
+                // ADD NOTIF - END
                 if (itemId == R.id.wallet_options_request) {
                     handleRequestCoins();
                     return true;
@@ -450,9 +515,6 @@ bar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(btc
                 } else if (itemId == R.id.wallet_options_report_issue) {
                     viewModel.showReportIssueDialog.setValue(Event.simple());
                     return true;
-                } else if (itemId == 9999) {
-                    startActivity(new Intent(WalletActivity.this, net.buli.w.ui.NotificationsActivity.class));
-                    return true;
                 } else if (itemId == R.id.wallet_options_help) {
                     viewModel.showHelpDialog.setValue(new Event<>(R.string.help_wallet));
                     return true;
@@ -465,63 +527,23 @@ bar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(btc
         MaybeMaintenanceFragment.add(fragmentManager);
         AlertDialogsFragment.add(fragmentManager);
 
-        notifListener = (sp, key) -> runOnUiThread(this::invalidateOptionsMenu);
-        getSharedPreferences("notif", 0).registerOnSharedPreferenceChangeListener(notifListener);
-    }
-
-    // --- HELPER METHODS ---
-    private TextView findSync(ViewGroup g) {
-        for (int i = 0; i < g.getChildCount(); i++) {
-            View v = g.getChildAt(i);
-            if (v instanceof TextView && ((TextView) v).getText().toString().contains("Synchronizing"))
-                return (TextView) v;
-            if (v instanceof ViewGroup) {
-                TextView t = findSync((ViewGroup) v);
-                if (t!= null) return t;
-            }
-        }
-        return null;
-    }
-
-    private TextView findTextViewWithText(ViewGroup g, String txt) {
-        for (int i = 0; i < g.getChildCount(); i++) {
-            View v = g.getChildAt(i);
-            if (v instanceof TextView && ((TextView) v).getText().toString().contains(txt))
-                return (TextView) v;
-            if (v instanceof ViewGroup) {
-                TextView t = findTextViewWithText((ViewGroup) v, txt);
-                if (t!= null) return t;
-            }
-        }
-        return null;
-    }
-
-    private View findQr(ViewGroup g) {
-        for (int i = 0; i < g.getChildCount(); i++) {
-            View v = g.getChildAt(i);
-            if (v instanceof ImageView && v.getWidth() > 50 && v.getX() > g.getWidth() * 0.6)
-                return v;
-            if (v instanceof ViewGroup) {
-                View t = findQr((ViewGroup) v);
-                if (t!= null) return t;
-            }
-        }
-        return null;
-    }
-
-    private int getLeftOnScreen(View v) {
-        int[] l = new int[2];
-        v.getLocationOnScreen(l);
-        return l[0];
+        // ADD NOTIF - START
+        notifListener = (sp, key) -> runOnUiThread(this::updateBellIcon);
+        getSharedPreferences("notif",0).registerOnSharedPreferenceChangeListener(notifListener);
+        // ADD NOTIF - END
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+
+        updateBellIcon(); // ADD NOTIF
+
         if (exchangeRatesFragment!= null)
             exchangeRatesFragment.setVisibility(config.isEnableExchangeRates()? View.VISIBLE : View.GONE);
-        invalidateOptionsMenu();
+
         handler.postDelayed(() -> {
+            // delayed start so that UI has enough time to initialize
             BlockchainService.start(WalletActivity.this, true);
         }, 1000);
     }
@@ -529,17 +551,46 @@ bar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(btc
     @Override
     protected void onPause() {
         handler.removeCallbacksAndMessages(null);
+
         super.onPause();
     }
 
     @Override
     protected void onDestroy() {
+        // ADD NOTIF - START
+        try { getSharedPreferences("notif",0).unregisterOnSharedPreferenceChangeListener(notifListener); } catch(Exception ignored){}
+        // ADD NOTIF - END
         super.onDestroy();
-        if (notifListener!= null) getSharedPreferences("notif",0).unregisterOnSharedPreferenceChangeListener(notifListener);
     }
 
+    // ADD NOTIF - START
+    private void updateBellIcon(){
+        if (bellMenuItem == null) return;
+        SharedPreferences sp = getSharedPreferences("notif",0);
+        boolean hasUnread = false;
+        for(String k: sp.getAll().keySet()) if(k.startsWith("n_")){
+            try{ if(!new JSONObject(sp.getString(k,"")).optBoolean("read",false)){hasUnread=true; break;} }catch(Exception e){}
+        }
+        bellMenuItem.setIcon(hasUnread? R.drawable.ic_notifications_24 : R.drawable.ic_notifications_none_24);
+    }
+
+    private void saveNotif(String title, String text, String extra){
+        try {
+            SharedPreferences sp = getSharedPreferences("notif",0);
+            String k="n_"+System.currentTimeMillis();
+            JSONObject o=new JSONObject();
+            o.put("title",title);
+            o.put("text",text);
+            o.put("extra",extra);
+            o.put("time",System.currentTimeMillis());
+            o.put("read",false);
+            sp.edit().putString(k,o.toString()).apply();
+            runOnUiThread(this::updateBellIcon);
+        } catch(Exception e){}
+    }
+    // ADD NOTIF - END
+
     private AnimatorSet buildEnterAnimation(final View contentView) {
-        //... giữ nguyên code gốc...
         final Drawable background = getWindow().getDecorView().getBackground();
         final int duration = getResources().getInteger(android.R.integer.config_mediumAnimTime);
         final Animator splashFadeOut = AnimatorInflater.loadAnimator(WalletActivity.this, R.animator.fade_out_drawable);
@@ -633,24 +684,40 @@ bar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(btc
 
     private void handleIntent(final Intent intent) {
         final String action = intent.getAction();
+
         if (NfcAdapter.ACTION_NDEF_DISCOVERED.equals(action)) {
             final String inputType = intent.getType();
             final NdefMessage ndefMessage = (NdefMessage) intent
-              .getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES)[0];
+                   .getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES)[0];
             final byte[] input = Nfc.extractMimePayload(Constants.MIMETYPE_TRANSACTION, ndefMessage);
+
             new BinaryInputParser(inputType, input) {
-                @Override protected void handlePaymentIntent(final PaymentIntent paymentIntent) { cannotClassify(inputType); }
-                @Override protected void error(final int messageResId, final Object... messageArgs) {
+                @Override
+                protected void handlePaymentIntent(final PaymentIntent paymentIntent) {
+                    cannotClassify(inputType);
+                }
+
+                @Override
+                protected void error(final int messageResId, final Object... messageArgs) {
                     final DialogBuilder dialog = DialogBuilder.dialog(WalletActivity.this, 0, messageResId, messageArgs);
-                    dialog.singleDismissButton(null); dialog.show();
+                    dialog.singleDismissButton(null);
+                    dialog.show();
                 }
             }.parse();
         }
     }
 
-    public void handleRequestCoins() { RequestCoinsActivity.start(this); }
-    public void handleSendCoins() { startActivity(new Intent(this, SendCoinsActivity.class)); }
+    public void handleRequestCoins() {
+        RequestCoinsActivity.start(this);
+    }
+
+    public void handleSendCoins() {
+        startActivity(new Intent(this, SendCoinsActivity.class));
+    }
+
     public void handleScan(final View clickView) {
+        // The animation must be ended because of several graphical glitching that happens when the
+        // Camera/SurfaceView is used while the animation is running.
         enterAnimation.end();
         if (clickView!= null) {
             final ActivityOptionsCompat options = ActivityOptionsCompat.makeClipRevealAnimation(clickView, 0, 0,
@@ -662,12 +729,16 @@ bar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(btc
     }
 
     private static final class QuickReturnBehavior extends CoordinatorLayout.Behavior<View> {
-        @Override public boolean onStartNestedScroll(final CoordinatorLayout coordinatorLayout, final View child,
+        @Override
+        public boolean onStartNestedScroll(final CoordinatorLayout coordinatorLayout, final View child,
                 final View directTargetChild, final View target, final int nestedScrollAxes, final int type) {
             return (nestedScrollAxes & ViewCompat.SCROLL_AXIS_VERTICAL)!= 0;
         }
-        @Override public void onNestedScroll(final CoordinatorLayout coordinatorLayout, final View child, final View target,
-                final int dxConsumed, final int dyConsumed, final int dxUnconsumed, final int dyUnconsumed, final int type) {
+
+        @Override
+        public void onNestedScroll(final CoordinatorLayout coordinatorLayout, final View child, final View target,
+                final int dxConsumed, final int dyConsumed, final int dxUnconsumed, final int dyUnconsumed,
+                final int type) {
             child.setTranslationY(Floats.constrainToRange(child.getTranslationY() - dyConsumed, -child.getHeight(), 0));
         }
     }
