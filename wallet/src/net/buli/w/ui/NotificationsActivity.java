@@ -16,6 +16,7 @@ import android.view.ViewGroup;
 import org.json.JSONObject;
 import java.util.*;
 import java.text.SimpleDateFormat;
+
 import net.buli.w.R;
 
 public class NotificationsActivity extends Activity {
@@ -69,8 +70,8 @@ public class NotificationsActivity extends Activity {
     }
 
     void updateTabs() {
-        int colorPrimary = getResources().getColor(R.color.colorAccent, getTheme());
-        int colorText = getResources().getColor(android.R.color.secondary_text_light, getTheme());
+        int colorPrimary = 0xFF3F51B5; // màu chính
+        int colorText = 0xFF757575;
         for (int i = 0; i < tabBar.getChildCount(); i++) {
             Button b = (Button) tabBar.getChildAt(i);
             boolean sel = b.getTag().equals(currentFilter);
@@ -140,12 +141,12 @@ public class NotificationsActivity extends Activity {
                 TextView tv = new TextView(this);
                 tv.setTextSize(16);
                 tv.setPadding(32, 28, 32, 28);
-                int c = t.toLowerCase().contains("received") ? getResources().getColor(R.color.green_700, getTheme()) :
-                        t.toLowerCase().contains("sent") ? getResources().getColor(R.color.red_700, getTheme()) :
-                        t.toLowerCase().contains("peer") ? getResources().getColor(R.color.blue_700, getTheme()) :
-                        getResources().getColor(R.color.amber_700, getTheme());
+                int c = t.toLowerCase().contains("received") ? 0xFF2E7D32 :
+                        t.toLowerCase().contains("sent") ? 0xFFC62828 :
+                        t.toLowerCase().contains("peer") ? 0xFF1565C0 :
+                        0xFFF9A825;
                 tv.setText("● " + t + "\n" + fmt.format(new Date(time)));
-                tv.setTextColor(read ? getResources().getColor(android.R.color.darker_gray, getTheme()) : c);
+                tv.setTextColor(read ? 0xFF888888 : c);
                 if (!read) tv.setBackgroundResource(android.R.drawable.list_selector_background);
                 else tv.setBackground(null);
 
@@ -157,7 +158,7 @@ public class NotificationsActivity extends Activity {
                         if (!obj.getBoolean("read")) {
                             obj.put("read", true);
                             sp.edit().putString(key, obj.toString()).apply();
-                            tv.setTextColor(getResources().getColor(android.R.color.darker_gray, getTheme()));
+                            tv.setTextColor(0xFF888888);
                             v.setBackground(null);
                         }
                         new AlertDialog.Builder(NotificationsActivity.this).setTitle(obj.getString("title"))
@@ -191,7 +192,7 @@ public class NotificationsActivity extends Activity {
             tv.setGravity(Gravity.CENTER);
             tv.setTextSize(18);
             tv.setPadding(0, 300, 0, 0);
-            tv.setTextColor(getResources().getColor(android.R.color.secondary_text_light, getTheme()));
+            tv.setTextColor(0xFF888888);
             ll.addView(tv);
         }
     }
