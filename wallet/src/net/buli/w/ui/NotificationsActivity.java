@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.widget.LinearLayout; 
 import android.widget.ScrollView; 
 import android.widget.TextView;
+import android.widget.Button;
 import android.widget.Toast;
 import android.graphics.Color; 
 import android.view.Gravity;
@@ -13,14 +14,48 @@ import org.json.JSONObject;
 import java.util.*;
 
 public class NotificationsActivity extends Activity {
+ LinearLayout ll;
+ SharedPreferences sp;
+
  protected void onCreate(Bundle b){ 
   super.onCreate(b);
   ScrollView sv=new ScrollView(this); 
-  LinearLayout ll=new LinearLayout(this); 
+  ll=new LinearLayout(this); 
   ll.setOrientation(LinearLayout.VERTICAL); 
   sv.addView(ll);
   
-  SharedPreferences sp=getSharedPreferences("notif",0);
+  sp=getSharedPreferences("notif",0);
+
+  // --- NÚT ĐỌC HẾT ---
+  Button markAll = new Button(this);
+  markAll.setText("Đánh dấu tất cả đã đọc");
+  markAll.setAllCaps(false);
+  markAll.setOnClickListener(v->{
+    SharedPreferences.Editor ed=sp.edit();
+    for(String k: sp.getAll().keySet()){
+      if(k.startsWith("n_")){
+        try{
+          JSONObject o=new JSONObject(sp.getString(k,""));
+          o.put("read",true);
+          ed.putString(k,o.toString());
+        }catch(Exception e){}
+      }
+    }
+    ed.apply();
+    Toast.makeText(this,"Đã đọc tất cả",Toast.LENGTH_SHORT).show();
+    recreate(); // load lại list
+  });
+  ll.addView(markAll, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+  // --- hết nút ---
+
+  loadList();
+  setContentView(sv);
+ }
+
+ void loadList(){
+  // xóa list cũ (giữ nút đầu)
+  while(ll.getChildCount()>1) ll.removeViewAt(1);
+
   List<String> keys=new ArrayList<>(sp.getAll().keySet()); 
   Collections.sort(keys,Collections.reverseOrder());
   
@@ -51,11 +86,13 @@ public class NotificationsActivity extends Activity {
     final JSONObject obj=o;
     tv.setOnClickListener(v->{
      try{
-      obj.put("read",true);
-      sp.edit().putString(key,obj.toString()).apply();
-      v.setBackgroundColor(0);
-      tv.setTextColor(0xFF888888);
-      Toast.makeText(NotificationsActivity.this,"Đã đọc",Toast.LENGTH_SHORT).show();
+      if(!obj.getBoolean("read")){
+        obj.put("read",true);
+        sp.edit().putString(key,obj.toString()).apply();
+        v.setBackgroundColor(0);
+        tv.setTextColor(0xFF888888);
+        Toast.makeText(NotificationsActivity.this,"Đã đọc",Toast.LENGTH_SHORT).show();
+      }
      }catch(Exception e){}
     });
     
@@ -71,7 +108,5 @@ public class NotificationsActivity extends Activity {
    tv.setPadding(0,300,0,0);
    ll.addView(tv);
   }
-  
-  setContentView(sv);
  }
 }
