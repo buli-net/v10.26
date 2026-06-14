@@ -81,6 +81,7 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import java.util.Locale;
+import org.json.JSONObject;
 //end
 
 /**
@@ -279,7 +280,6 @@ private TextView findTextViewWithText(ViewGroup g, String txt) {
             TextView t = findTextViewWithText((ViewGroup) v, txt);
             if (t!= null) return t;
         }
-    }
     return null;
 }
 
@@ -445,52 +445,37 @@ private TextView findTextViewWithText(ViewGroup g, String txt) {
                     requestLegacyOption.setVisible(isLegacyFallback);
                 }
                 // BELL ICON - START
-            /*    MenuItem bell = menu.findItem(9999);
+                MenuItem bell = menu.findItem(9999);
                 if (bell == null) bell = menu.add(0, 9999, 0, "Notifications");
                 bell.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
                 SharedPreferences sp = getSharedPreferences("notif",0);
                 boolean hasUnread = false;
+                int bellColor = 0xFFD7B48C;
+                long latest = 0;
                 for (String k : sp.getAll().keySet()) if (k.startsWith("n_")) {
-                    try { if (!new org.json.JSONObject((String)sp.getAll().get(k)).getBoolean("read")) { hasUnread=true; break; } } catch(Exception e){}
+                    try {
+                        JSONObject o = new JSONObject((String)sp.getAll().get(k));
+                        if (!o.getBoolean("read")) {
+                            hasUnread = true;
+                            long t = o.getLong("time");
+                            if (t > latest) {
+                                latest = t;
+                                String title = o.getString("title").toLowerCase();
+                                if (title.contains("received")) bellColor = 0xFF2E7D32;
+                                else if (title.contains("sent")) bellColor = 0xFFC62828;
+                                else if (title.contains("peer")) bellColor = 0xFF1565C0;
+                                else if (title.contains("sync")) bellColor = 0xFFF9A825;
+                                else bellColor = 0xFFD7B48C;
+                            }
+                        }
+                    } catch(Exception e){}
                 }
                 bell.setIcon(hasUnread? R.drawable.ic_notifications_24 : R.drawable.ic_notifications_none_24);
+                if (bell.getIcon()!= null) {
+                    bell.getIcon().mutate().setTint(bellColor);
+                }
                 // BELL ICON - END
-            }*/
-//bell color full
-
-
-// BELL ICON - START
-MenuItem bell = menu.findItem(9999);
-if (bell == null) bell = menu.add(0, 9999, 0, "Notifications");
-bell.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
-SharedPreferences sp = getSharedPreferences("notif",0);
-boolean hasUnread = false;
-int bellColor = 0xFFD7B48C; // màu mặc định (vàng nhạt như theme)
-long latest = 0;
-for (String k : sp.getAll().keySet()) if (k.startsWith("n_")) {
-    try {
-        org.json.JSONObject o = new org.json.JSONObject((String)sp.getAll().get(k));
-        if (!o.getBoolean("read")) {
-            hasUnread = true;
-            long t = o.getLong("time");
-            if (t > latest) {
-                latest = t;
-                String title = o.getString("title").toLowerCase();
-                if (title.contains("received")) bellColor = 0xFF2E7D32; // xanh lá
-                else if (title.contains("sent")) bellColor = 0xFFC62828; // đỏ
-                else if (title.contains("peer")) bellColor = 0xFF1565C0; // xanh dương
-                else if (title.contains("sync")) bellColor = 0xFFF9A825; // cam
-                else bellColor = 0xFFD7B48C;
             }
-        }
-    } catch(Exception e){}
-}
-bell.setIcon(hasUnread? R.drawable.ic_notifications_24 : R.drawable.ic_notifications_none_24);
-if (bell.getIcon() != null) {
-    bell.getIcon().mutate().setTint(bellColor);
-}
-// BELL ICON - END
-//end
 
             @Override
             public boolean onMenuItemSelected(final MenuItem item) {
@@ -676,7 +661,7 @@ if (bell.getIcon() != null) {
         if (NfcAdapter.ACTION_NDEF_DISCOVERED.equals(action)) {
             final String inputType = intent.getType();
             final NdefMessage ndefMessage = (NdefMessage) intent
-                  .getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES)[0];
+                 .getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES)[0];
             final byte[] input = Nfc.extractMimePayload(Constants.MIMETYPE_TRANSACTION, ndefMessage);
 
             new BinaryInputParser(inputType, input) {
